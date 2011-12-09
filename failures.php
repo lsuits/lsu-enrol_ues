@@ -3,7 +3,7 @@
 require_once '../../config.php';
 require_once 'publiclib.php';
 
-cps::require_daos();
+ues::require_daos();
 
 require_login();
 
@@ -15,10 +15,10 @@ $errorids = optional_param('ids', null, PARAM_INT);
 $reprocess_all = optional_param('reprocess_all', null, PARAM_TEXT);
 $delete_all = optional_param('delete_all', null, PARAM_TEXT);
 
-$_s = cps::gen_str();
+$_s = ues::gen_str();
 
 $base_url = new moodle_url('/admin/settings.php', array(
-    'section' => 'enrolsettingscps'
+    'section' => 'enrolsettingsues'
 ));
 
 $blockname = $_s('pluginname');
@@ -28,8 +28,8 @@ $action = $_s('reprocess_failures');
 $PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
 $PAGE->set_title($blockname. ': '. $action);
 $PAGE->set_heading($blockname. ': '. $action);
-$PAGE->set_url('/enrol/cps/cleanup.php');
-$PAGE->set_pagetype('admin-settings-cps-semester-cleanup');
+$PAGE->set_url('/enrol/ues/cleanup.php');
+$PAGE->set_pagetype('admin-settings-ues-semester-cleanup');
 $PAGE->set_pagelayout('admin');
 $PAGE->navbar->add($blockname, $base_url);
 
@@ -37,16 +37,16 @@ $PAGE->navbar->add($action);
 
 // LSU requirement
 $PAGE->requires->js(new moodle_url('/lib/jquery.js'));
-$PAGE->requires->js(new moodle_url('/enrol/cps/js/failure.js'));
+$PAGE->requires->js(new moodle_url('/enrol/ues/js/failure.js'));
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($action);
 
 if ($reprocess_all or $delete_all) {
-    $posted = cps_error::get_all();
+    $posted = ues_error::get_all();
 } else if ($errorids and is_array($errorids)) {
     $ids = implode(',', $errorids);
-    $posted = cps_error::get_select('id IN ('.$ids.')');
+    $posted = ues_error::get_select('id IN ('.$ids.')');
 } else {
     $posted = array();
 }
@@ -56,28 +56,28 @@ if ($posted and $data = data_submitted()) {
 
     if ($reprocessing) {
         $handler = function($out) use ($posted) {
-            $msg = cps::_s('reprocess_success');
+            $msg = ues::_s('reprocess_success');
 
             echo $out->notification($msg, 'notifysuccess');
-            echo html_writer::tag('pre', cps::reprocess_errors($posted));
+            echo html_writer::tag('pre', ues::reprocess_errors($posted));
         };
     } else {
         $handler = function($out) use ($posted) {
             foreach ($posted as $error) {
-                cps_error::delete($error->id);
+                ues_error::delete($error->id);
             }
 
-            $msg = cps::_s('delete_success');
+            $msg = ues::_s('delete_success');
             echo $out->notification($msg, 'notifysuccess');
         };
     }
 
-    $url = new moodle_url('/enrol/cps/failures.php');
+    $url = new moodle_url('/enrol/ues/failures.php');
 
     output_box_and_die($url, $handler);
 }
 
-$errors = cps_error::get_all();
+$errors = ues_error::get_all();
 
 if (empty($errors)) {
     output_box_and_die($base_url, function($out) use ($_s) {

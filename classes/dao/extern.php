@@ -1,6 +1,6 @@
 <?php
 
-abstract class cps_external extends cps_base {
+abstract class ues_external extends ues_base {
     public static function get_all(array $params = array(), $fields = '*') {
         return self::get_all_internal($params, $fields);
     }

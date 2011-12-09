@@ -15,7 +15,7 @@ function cleanup_fake_data($output = true) {
         }
 
         if ($table == 'sections') {
-            $sections = $DB->get_records('enrol_cps_sections');
+            $sections = $DB->get_records('enrol_ues_sections');
 
             foreach ($sections as $section) {
                 $course = $DB->get_record('course', array('idnumber' => $section->idnumber));
@@ -26,7 +26,7 @@ function cleanup_fake_data($output = true) {
             }
         }
 
-        $sql = 'TRUNCATE {enrol_cps_' . $table .'}';
+        $sql = 'TRUNCATE {enrol_ues_' . $table .'}';
 
         $DB->execute($sql);
     }

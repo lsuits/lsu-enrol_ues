@@ -1,6 +1,6 @@
 <?php
 
-abstract class cps_base {
+abstract class ues_base {
     /** Protected static helper function to maintain calling class static
      * overrides
      */
@@ -144,11 +144,12 @@ abstract class cps_base {
     }
 
     public static function get_name() {
-        return end(explode('cps_', get_called_class()));
+        $names = explode('_', get_called_class());
+        return implode('_', array_slice($names, 1));
     }
 
     public static function tablename() {
-        return sprintf('enrol_cps_%s', self::call('get_name').'s');
+        return sprintf('enrol_%s', get_called_class() . 's');
     }
 
     public static function upgrade($db_object) {

@@ -4,7 +4,7 @@ defined('MOODLE_INTERNAL') or die();
 
 require_once dirname(__FILE__) . '/publiclib.php';
 
-class enrol_cps_plugin extends enrol_plugin {
+class enrol_ues_plugin extends enrol_plugin {
     /** Typical errorlog for cron run */
     var $errors = array();
 
@@ -20,9 +20,9 @@ class enrol_cps_plugin extends enrol_plugin {
     function __construct() {
         global $CFG;
 
-        $lib = cps::base('classes/dao');
+        $lib = ues::base('classes/dao');
 
-        cps::require_daos();
+        ues::require_daos();
         require_once $CFG->dirroot . '/group/lib.php';
     }
 
@@ -30,12 +30,12 @@ class enrol_cps_plugin extends enrol_plugin {
         $this->_loaded = true;
 
         try {
-            $this->_provider = cps::create_provider();
+            $this->_provider = ues::create_provider();
 
         } catch (Exception $e) {
-            $a = cps::translate_error($e);
+            $a = ues::translate_error($e);
 
-            $this->errors[] = cps::_s('provider_cron_problem', $a);
+            $this->errors[] = ues::_s('provider_cron_problem', $a);
         }
     }
 
@@ -72,16 +72,16 @@ class enrol_cps_plugin extends enrol_plugin {
     }
 
     private function handle_automatic_errors() {
-        $errors = cps_error::get_all();
+        $errors = ues_error::get_all();
 
         $error_threshold = $this->setting('error_threshold');
 
         if (count($errors) > $error_threshold) {
-            $this->errors[] = cps::_s('error_threshold_log');
+            $this->errors[] = ues::_s('error_threshold_log');
             return;
         }
 
-        cps::reprocess_errors($errors, true);
+        ues::reprocess_errors($errors, true);
     }
 
     public function cron() {
@@ -104,7 +104,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $how_long = microtime_diff($start, $end);
 
             $this->log('------------------------------------------------');
-            $this->log('CPS enrollment took: ' . $how_long . ' secs');
+            $this->log('UES enrollment took: ' . $how_long . ' secs');
             $this->log('------------------------------------------------');
         }
 
@@ -123,7 +123,7 @@ class enrol_cps_plugin extends enrol_plugin {
 
             foreach ($admins as $admin) {
                 email_to_user($admin, $CFG->noreplyaddress,
-                    'CPS Enrollment Log', $email_text);
+                    'UES Log', $email_text);
             }
         }
 
@@ -132,16 +132,16 @@ class enrol_cps_plugin extends enrol_plugin {
 
             foreach ($admins as $admin) {
                 email_to_user($admin, $CFG->noreplyaddress,
-                    '[SEVERE] CPS Enrollment Errors', $error_text);
+                    '[SEVERE] UES Errors', $error_text);
             }
         }
     }
 
     public function setting($key, $value = null) {
         if ($value !== null) {
-            return set_config($key, $value, 'enrol_cps');
+            return set_config($key, $value, 'enrol_ues');
         } else {
-            return get_config('enrol_cps', $key);
+            return get_config('enrol_ues', $key);
         }
     }
 
@@ -151,7 +151,7 @@ class enrol_cps_plugin extends enrol_plugin {
 
         $provider_name = $this->provider()->get_name();
 
-        $this->log('Pulling information from ' . cps::_s($provider_name . '_name'));
+        $this->log('Pulling information from ' . ues::_s($provider_name . '_name'));
         $this->process_all();
         $this->log('------------------------------------------------');
 
@@ -164,11 +164,11 @@ class enrol_cps_plugin extends enrol_plugin {
     }
 
     public function handle_enrollments() {
-        $pending = cps_section::get_all(array('status' => cps::PENDING));
+        $pending = ues_section::get_all(array('status' => ues::PENDING));
 
         $this->handle_pending_sections($pending);
 
-        $processed = cps_section::get_all(array('status' => cps::PROCESSED));
+        $processed = ues_section::get_all(array('status' => ues::PROCESSED));
 
         $this->handle_processed_sections($processed);
     }
@@ -190,7 +190,7 @@ class enrol_cps_plugin extends enrol_plugin {
             return;
         }
 
-        $departments = cps_course::flatten_departments($process_courses);
+        $departments = ues_course::flatten_departments($process_courses);
 
         foreach ($departments as $department => $courseids) {
             $filters = array(
@@ -198,7 +198,7 @@ class enrol_cps_plugin extends enrol_plugin {
                 'courseid IN ('.implode(',', $courseids).')',
             );
 
-            $current_sections = cps_section::get_select($filters);
+            $current_sections = ues_section::get_select($filters);
 
             $this->process_enrollment_by_department(
                 $semester, $department, $current_sections
@@ -208,7 +208,7 @@ class enrol_cps_plugin extends enrol_plugin {
 
     public function get_semesters($time) {
         $ninety_days = 24 * 90 * 60 * 60;
-        $now = cps::format_time($time - $ninety_days);
+        $now = ues::format_time($time - $ninety_days);
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
@@ -220,7 +220,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $this->process_semesters($semesters);
 
             $sems_in = function ($time) {
-                return cps_semester::in_session($time);
+                return ues_semester::in_session($time);
             };
 
             $processed_semesters = $sems_in($time) + $sems_in($time + $ninety_days);
@@ -245,7 +245,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $this->errors[] = 'Unable to process courses for ' . $semester;
 
             // Queue up errors
-            cps_error::courses($semester)->save();
+            ues_error::courses($semester)->save();
 
             return array();
         }
@@ -259,14 +259,14 @@ class enrol_cps_plugin extends enrol_plugin {
             $teachers = $teacher_source->teachers($semester, $department);
             $students = $student_source->students($semester, $department);
 
-            $sectionids = cps_section::ids_by_course_department($semester, $department);
+            $sectionids = ues_section::ids_by_course_department($semester, $department);
 
             $filter = array('sectionid IN ('.$sectionids.')');
-            $current_teachers = cps_teacher::get_select($filter);
-            $current_students = cps_student::get_select($filter);
+            $current_teachers = ues_teacher::get_select($filter);
+            $current_students = ues_student::get_select($filter);
 
             $ids_param = array('id IN ('.$sectionids.')');
-            $all_sections = cps_section::get_select($ids_param);
+            $all_sections = ues_section::get_select($ids_param);
 
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
             $this->process_students_by_department($semester, $department, $students, $current_students);
@@ -283,8 +283,8 @@ class enrol_cps_plugin extends enrol_plugin {
             // Drop remaining
             $remaining = implode(', ', array_keys($all_sections));
             if (!empty($remaining)) {
-                cps_section::update_select(
-                    array('status' => cps::PENDING),
+                ues_section::update_select(
+                    array('status' => ues::PENDING),
                     array('id IN ('. $remaining .')')
                 );
             }
@@ -293,7 +293,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $info = "$semester $department";
             $this->errors[] = 'Failed to process enrollment for ' . $info;
 
-            cps_error::department($semester, $department)->save();
+            ues_error::department($semester, $department)->save();
         }
     }
 
@@ -312,7 +312,7 @@ class enrol_cps_plugin extends enrol_plugin {
                 'cou_number' => $user->cou_number
             );
 
-            $course = cps_course::get($course_params);
+            $course = ues_course::get($course_params);
 
             if (empty($course)) {
                 continue;
@@ -324,7 +324,7 @@ class enrol_cps_plugin extends enrol_plugin {
                 'sec_number' => $user->sec_number
             );
 
-            $section = cps_section::get($section_params);
+            $section = ues_section::get($section_params);
 
             if (empty($section)) {
                 continue;
@@ -348,17 +348,17 @@ class enrol_cps_plugin extends enrol_plugin {
                     'session_key' => $semester->session_key
                 );
 
-                $cps = cps_semester::upgrade_and_get($semester, $params);
+                $ues = ues_semester::upgrade_and_get($semester, $params);
 
-                if (empty($cps->classes_start)) {
+                if (empty($ues->classes_start)) {
                     continue;
                 }
 
-                $cps->save();
+                $ues->save();
 
-                events_trigger('cps_semester_process', $cps);
+                events_trigger('ues_semester_process', $ues);
 
-                $processed[] = $cps;
+                $processed[] = $ues;
             } catch (Exception $e) {
                 $this->errors[] = $e->getMessage();
             }
@@ -377,37 +377,37 @@ class enrol_cps_plugin extends enrol_plugin {
                     'cou_number' => $course->cou_number
                 );
 
-                $cps_course = cps_course::upgrade_and_get($course, $params);
+                $ues_course = ues_course::upgrade_and_get($course, $params);
 
-                $cps_course->save();
+                $ues_course->save();
 
-                events_trigger('cps_course_process', $cps_course);
+                events_trigger('ues_course_process', $ues_course);
 
                 $processed_sections = array();
-                foreach ($cps_course->sections as $section) {
+                foreach ($ues_course->sections as $section) {
                     $params = array(
-                        'courseid' => $cps_course->id,
+                        'courseid' => $ues_course->id,
                         'semesterid' => $semester->id,
                         'sec_number' => $section->sec_number
                     );
 
-                    $cps_section = cps_section::upgrade_and_get($section, $params);
+                    $ues_section = ues_section::upgrade_and_get($section, $params);
 
-                    if (empty($cps_section->id)) {
-                        $cps_section->courseid = $cps_course->id;
-                        $cps_section->semesterid = $semester->id;
-                        $cps_section->status = cps::PENDING;
+                    if (empty($ues_section->id)) {
+                        $ues_section->courseid = $ues_course->id;
+                        $ues_section->semesterid = $semester->id;
+                        $ues_section->status = ues::PENDING;
 
-                        $cps_section->save();
+                        $ues_section->save();
                     }
 
-                    $processed_sections[] = $cps_section;
+                    $processed_sections[] = $ues_section;
                 }
 
                 // Mutating sections tied to course
-                $cps_course->sections = $processed_sections;
+                $ues_course->sections = $processed_sections;
 
-                $processed[] = $cps_course;
+                $processed[] = $ues_course;
             } catch (Exception $e) {
                 $this->errors[] = $e->getMessage();
             }
@@ -429,8 +429,8 @@ class enrol_cps_plugin extends enrol_plugin {
             $students = $student_source->students($semester, $course, $section);
 
             $filter = array('sectionid' => $section->id);
-            $current_teachers = cps_teacher::get_all($filter);
-            $current_students = cps_student::get_all($filter);
+            $current_teachers = ues_teacher::get_all($filter);
+            $current_students = ues_student::get_all($filter);
 
             $this->process_teachers($section, $teachers, $current_teachers);
             $this->process_students($section, $students, $current_students);
@@ -442,16 +442,16 @@ class enrol_cps_plugin extends enrol_plugin {
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
 
-            cps_error::section($section)->save();
+            ues_error::section($section)->save();
         }
     }
 
     private function release($type, $users) {
         foreach ($users as $user) {
-            $user->status = cps::PENDING;
+            $user->status = ues::PENDING;
             $user->save();
 
-            events_trigger('cps_' . $type . '_release', $user);
+            events_trigger('ues_' . $type . '_release', $user);
         }
     }
 
@@ -460,11 +460,11 @@ class enrol_cps_plugin extends enrol_plugin {
         // Take into consideration outside forces manipulating
         // processed numbers through event handlers
         $by_processed = array(
-            "status IN ('". cps::PROCESSED . "', '" . cps::ENROLLED ."')",
+            "status IN ('". ues::PROCESSED . "', '" . ues::ENROLLED ."')",
             'sectionid = ' .$section->id
         );
 
-        $processed_teachers = cps_teacher::count_select($by_processed);
+        $processed_teachers = ues_teacher::count_select($by_processed);
 
         // A section _can_ be processed only if they have a teacher
         if (!empty($processed_teachers)) {
@@ -477,10 +477,10 @@ class enrol_cps_plugin extends enrol_plugin {
             $count = function ($type) use ($section) {
                 $enrollment = array(
                     'sectionid = '.$section->id,
-                    "status IN ('".cps::PENDING."','".cps::PROCESSED."')"
+                    "status IN ('".ues::PENDING."','".ues::PROCESSED."')"
                 );
 
-                $class = 'cps_'.$type;
+                $class = 'ues_'.$type;
 
                 return $class::count_select($enrollment);
             };
@@ -488,11 +488,11 @@ class enrol_cps_plugin extends enrol_plugin {
             $will_enroll = ($count('teacher') or $count('student'));
 
             if ($will_enroll) {
-                $section->status = cps::PROCESSED;
+                $section->status = ues::PROCESSED;
             }
 
             // Allow outside interaction
-            events_trigger('cps_section_process', $section);
+            events_trigger('ues_section_process', $section);
 
             if ($previous_status != $section->status) {
                 $section->save();
@@ -524,14 +524,14 @@ class enrol_cps_plugin extends enrol_plugin {
 
                 $course = $section->moodle();
 
-                $last_section = cps_section::count($params) == 1;
+                $last_section = ues_section::count($params) == 1;
 
-                $cps_course = $section->course();
+                $ues_course = $section->course();
 
-                $group = $this->manifest_group($course, $cps_course, $section);
+                $group = $this->manifest_group($course, $ues_course, $section);
 
                 foreach (array('student', 'teacher') as $type) {
-                    $class = 'cps_' . $type;
+                    $class = 'ues_' . $type;
 
                     $params = array(
                         'sectionid' => $section->id, 'status' => 'enrolled'
@@ -553,12 +553,12 @@ class enrol_cps_plugin extends enrol_plugin {
 
                     $this->log('Unloading ' . $course->idnumber);
 
-                    events_trigger('cps_course_severed', $course);
+                    events_trigger('ues_course_severed', $course);
                 }
 
                 $section->idnumber = null;
             }
-            $section->status = cps::SKIPPED;
+            $section->status = ues::SKIPPED;
             $section->save();
         }
 
@@ -571,7 +571,7 @@ class enrol_cps_plugin extends enrol_plugin {
         }
 
         foreach ($sections as $section) {
-            if ($section->status == cps::PENDING) {
+            if ($section->status == ues::PENDING) {
                 continue;
             }
 
@@ -582,7 +582,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $success = $this->manifestation($semester, $course, $section);
 
             if ($success) {
-                $section->status = cps::MANIFESTED;
+                $section->status = ues::MANIFESTED;
                 $section->save();
             }
         }
@@ -596,7 +596,7 @@ class enrol_cps_plugin extends enrol_plugin {
         $instances = enrol_get_instances($courseid, true);
 
         $attempt = array_filter($instances, function($in) {
-            return $in->enrol == 'cps';
+            return $in->enrol == 'ues';
         });
 
         // Cannot enrol without an instance
@@ -620,17 +620,17 @@ class enrol_cps_plugin extends enrol_plugin {
             'primary_flag' => 1
         );
 
-        $new_primary = cps_teacher::get($teacher_params + array(
-            'status' => cps::PROCESSED
+        $new_primary = ues_teacher::get($teacher_params + array(
+            'status' => ues::PROCESSED
         ));
 
-        $old_primary = cps_teacher::get($teacher_params + array(
-            'status' => cps::PENDING
+        $old_primary = ues_teacher::get($teacher_params + array(
+            'status' => ues::PENDING
         ));
 
         // Campuses may want to handle primary instructor changes differently
         if ($new_primary and $old_primary) {
-            events_trigger('cps_primary_change', array(
+            events_trigger('ues_primary_change', array(
                 'section' => $section,
                 'old_teacher' => $old_teacher,
                 'new_teacher' => $new_teacher
@@ -651,14 +651,14 @@ class enrol_cps_plugin extends enrol_plugin {
         $general_params = array('sectionid' => $section->id);
 
         $actions = array(
-            cps::PENDING => 'unenroll',
-            cps::PROCESSED => 'enroll'
+            ues::PENDING => 'unenroll',
+            ues::PROCESSED => 'enroll'
         );
 
         $unenroll_count = $enroll_count = 0;
 
         foreach (array('teacher', 'student') as $type) {
-            $class = 'cps_' . $type;
+            $class = 'ues_' . $type;
 
             foreach ($actions as $status => $action) {
                 $action_params = $general_params + array('status' => $status);
@@ -699,15 +699,15 @@ class enrol_cps_plugin extends enrol_plugin {
 
             groups_add_member($group->id, $user->userid);
 
-            $user->status = cps::ENROLLED;
+            $user->status = ues::ENROLLED;
             $user->save();
 
             $event_params = array(
                 'group' => $group,
-                'cps_user' => $user
+                'ues_user' => $user
             );
 
-            events_trigger('cps_' . $shortname . '_enroll', $event_params);
+            events_trigger('ues_' . $shortname . '_enroll', $event_params);
         }
     }
 
@@ -721,20 +721,20 @@ class enrol_cps_plugin extends enrol_plugin {
         foreach ($users as $user) {
             $shortname = $this->determine_role($user);
 
-            $class = 'cps_' . $shortname;
+            $class = 'ues_' . $shortname;
 
             $roleid = $this->setting($shortname . '_role');
 
             groups_remove_member($group->id, $user->userid);
 
-            $to_status = $user->status == cps::PENDING ?
-                cps::UNENROLLED :
-                cps::PROCESSED;
+            $to_status = $user->status == ues::PENDING ?
+                ues::UNENROLLED :
+                ues::PROCESSED;
 
             $user->status = $to_status;
             $user->save();
 
-            $sections = $user->sections_by_status(cps::ENROLLED);
+            $sections = $user->sections_by_status(ues::ENROLLED);
 
             $enrolled_sections = array_filter($sections, function($section) use ($course) {
                 return $section->idnumber == $course->idnumber;
@@ -744,13 +744,13 @@ class enrol_cps_plugin extends enrol_plugin {
                 $this->unenrol_user($instance, $user->userid, $roleid);
             }
 
-            if ($to_status == cps::UNENROLLED) {
+            if ($to_status == ues::UNENROLLED) {
                 $event_params = array(
                     'group' => $group,
-                    'cps_user' => $user
+                    'ues_user' => $user
                 );
 
-                events_trigger('cps_' . $shortname . '_unenroll', $event_params);
+                events_trigger('ues_' . $shortname . '_unenroll', $event_params);
             }
         }
 
@@ -760,7 +760,7 @@ class enrol_cps_plugin extends enrol_plugin {
             // Going ahead and delete as delete
             groups_delete_group($group);
 
-            events_trigger('cps_group_emptied', $group);
+            events_trigger('ues_group_emptied', $group);
         }
     }
 
@@ -786,15 +786,15 @@ class enrol_cps_plugin extends enrol_plugin {
         $teacher_params = array(
             'sectionid = ' . $section->id,
             'primary_flag = 1',
-            "(status = '".cps::PROCESSED."' OR status = '".cps::ENROLLED."')"
+            "(status = '".ues::PROCESSED."' OR status = '".ues::ENROLLED."')"
         );
 
-        $primary_teacher = current(cps_teacher::get_select($teacher_params));
+        $primary_teacher = current(ues_teacher::get_select($teacher_params));
 
         if (!$primary_teacher) {
             $teacher_params[1] = 'primary_flag = 0';
 
-            $primary_teacher = current(cps_teacher::get_select($teacher_params));
+            $primary_teacher = current(ues_teacher::get_select($teacher_params));
         }
 
         $assumed_idnumber = $semester->year . $semester->name .
@@ -833,7 +833,7 @@ class enrol_cps_plugin extends enrol_plugin {
 
             $pattern = $this->setting('course_shortname');
 
-            $shortname = cps::format_string($pattern, $a);
+            $shortname = ues::format_string($pattern, $a);
 
             $moodle_course->idnumber = $idnumber;
             $moodle_course->shortname = $shortname;
@@ -846,7 +846,7 @@ class enrol_cps_plugin extends enrol_plugin {
             $moodle_course->numsections = $this->setting('course_numsections');
 
             // Actually needs to happen, before the create call
-            events_trigger('cps_course_create', $moodle_course);
+            events_trigger('ues_course_create', $moodle_course);
 
             $moodle_course = create_course($moodle_course);
 
@@ -887,13 +887,13 @@ class enrol_cps_plugin extends enrol_plugin {
 
         $exact_params = $by_idnumber + $by_username;
 
-        $user = cps_user::upgrade($u);
+        $user = ues_user::upgrade($u);
 
-        if ($prev = cps_user::get($exact_params, true)) {
+        if ($prev = ues_user::get($exact_params, true)) {
             $user->id = $prev->id;
-        } else if ($prev = cps_user::get($by_idnumber, true)) {
+        } else if ($prev = ues_user::get($by_idnumber, true)) {
             $user->id = $prev->id;
-        } else if ($prev = cps_user::get($by_username, true)) {
+        } else if ($prev = ues_user::get($by_username, true)) {
             $user->id = $prev->id;
         } else {
             $user->email = $user->username . $this->setting('user_email');
@@ -922,28 +922,28 @@ class enrol_cps_plugin extends enrol_plugin {
     }
 
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
-        $class = 'cps_' . $type;
+        $class = 'ues_' . $type;
 
-        $already_enrolled = array(cps::ENROLLED, cps::PROCESSED);
+        $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
 
         foreach ($users as $user) {
-            $cps_user = $this->create_user($user);
+            $ues_user = $this->create_user($user);
 
             $params = array(
                 'sectionid' => $section->id,
-                'userid' => $cps_user->id
+                'userid' => $ues_user->id
             );
 
             if ($extra_params) {
-                $params += $extra_params($cps_user);
+                $params += $extra_params($ues_user);
             }
 
-            $cps_type = $class::upgrade($cps_user);
+            $ues_type = $class::upgrade($ues_user);
 
-            unset($cps_type->id);
+            unset($ues_type->id);
 
             if ($prev = $class::get($params, true)) {
-                $cps_type->id = $prev->id;
+                $ues_type->id = $prev->id;
                 unset($current_users[$prev->id]);
 
                 if (in_array($prev->status, $already_enrolled)) {
@@ -951,14 +951,14 @@ class enrol_cps_plugin extends enrol_plugin {
                 }
             }
 
-            $cps_type->userid = $cps_user->id;
-            $cps_type->sectionid = $section->id;
-            $cps_type->status = cps::PROCESSED;
+            $ues_type->userid = $ues_user->id;
+            $ues_type->sectionid = $section->id;
+            $ues_type->status = ues::PROCESSED;
 
-            $cps_type->save();
+            $ues_type->save();
 
-            if (empty($prev) or $prev->status == cps::UNENROLLED) {
-                events_trigger($class . '_process', $cps_type);
+            if (empty($prev) or $prev->status == ues::UNENROLLED) {
+                events_trigger($class . '_process', $ues_type);
             }
         }
     }
@@ -982,7 +982,7 @@ class enrol_cps_plugin extends enrol_plugin {
     }
 }
 
-function enrol_cps_supports($feature) {
+function enrol_ues_supports($feature) {
     switch ($feature) {
         case ENROL_RESTORE_TYPE: return ENROL_RESTORE_EXACT;
 

@@ -1,13 +1,13 @@
 <?php
 
-interface cps_error_types {
+interface ues_error_types {
     const COURSE = 'course';
     const DEPARTMENT = 'department';
     const SECTION = 'section';
     const CUSTOM = 'custom';
 }
 
-class cps_error extends cps_external implements cps_error_types {
+class ues_error extends ues_external implements ues_error_types {
     var $name;
     var $params;
     var $timestamp;
@@ -43,22 +43,22 @@ class cps_error extends cps_external implements cps_error_types {
 
         switch ($this->name) {
             case self::COURSE:
-                $semester = cps_semester::get(array('id' => $params['semesterid']));
+                $semester = ues_semester::get(array('id' => $params['semesterid']));
                 $enrollment->process_semester($semester);
                 break;
             case self::DEPARTMENT:
-                $semester = cps_semester::get(array('id' => $params['semesterid']));
+                $semester = ues_semester::get(array('id' => $params['semesterid']));
                 $department = $params['department'];
 
-                $ids = cps_section::ids_by_course_department($semester, $department);
-                $sections = cps_section::get_select(array('id IN ('.$ids.')'));
+                $ids = ues_section::ids_by_course_department($semester, $department);
+                $sections = ues_section::get_select(array('id IN ('.$ids.')'));
 
                 $enrollment->process_enrollment_by_department(
                     $semester, $department, $sections
                 );
                 break;
             case self::SECTION:
-                $section = cps_section::get(array('id' => $params['sectionid']));
+                $section = ues_section::get(array('id' => $params['sectionid']));
 
                 $enrollment->process_enrollment(
                     $section->semester(), $section->course(), $section
@@ -97,7 +97,7 @@ class cps_error extends cps_external implements cps_error_types {
     }
 
     private static function make($type, $params) {
-        $error = new cps_error();
+        $error = new ues_error();
         $error->name = $type;
         $error->params = serialize($params);
         $error->timestamp = time();

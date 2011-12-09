@@ -18,9 +18,9 @@ interface meta_information {
     public static function delete_all_meta(array $params);
 }
 
-abstract class cps_dao extends cps_base implements meta_information {
+abstract class ues_dao extends ues_base implements meta_information {
 
-    /** Public api to interact with cps_dao's */
+    /** Public api to interact with ues_dao's */
     public static function get_meta($parentid) {
         global $DB;
 
@@ -110,18 +110,18 @@ abstract class cps_dao extends cps_base implements meta_information {
     }
 
     public static function metatablename() {
-        return sprintf('enrol_cps_%smeta', self::call('get_name'));
+        return sprintf('enrol_%smeta', get_called_class());
     }
 
     public static function upgrade_and_get($object, array $params) {
         return self::with_class(function ($class) use ($object, $params) {
-            $cps = $class::upgrade($object);
+            $ues = $class::upgrade($object);
 
             if ($prev = $class::get($params)) {
-                $cps->id = $prev->id;
+                $ues->id = $prev->id;
             }
 
-            return $cps;
+            return $ues;
         });
     }
 

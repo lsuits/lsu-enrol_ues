@@ -287,17 +287,17 @@ class fake_enrollment_provider extends enrollment_provider {
     public static function adv_settings() {
         require_once dirname(__FILE__) . '/adminlib.php';
 
-        $_s = cps::gen_str();
+        $_s = ues::gen_str();
 
         return array(
-            new admin_setting_heading('enrol_cps_fake_linkables',
+            new admin_setting_heading('enrol_ues_fake_linkables',
             $_s('fake_linkables'), ''),
 
-            new admin_setting_link('enrol_cps/fake_cleanup',
+            new admin_setting_link('enrol_ues/fake_cleanup',
             $_s('fake_cleanup'), $_s('fake_cleanup_desc'),
-            '/enrol/cps/plugins/fake/cleanup.php'),
+            '/enrol/ues/plugins/fake/cleanup.php'),
 
-            new admin_setting_configcheckbox('enrol_cps/fake_cleanuprun',
+            new admin_setting_configcheckbox('enrol_ues/fake_cleanuprun',
             $_s('fake_cleanuprun'), $_s('fake_cleanuprun_desc'), 0)
         );
     }

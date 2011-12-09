@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') or die();
 
-abstract class cps {
+abstract class ues {
     const PENDING = 'pending';
     const PROCESSED = 'processed';
 
@@ -54,7 +54,7 @@ abstract class cps {
 
     // Note: this will erase the idnumber of the sections
     public static function unenroll_users(array $sections, $silent = true) {
-        $enrol = enrol_get_plugin('cps');
+        $enrol = enrol_get_plugin('ues');
 
         $enrol->is_silent = $silent;
 
@@ -73,13 +73,13 @@ abstract class cps {
         global $CFG;
         require_once $CFG->dirroot . '/course/lib.php';
 
-        $enrol = enrol_get_plugin('cps');
+        $enrol = enrol_get_plugin('ues');
 
         $enrol->is_silent = $silent;
 
         foreach ($sections as $section) {
             foreach (array('teacher', 'student') as $type) {
-                $class = 'cps_' . $type;
+                $class = 'ues_' . $type;
 
                 $class::reset_status($section, self::PROCESSED);
             }
@@ -87,7 +87,7 @@ abstract class cps {
             $section->status = self::PROCESSED;
 
             // Appropriate events needs to be adhered to
-            events_trigger('cps_section_process', $section);
+            events_trigger('ues_section_process', $section);
 
             $section->save();
         }
@@ -98,7 +98,7 @@ abstract class cps {
     }
 
     public static function reprocess_department($semester, $department, $silent = true) {
-        $enrol = enrol_get_plugin('cps');
+        $enrol = enrol_get_plugin('ues');
 
         if (!$enrol or $enrol->errors) {
             return false;
@@ -107,7 +107,7 @@ abstract class cps {
         $enrol->is_silent = $silent;
 
         // Work on making department reprocessing code separate
-        cps_error::department($semester, $department)->handle($enrol);
+        ues_error::department($semester, $department)->handle($enrol);
 
         $enrol->handle_enrollments();
 
@@ -115,13 +115,13 @@ abstract class cps {
     }
 
     public static function reprocess_course($course, $silent = true) {
-        $sections = cps_section::from_course($course, true);
+        $sections = ues_section::from_course($course, true);
 
         return self::reprocess_sections($sections, $silent);
     }
 
     public static function reprocess_sections($sections, $silent = true) {
-        $enrol = enrol_get_plugin('cps');
+        $enrol = enrol_get_plugin('ues');
 
         if (!$enrol or $enrol->errors) {
             return false;
@@ -141,19 +141,19 @@ abstract class cps {
     }
 
     public static function reprocess_for($teacher, $silent = true) {
-        $cps_user = $teacher->user();
+        $ues_user = $teacher->user();
 
         $provider = self::create_provider();
 
         if ($provider and $provider->supports_reverse_lookups()) {
-            $enrol = enrol_get_plugin('cps');
+            $enrol = enrol_get_plugin('ues');
 
             $info = $provider->teacher_info_source();
 
-            $semesters = cps_semester::in_session();
+            $semesters = ues_semester::in_session();
 
             foreach ($semesters as $semester) {
-                $courses = $info->teacher_info($semester, $cps_user);
+                $courses = $info->teacher_info($semester, $ues_user);
 
                 $processed = $enrol->process_courses($semester, $courses);
 
@@ -176,14 +176,14 @@ abstract class cps {
 
     public static function reprocess_errors($errors, $report = false) {
 
-        $enrol = enrol_get_plugin('cps');
+        $enrol = enrol_get_plugin('ues');
 
         foreach ($errors as $error) {
             $enrol->log('Executing error code: ' . $error->name);
 
             if ($error->handle($enrol)) {
                 $enrol->handle_enrollments();
-                cps_error::delete($error->id);
+                ues_error::delete($error->id);
             }
         }
 
@@ -204,16 +204,16 @@ abstract class cps {
         foreach ($semester->sections() as $section) {
             $section_param = array('sectionid' => $section->id);
 
-            $types = array('cps_student', 'cps_teacher');
+            $types = array('ues_student', 'ues_teacher');
 
             // Triggered before db removal and enrollment drop
-            events_trigger('cps_section_drop', $section);
+            events_trigger('ues_section_drop', $section);
 
             // Optimize enrollment deletion
             foreach ($types as $class) {
                 $class::delete_all(array('sectionid' => $section->id));
             }
-            cps_section::delete($section->id);
+            ues_section::delete($section->id);
 
             $count ++;
 
@@ -229,20 +229,20 @@ abstract class cps {
 
         $log('Dropped all ' . $count . " sections...\n");
 
-        events_trigger('cps_semester_drop', $semester);
-        cps_semester::delete($semester->id);
+        events_trigger('ues_semester_drop', $semester);
+        ues_semester::delete($semester->id);
 
         $log('Done');
     }
 
-    public static function gen_str($plugin = 'enrol_cps') {
+    public static function gen_str($plugin = 'enrol_ues') {
         return function ($key, $a = null) use ($plugin) {
             return get_string($key, $plugin, $a);
         };
     }
 
     public static function _s($key, $a=null) {
-        return get_string($key, 'enrol_cps', $a);
+        return get_string($key, 'enrol_ues', $a);
     }
 
     public static function format_string($pattern, $obj) {
@@ -276,14 +276,14 @@ abstract class cps {
         }
 
         $provide_append = function ($name) {
-            return cps::_s("{$name}_name");
+            return ues::_s("{$name}_name");
         };
 
         return array_combine($plugins, array_map($provide_append, $plugins));
     }
 
     public static function provider_class() {
-        $provider_name = get_config('enrol_cps', 'enrollment_provider');
+        $provider_name = get_config('enrol_ues', 'enrollment_provider');
 
         if (!$provider_name) {
             return false;

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="enrol/cps/db" VERSION="20111111" COMMENT="XMLDB file for the CPS enrollment module"
+<XMLDB PATH="enrol/ues/db" VERSION="20111111" COMMENT="XMLDB file for the UES enrollment module"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="enrol_cps_semesters" COMMENT="Table containing the semester information for a campus" NEXT="enrol_cps_courses">
+    <TABLE NAME="enrol_ues_semesters" COMMENT="Table containing the semester information for a campus" NEXT="enrol_ues_courses">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="year"/>
         <FIELD NAME="year" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -21,7 +21,7 @@
         <INDEX NAME="yeanamcamses" UNIQUE="true" FIELDS="year, name, campus, session_key"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_courses" COMMENT="CPS course information (like Moodle course categories)" PREVIOUS="enrol_cps_semesters" NEXT="enrol_cps_sections">
+    <TABLE NAME="enrol_ues_courses" COMMENT="ues course information (like Moodle course categories)" PREVIOUS="enrol_ues_semesters" NEXT="enrol_ues_sections">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="department"/>
         <FIELD NAME="department" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="cou_number"/>
@@ -35,7 +35,7 @@
         <INDEX NAME="depcou" UNIQUE="true" FIELDS="department, cou_number"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_sections" COMMENT="Section information tied to courses (a Moodle course or groups within a course)" PREVIOUS="enrol_cps_courses" NEXT="enrol_cps_teachers">
+    <TABLE NAME="enrol_ues_sections" COMMENT="Section information tied to courses (a Moodle course or groups within a course)" PREVIOUS="enrol_ues_courses" NEXT="enrol_ues_teachers">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="courseid"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="semesterid"/>
@@ -46,14 +46,14 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="courseidtocourses"/>
-        <KEY NAME="courseidtocourses" TYPE="foreign" FIELDS="courseid" REFTABLE="enrol_cps_courses" REFFIELDS="id" PREVIOUS="primary" NEXT="semestersidtosemester"/>
-        <KEY NAME="semestersidtosemester" TYPE="foreign" FIELDS="semesterid" REFTABLE="enrol_cps_semesters" REFFIELDS="id" PREVIOUS="courseidtocourses"/>
+        <KEY NAME="courseidtocourses" TYPE="foreign" FIELDS="courseid" REFTABLE="enrol_ues_courses" REFFIELDS="id" PREVIOUS="primary" NEXT="semestersidtosemester"/>
+        <KEY NAME="semestersidtosemester" TYPE="foreign" FIELDS="semesterid" REFTABLE="enrol_ues_semesters" REFFIELDS="id" PREVIOUS="courseidtocourses"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="semcousec" UNIQUE="true" FIELDS="semesterid, courseid, sec_number"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_teachers" COMMENT="CPS Instructor enrollments" PREVIOUS="enrol_cps_sections" NEXT="enrol_cps_students">
+    <TABLE NAME="enrol_ues_teachers" COMMENT="ues Instructor enrollments" PREVIOUS="enrol_ues_sections" NEXT="enrol_ues_students">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="sectionid"/>
         <FIELD NAME="sectionid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="userid"/>
@@ -63,7 +63,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="sectionidtosection"/>
-        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_cps_sections" REFFIELDS="id" PREVIOUS="primary" NEXT="useridtomoodle"/>
+        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_ues_sections" REFFIELDS="id" PREVIOUS="primary" NEXT="useridtomoodle"/>
         <KEY NAME="useridtomoodle" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id" PREVIOUS="sectionidtosection"/>
       </KEYS>
       <INDEXES>
@@ -73,7 +73,7 @@
         <INDEX NAME="usesecprista" UNIQUE="true" FIELDS="userid, sectionid, primary_flag, status" PREVIOUS="usesecpri"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_students" COMMENT="CPS Students enrollments for sections" PREVIOUS="enrol_cps_teachers" NEXT="enrol_cps_usermeta">
+    <TABLE NAME="enrol_ues_students" COMMENT="ues Students enrollments for sections" PREVIOUS="enrol_ues_teachers" NEXT="enrol_ues_usermeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="sectionid"/>
@@ -84,14 +84,14 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="useridmoodleid"/>
         <KEY NAME="useridmoodleid" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id" PREVIOUS="primary" NEXT="sectionidtosection"/>
-        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_cps_sections" REFFIELDS="id" PREVIOUS="useridmoodleid"/>
+        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_ues_sections" REFFIELDS="id" PREVIOUS="useridmoodleid"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="usesec" UNIQUE="false" FIELDS="userid, sectionid" NEXT="usesecsta"/>
         <INDEX NAME="usesecsta" UNIQUE="true" FIELDS="userid, sectionid, status" PREVIOUS="usesec"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_usermeta" COMMENT="Sub system meta information for Moodle users." PREVIOUS="enrol_cps_students" NEXT="enrol_cps_semestermeta">
+    <TABLE NAME="enrol_ues_usermeta" COMMENT="Sub system meta information for Moodle users." PREVIOUS="enrol_ues_students" NEXT="enrol_ues_semestermeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -104,7 +104,7 @@
         <KEY NAME="useridmoodleid" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id" PREVIOUS="username"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="enrol_cps_semestermeta" COMMENT="Meta information for semesters" PREVIOUS="enrol_cps_usermeta" NEXT="enrol_cps_coursemeta">
+    <TABLE NAME="enrol_ues_semestermeta" COMMENT="Meta information for semesters" PREVIOUS="enrol_ues_usermeta" NEXT="enrol_ues_coursemeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="semesterid"/>
         <FIELD NAME="semesterid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -113,13 +113,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="semestersidtosemester"/>
-        <KEY NAME="semestersidtosemester" TYPE="foreign" FIELDS="semesterid" REFTABLE="enrol_cps_semesters" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="semestersidtosemester" TYPE="foreign" FIELDS="semesterid" REFTABLE="enrol_ues_semesters" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="semnam" UNIQUE="true" FIELDS="semesterid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_coursemeta" COMMENT="Meta information for Courses" PREVIOUS="enrol_cps_semestermeta" NEXT="enrol_cps_sectionmeta">
+    <TABLE NAME="enrol_ues_coursemeta" COMMENT="Meta information for Courses" PREVIOUS="enrol_ues_semestermeta" NEXT="enrol_ues_sectionmeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="courseid"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -128,13 +128,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="courseidtocourses"/>
-        <KEY NAME="courseidtocourses" TYPE="foreign" FIELDS="courseid" REFTABLE="enrol_cps_courses" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="courseidtocourses" TYPE="foreign" FIELDS="courseid" REFTABLE="enrol_ues_courses" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="counam" UNIQUE="true" FIELDS="courseid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_sectionmeta" COMMENT="Meta information for Sections" PREVIOUS="enrol_cps_coursemeta" NEXT="enrol_cps_teachermeta">
+    <TABLE NAME="enrol_ues_sectionmeta" COMMENT="Meta information for Sections" PREVIOUS="enrol_ues_coursemeta" NEXT="enrol_ues_teachermeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="sectionid"/>
         <FIELD NAME="sectionid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -143,13 +143,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="sectionidtosection"/>
-        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_cps_sections" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="sectionidtosection" TYPE="foreign" FIELDS="sectionid" REFTABLE="enrol_ues_sections" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="secnam" UNIQUE="true" FIELDS="sectionid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_teachermeta" COMMENT="Meta Information for teachers" PREVIOUS="enrol_cps_sectionmeta" NEXT="enrol_cps_studentmeta">
+    <TABLE NAME="enrol_ues_teachermeta" COMMENT="Meta Information for teachers" PREVIOUS="enrol_ues_sectionmeta" NEXT="enrol_ues_studentmeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="teacherid"/>
         <FIELD NAME="teacherid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -158,13 +158,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="teacheridtoteachers"/>
-        <KEY NAME="teacheridtoteachers" TYPE="foreign" FIELDS="teacherid" REFTABLE="enrol_cps_teachers" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="teacheridtoteachers" TYPE="foreign" FIELDS="teacherid" REFTABLE="enrol_ues_teachers" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="teanam" UNIQUE="true" FIELDS="teacherid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_studentmeta" COMMENT="Meta Information for students" PREVIOUS="enrol_cps_teachermeta" NEXT="enrol_cps_errors">
+    <TABLE NAME="enrol_ues_studentmeta" COMMENT="Meta Information for students" PREVIOUS="enrol_ues_teachermeta" NEXT="enrol_ues_errors">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="studentid"/>
         <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
@@ -173,13 +173,13 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="studentidtostudent"/>
-        <KEY NAME="studentidtostudent" TYPE="foreign" FIELDS="studentid" REFTABLE="enrol_cps_students" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="studentidtostudent" TYPE="foreign" FIELDS="studentid" REFTABLE="enrol_ues_students" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="stunam" UNIQUE="true" FIELDS="studentid, name"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="enrol_cps_errors" COMMENT="Table used to store error information when processing enrollment." PREVIOUS="enrol_cps_studentmeta">
+    <TABLE NAME="enrol_ues_errors" COMMENT="Table used to store error information when processing enrollment." PREVIOUS="enrol_ues_studentmeta">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="name"/>
         <FIELD NAME="name" TYPE="char" LENGTH="25" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="params"/>

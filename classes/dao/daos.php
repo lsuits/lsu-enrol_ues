@@ -2,7 +2,7 @@
 
 require_once dirname(__FILE__) . '/lib.php';
 
-class cps_semester extends cps_dao {
+class ues_semester extends ues_dao {
     var $sections;
 
     public static function in_session($when = null) {
@@ -20,7 +20,7 @@ class cps_semester extends cps_dao {
 
     public function sections() {
         if (empty($this->sections)) {
-            $sections = cps_section::get_all(array('semesterid' => $this->id));
+            $sections = ues_section::get_all(array('semesterid' => $this->id));
 
             $this->sections = $sections;
         }
@@ -34,7 +34,7 @@ class cps_semester extends cps_dao {
     }
 }
 
-class cps_course extends cps_dao {
+class ues_course extends ues_dao {
     var $sections;
     var $teachers;
     var $student;
@@ -45,7 +45,7 @@ class cps_course extends cps_dao {
         $safe_filter = $filter ? "WHERE department = '".addslashes($filter)."'":'';
 
         $sql = "SELECT DISTINCT(department)
-                    FROM {enrol_cps_courses} $safe_filter ORDER BY department";
+                    FROM {enrol_ues_courses} $safe_filter ORDER BY department";
 
         return array_keys($DB->get_records_sql($sql));
     }
@@ -65,7 +65,7 @@ class cps_course extends cps_dao {
     }
 
     public static function by_department($dept) {
-        return cps_course::get_all(array('department' => $dept), true);
+        return ues_course::get_all(array('department' => $dept), true);
     }
 
     public static function merge_sections(array $sections) {
@@ -92,7 +92,7 @@ class cps_course extends cps_dao {
 
             $filters[] = 'primary_flag = 1';
 
-            $this->teachers = cps_teacher::get_select($filters);
+            $this->teachers = ues_teacher::get_select($filters);
         }
 
         return $this->teachers;
@@ -102,7 +102,7 @@ class cps_course extends cps_dao {
         if (empty($this->students)) {
             $filters = $this->section_filters($semester);
 
-            $this->students = cps_student::get_select($filters);
+            $this->students = ues_student::get_select($filters);
         }
 
         return $this->students;
@@ -116,7 +116,7 @@ class cps_course extends cps_dao {
                 $by_params['semesterid'] = $semester->id;
             }
 
-            $this->sections = cps_section::get_all($by_params);
+            $this->sections = ues_section::get_all($by_params);
         }
 
         return $this->sections;
@@ -131,14 +131,14 @@ class cps_course extends cps_dao {
 
         $filters = array (
             'sectionid IN (' . $sectionids . ')',
-            "(status = '".cps::PROCESSED."' OR status ='".cps::ENROLLED."')"
+            "(status = '".ues::PROCESSED."' OR status ='".ues::ENROLLED."')"
         );
 
         return $filters;
     }
 }
 
-class cps_section extends cps_dao {
+class ues_section extends ues_dao {
     var $semester;
     var $course;
     var $moodle;
@@ -151,7 +151,7 @@ class cps_section extends cps_dao {
     protected function qualified() {
         return array(
             'sectionid = '.$this->id,
-            '(status = "'.cps::ENROLLED.'" OR status = "'.cps::PROCESSED.'")'
+            '(status = "'.ues::ENROLLED.'" OR status = "'.ues::PROCESSED.'")'
         );
     }
 
@@ -169,7 +169,7 @@ class cps_section extends cps_dao {
 
     public function teachers() {
         if (empty($this->teachers)) {
-            $this->teachers = cps_teacher::get_select($this->qualified());
+            $this->teachers = ues_teacher::get_select($this->qualified());
         }
 
         return $this->teachers;
@@ -177,7 +177,7 @@ class cps_section extends cps_dao {
 
     public function students() {
         if (empty($this->students)) {
-            $this->students = cps_student::get_select($this->qualified());
+            $this->students = ues_student::get_select($this->qualified());
         }
 
         return $this->students;
@@ -185,7 +185,7 @@ class cps_section extends cps_dao {
 
     public function semester() {
         if (empty($this->semester)) {
-            $semester = cps_semester::get(array('id' => $this->semesterid));
+            $semester = ues_semester::get(array('id' => $this->semesterid));
 
             $this->semester = $semester;
         }
@@ -195,7 +195,7 @@ class cps_section extends cps_dao {
 
     public function course() {
         if (empty($this->course)) {
-            $course = cps_course::get(array('id' => $this->courseid));
+            $course = ues_course::get(array('id' => $this->courseid));
 
             $this->course = $course;
         }
@@ -239,9 +239,9 @@ class cps_section extends cps_dao {
         return 'Section '. $this->sec_number;
     }
 
-    /** Expects a Moodle course, returns an optionally full cps_section */
+    /** Expects a Moodle course, returns an optionally full ues_section */
     public static function from_course(stdClass $course, $fill = true) {
-        $sections = cps_section::get_all(array('idnumber' => $course->idnumber));
+        $sections = ues_section::get_all(array('idnumber' => $course->idnumber));
 
         if ($sections and $fill) {
             foreach ($sections as $section) {
@@ -257,8 +257,8 @@ class cps_section extends cps_dao {
         global $DB;
 
         $sql = 'SELECT sec.*
-                FROM {enrol_cps_sections} sec,
-                     {enrol_cps_courses} cou
+                FROM {enrol_ues_sections} sec,
+                     {enrol_ues_courses} cou
                      WHERE sec.courseid = cou.id
                        AND sec.semesterid = :semid
                        AND cou.department = :dept';
@@ -269,14 +269,14 @@ class cps_section extends cps_dao {
     }
 }
 
-abstract class user_handler extends cps_dao {
+abstract class user_handler extends ues_dao {
     var $section;
     var $user;
 
     protected function qualified($by_status = null) {
         if (empty($by_status)) {
-            $status = '(status = "'.cps::ENROLLED.'" OR status = "'.
-                cps::PROCESSED.'")';
+            $status = '(status = "'.ues::ENROLLED.'" OR status = "'.
+                ues::PROCESSED.'")';
         } else {
             $status = 'status = "'.$by_status.'"';
         }
@@ -300,7 +300,7 @@ abstract class user_handler extends cps_dao {
 
     public function section() {
         if (empty($this->section)) {
-            $section = cps_section::get(array('id' => $this->sectionid));
+            $section = ues_section::get(array('id' => $this->sectionid));
 
             $this->section = $section;
         }
@@ -310,7 +310,7 @@ abstract class user_handler extends cps_dao {
 
     public function user() {
         if (empty($this->user)) {
-            $user = cps_user::get(array('id' => $this->userid), true,
+            $user = ues_user::get(array('id' => $this->userid), true,
                 'id, firstname, lastname, username, email, idnumber');
 
             $this->user = $user;
@@ -336,7 +336,7 @@ abstract class user_handler extends cps_dao {
     }
 }
 
-class cps_teacher extends user_handler {
+class ues_teacher extends user_handler {
     var $sections;
 
     public function sections($is_primary = false) {
@@ -347,7 +347,7 @@ class cps_teacher extends user_handler {
                 $qualified[] = 'primary_flag = 1';
             }
 
-            $all_teaching = cps_teacher::get_select($qualified);
+            $all_teaching = ues_teacher::get_select($qualified);
             $sections = array();
             foreach ($all_teaching as $teacher) {
                 $section = $teacher->section();
@@ -361,12 +361,12 @@ class cps_teacher extends user_handler {
     }
 }
 
-class cps_student extends user_handler {
+class ues_student extends user_handler {
     var $sections;
 
     public function sections() {
         if (empty($this->sections)) {
-            $all_students = cps_student::get_select($this->qualified());
+            $all_students = ues_student::get_select($this->qualified());
 
             $sections = array();
             foreach ($all_students as $student) {
@@ -381,11 +381,7 @@ class cps_student extends user_handler {
     }
 }
 
-class cps_user extends cps_dao {
-
-    public static function tablename() {
-        return self::get_name();
-    }
+class ues_user extends ues_dao {
 
     private static function qualified($userid = null) {
         if (!$userid) {
@@ -395,14 +391,14 @@ class cps_user extends cps_dao {
 
         $filters = array (
             'userid = ' . $userid,
-            '(status = "'.cps::PROCESSED.'" OR status = "'.cps::ENROLLED.'")'
+            '(status = "'.ues::PROCESSED.'" OR status = "'.ues::ENROLLED.'")'
         );
 
         return $filters;
     }
 
     public static function is_teacher($userid = null) {
-        $count = cps_teacher::count_select(self::qualified($userid));
+        $count = ues_teacher::count_select(self::qualified($userid));
 
         return !empty($count);
     }
@@ -412,7 +408,7 @@ class cps_user extends cps_dao {
             return array();
         }
 
-        $teacher = current(cps_teacher::get_select(self::qualified()));
+        $teacher = current(ues_teacher::get_select(self::qualified()));
 
         return $teacher->sections($primary);
     }

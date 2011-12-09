@@ -23,7 +23,7 @@ class lsu_semesters extends lsu_source implements semester_processor {
     function semesters($date_threshold) {
 
         if (is_numeric($date_threshold)) {
-            $date_threshold = cps::format_time($date_threshold);
+            $date_threshold = ues::format_time($date_threshold);
         }
 
         $xml_semesters = $this->invoke(array($date_threshold));

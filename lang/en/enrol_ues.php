@@ -1,7 +1,7 @@
 <?php
 
-$string['pluginname'] = 'CPS Enrollment';
-$string['pluginname_desc'] = 'The CPS (Course Preference System) enrollment module is a pluggable enrollment system that adheres to common university
+$string['pluginname'] = 'UES Enrollment';
+$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university
 criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.
 
 The Moodle enrollment module will scan for behaviors defined in _{$a}_. A fully defined behavior will show up in the dropdown below.';
@@ -54,7 +54,7 @@ Below are some internal links to manage the enrollment data.
 ';
 
 $string['email_report'] = 'Email Logs';
-$string['email_report_desc'] = 'Email CPS execution log to all admins.
+$string['email_report_desc'] = 'Email UES execution log to all admins.
 
 __Note__: Any errors will be reported regardless.';
 
@@ -98,11 +98,11 @@ $string['provider_cron_problem'] = 'Could not instantiate {$a->pluginname}: {$a-
 
 $string['enrol_settings'] = 'User Enrollment Settings';
 $string['student_role'] = 'Students';
-$string['student_role_desc'] = 'CPS students will be enrolled in this Moodle role';
+$string['student_role_desc'] = 'UES students will be enrolled in this Moodle role';
 $string['editingteacher_role'] = 'Primary Instructor';
-$string['editingteacher_role_desc'] = 'CPS *primary* teachers will be enrolled in this Moodle role';
+$string['editingteacher_role_desc'] = 'UES *primary* teachers will be enrolled in this Moodle role';
 $string['teacher_role'] = 'Non-Primary Instructor';
-$string['teacher_role_desc'] = 'CPS *non-primary* teachers will be enrolled in this Moodle role';
+$string['teacher_role_desc'] = 'UES *non-primary* teachers will be enrolled in this Moodle role';
 
 /** Behavior Strings go here */
 $string['lsu_name'] = 'LSU Enrollment Provider';
@@ -145,7 +145,7 @@ $string['fake_invalid_sections'] = 'Must have at least one section';
 
 $string['fake_linkables'] = 'Fake Provider External Links';
 $string['fake_cleanup'] = 'Cleanup';
-$string['fake_cleanup_desc'] = 'Warning: this runs truncate on all the CPS tables.';
+$string['fake_cleanup_desc'] = 'Warning: this runs truncate on all the UES tables.';
 
 $string['fake_cleanuprun'] = 'Cleanup on run';
 $string['fake_cleanuprun_desc'] = 'Runs _Cleanup_ in provider `postprocess`';

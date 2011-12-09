@@ -24,7 +24,7 @@ abstract class enrollment_provider implements enrollment_factory {
 
     function get_setting($key, $default=false) {
 
-        $attempt = get_config('enrol_cps', $this->setting_key($key));
+        $attempt = get_config('enrol_ues', $this->setting_key($key));
 
         // Try generated setting defaults first
         $reg_settings = $this->settings();

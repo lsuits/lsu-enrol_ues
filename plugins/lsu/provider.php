@@ -71,8 +71,8 @@ class lsu_enrollment_provider extends enrollment_provider {
 
         foreach ($optional_pulls as $key => $default) {
             $k = self::get_name() . '_' . $key;
-            $admin_settings[] = new admin_setting_configcheckbox('enrol_cps/' . $k,
-                cps::_s('lsu_'. $key), cps::_s('lsu_' . $key . '_desc'), $default);
+            $admin_settings[] = new admin_setting_configcheckbox('enrol_ues/' . $k,
+                ues::_s('lsu_'. $key), ues::_s('lsu_' . $key . '_desc'), $default);
         }
 
         return $admin_settings;
@@ -115,7 +115,7 @@ class lsu_enrollment_provider extends enrollment_provider {
     }
 
     function postprocess() {
-        $semesters_in_session = cps_semester::in_session();
+        $semesters_in_session = ues_semester::in_session();
 
         $now = time();
 
@@ -139,7 +139,7 @@ class lsu_enrollment_provider extends enrollment_provider {
             return true;
         }
 
-        $law_semesters = cps_semester::get_all(array(
+        $law_semesters = ues_semester::get_all(array(
             'year' => $lsu_semester->year,
             'name' => $lsu_semester->name,
             'campus' => 'LAW',
@@ -168,14 +168,14 @@ class lsu_enrollment_provider extends enrollment_provider {
                     $handler->function = function($enrol, $params) {
                         extract($params);
 
-                        $semester = cps_semester::get(array('id' => $semesterid));
+                        $semester = ues_semester::get(array('id' => $semesterid));
 
                         $enrol->provider()->process_data_source($source, $semester);
                     };
 
                     $params = array('source' => $source, 'semesterid' => $semester->id);
 
-                    cps_error::custom($handler, $params)->save();
+                    ues_error::custom($handler, $params)->save();
                 }
             }
         }
@@ -189,7 +189,7 @@ class lsu_enrollment_provider extends enrollment_provider {
         foreach ($datas as $data) {
             $params = array('idnumber' => $data->idnumber);
 
-            $user = cps_user::upgrade_and_get($data, $params);
+            $user = ues_user::upgrade_and_get($data, $params);
 
             if (empty($user->id)) {
                 continue;
