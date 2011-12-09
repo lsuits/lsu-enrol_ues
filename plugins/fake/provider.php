@@ -39,7 +39,7 @@ class fake_courses implements course_processor {
     function courses($semester) {
         $alpha = range('a', 'z');
 
-        $course_range = range(0, $this->course_max);
+        $course_range = range(0, $this->course_max - 1);
 
         $courses = array();
 

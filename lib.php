@@ -24,6 +24,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         ues::require_daos();
         require_once $CFG->dirroot . '/group/lib.php';
+        require_once $CFG->dirroot . '/course/lib.php';
     }
 
     function init() {
@@ -815,9 +816,9 @@ class enrol_ues_plugin extends enrol_plugin {
             $user = $primary_teacher->user();
 
             $session = empty($semester->session_key) ? '' :
-                '(' . $semester->session_key . ')';
+                '(' . $semester->session_key . ') ';
 
-            $assumed_fullname = sprintf('%s %s %s %s %s for %s', $semester->year,
+            $assumed_fullname = sprintf('%s %s %s %s%s for %s', $semester->year,
                 $semester->name, $course->department, $session, $course->cou_number,
                 fullname($user));
 

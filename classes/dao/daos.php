@@ -383,6 +383,10 @@ class ues_student extends user_handler {
 
 class ues_user extends ues_dao {
 
+    public static function tablename() {
+        return 'user';
+    }
+
     private static function qualified($userid = null) {
         if (!$userid) {
             global $USER;
