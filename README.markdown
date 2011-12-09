@@ -1,10 +1,9 @@
-# CPS Enrollment Module
+# UES Enrollment Module
 
-The CPS (Course Preference System) enrollment module, is a pluggable
+The UES (Universal Enrollment Service) enrollment module, is a pluggable
 course creation / enrollment system that adheres to some common university
 constraints. The module enhances the Moodle course and user tables with
 some meta information for course creation.
-
 
 Upon installation, the enrollment modules creates tables for the following
 information:
