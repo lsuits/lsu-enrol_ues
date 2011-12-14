@@ -26,6 +26,8 @@ $string['no_errors'] = 'Congratulations! You have handled all the enrollment err
 $string['cron_run'] = 'Daily Cron';
 $string['cron_run_desc'] = 'Enable the daily cron run, or run cron manually.';
 
+$string['could_not_enroll'] = 'Could not process enrollment for courses in {$a->year} {$a->name} {$a->campus} {$a->session_key}. Consider changing the Process by Department setting';
+
 $string['running'] = 'Currently Running';
 $string['running_desc'] = 'If this is checked then it either means that the process is still running, or the process died unexpectingly. Uncheck this if you think the process should be enabled.
 
@@ -78,6 +80,10 @@ $string['course_numsections_desc'] = 'Creates a course with this many sections a
 $string['provider'] = 'Enrollment Provider';
 $string['provider_desc'] = 'This enrollment provider will be used to pull enrollment data.';
 
+$string['process_by_department'] = 'Process by Department';
+$string['process_by_department_desc'] = 'This setting will make UES query enrollment by department
+instead of sections. For network queries, this option may be more efficient.';
+
 $string['provider_problems'] = 'Provider Cannot be Instantiated';
 $string['provider_problems_desc'] = '
 _{$a->pluginname}_ cannot be instantiated with the current settings.
@@ -95,6 +101,9 @@ $string['no_provider'] = 'No Enrollment Provider selected.';
 $string['provider_settings'] = '{$a} Settings';
 
 $string['provider_cron_problem'] = 'Could not instantiate {$a->pluginname}: {$a->problem}. Check provider configuration.';
+$string['enrollment_unsupported'] = 'Provider does not fully support either
+teacher_source() / student_source() or teacher_department_source() / student_department_source()
+enrollment source';
 
 $string['enrol_settings'] = 'User Enrollment Settings';
 $string['student_role'] = 'Students';

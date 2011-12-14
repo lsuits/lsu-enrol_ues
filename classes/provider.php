@@ -57,6 +57,30 @@ abstract class enrollment_provider implements enrollment_factory {
         return null;
     }
 
+    function teacher_source() {
+        return null;
+    }
+
+    function teacher_department_source() {
+        return null;
+    }
+
+    function student_source() {
+        return null;
+    }
+
+    function student_department_source() {
+        return null;
+    }
+
+    function supports_section_lookups() {
+        return !(is_null($this->student_source()) or is_null($this->teacher_source()));
+    }
+
+    function supports_department_lookups() {
+        return !(is_null($this->teacher_source()) or is_null($this->teacher_department_source()));
+    }
+
     function setting_key($key) {
         return $this->get_name() . '_' . $key;
     }

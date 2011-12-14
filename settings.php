@@ -25,6 +25,9 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
         $_s('provider'), $_s('provider_desc'), 'fake', $plugins));
 
+    $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
+        $_s('process_by_department'), $_s('process_by_department_desc'), 1));
+
     $settings->add(new admin_setting_configcheckbox('enrol_ues/cron_run',
         $_s('cron_run'), $_s('cron_run_desc'), 1));
 
@@ -122,7 +125,16 @@ if ($ADMIN->fulltree) {
 
         try {
             // Attempting to create the provider
-            new $provider();
+            $test_provider = new $provider();
+
+            $works = (
+                $test_provider->supports_section_lookups() or
+                $test_provider->supports_department_lookups()
+            );
+
+            if ($works === false) {
+                throw new Exception('enrollment_unsupported');
+            }
         } catch (Exception $e) {
             $a = ues::translate_error($e);
 
