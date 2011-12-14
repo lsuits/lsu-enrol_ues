@@ -107,6 +107,10 @@ abstract class ues {
             return false;
         }
 
+        if (!$enrol->provider()->supports_department_lookups()) {
+            return false;
+        }
+
         $enrol->is_silent = $silent;
 
         // Work on making department reprocessing code separate
@@ -127,6 +131,10 @@ abstract class ues {
         $enrol = enrol_get_plugin('ues');
 
         if (!$enrol or $enrol->errors) {
+            return false;
+        }
+
+        if (!$enrol->provider()->supports_section_lookups()) {
             return false;
         }
 
@@ -319,7 +327,13 @@ abstract class ues {
         $provider_class = self::provider_class();
         $provider_name = $provider_class::get_name();
 
-        $problem = self::_s($provider_name . '_' . $e->getMessage());
+        $code = $e->getMessage();
+
+        if ($code == "enrollment_unsupported") {
+            $problem = self::_s($code);
+        } else {
+            $problem = self::_s($provider_name . '_' . $code);
+        }
 
         $a = new stdClass;
         $a->pluginname = self::_s($provider_name.'_name');

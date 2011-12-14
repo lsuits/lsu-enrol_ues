@@ -33,6 +33,14 @@ class enrol_ues_plugin extends enrol_plugin {
         try {
             $this->_provider = ues::create_provider();
 
+            $works = (
+                $this->_provider->supports_section_lookups() or
+                $this->_provider->supports_department_lookups()
+            );
+
+            if ($works === false) {
+                throw new Exception('enrollment_unsupported');
+            }
         } catch (Exception $e) {
             $a = ues::translate_error($e);
 
@@ -191,7 +199,26 @@ class enrol_ues_plugin extends enrol_plugin {
             return;
         }
 
-        $departments = ues_course::flatten_departments($process_courses);
+        $set_by_department = (bool) $this->setting('process_by_department');
+
+        $supports_department = $this->provider()->supports_department_lookups();
+
+        $supports_section = $this->provider()->supports_section_lookups();
+
+        if ($set_by_department and $supports_department) {
+            $this->process_semester_by_department($semester, $process_courses);
+        } else if (!$set_by_department and $supports_section) {
+            $this->process_semester_by_section($semester, $process_courses);
+        } else {
+            $message = ues::_s('could_not_enroll', $semester);
+
+            $this->log($message);
+            $this->errors[] = $message;
+        }
+    }
+
+    private function process_semester_by_department($semester, $courses) {
+        $departments = ues_course::flatten_departments($courses);
 
         foreach ($departments as $department => $courseids) {
             $filters = array(
@@ -204,6 +231,16 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->process_enrollment_by_department(
                 $semester, $department, $current_sections
             );
+        }
+    }
+
+    private function process_semester_by_section($semester, $courses) {
+        foreach ($courses as $course) {
+            foreach ($course->sections as $section) {
+                $this->process_enrollment(
+                    $semester, $course, $section
+                );
+            }
         }
     }
 
