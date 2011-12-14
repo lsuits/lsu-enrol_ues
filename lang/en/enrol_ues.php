@@ -81,8 +81,13 @@ $string['provider'] = 'Enrollment Provider';
 $string['provider_desc'] = 'This enrollment provider will be used to pull enrollment data.';
 
 $string['process_by_department'] = 'Process by Department';
+$string['process_by_section'] = 'Process by Section';
+$string['reverse_lookups'] = 'Reverse Lookups';
 $string['process_by_department_desc'] = 'This setting will make UES query enrollment by department
 instead of sections. For network queries, this option may be more efficient.';
+
+$string['provider_information'] = 'Provider Information';
+$string['provider_information_desc'] = '__{$a->name}__ supports the following methods: <ul>{$a->list}</ul>';
 
 $string['provider_problems'] = 'Provider Cannot be Instantiated';
 $string['provider_problems_desc'] = '

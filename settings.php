@@ -135,6 +135,25 @@ if ($ADMIN->fulltree) {
             if ($works === false) {
                 throw new Exception('enrollment_unsupported');
             }
+
+            $a = new stdClass;
+            $a->name = $plugin_name;
+            $a->list = '';
+
+            if ($test_provider->supports_department_lookups()) {
+                $a->list .= '<li>' . ues::_s('process_by_department') . '</li>';
+            }
+
+            if ($test_provider->supports_section_lookups()) {
+                $a->list .= '<li>' . ues::_s('process_by_section') . '</li>';
+            }
+
+            if ($test_provider->supports_reverse_lookups()) {
+                $a->list .= '<li>' . ues::_s('reverse_lookups') . '</li>';
+            }
+
+            $settings->add(new admin_setting_heading('provider_information',
+                $_s('provider_information'), $_s('provider_information_desc', $a)));
         } catch (Exception $e) {
             $a = ues::translate_error($e);
 
