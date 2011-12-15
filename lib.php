@@ -245,8 +245,10 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function get_semesters($time) {
-        $ninety_days = 24 * 90 * 60 * 60;
-        $now = ues::format_time($time - $ninety_days);
+        $set_days = (int) $this->setting('sub_days');
+        $sub_days = 24 * $set_days * 60 * 60;
+
+        $now = ues::format_time($time - $sub_days);
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
@@ -261,7 +263,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 return ues_semester::in_session($time);
             };
 
-            $processed_semesters = $sems_in($time) + $sems_in($time + $ninety_days);
+            $processed_semesters = $sems_in($time) + $sems_in($time + $sub_days);
 
             return $processed_semesters;
         } catch (Exception $e) {

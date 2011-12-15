@@ -39,6 +39,9 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('enrol_ues/cron_hour',
         $_s('cron_hour'), $_s('cron_hour_desc'), 2, $hours));
 
+    $settings->add(new admin_setting_configtext('enrol_ues/sub_days',
+        $_s('sub_days'), $_s('sub_days_desc'), 60));
+
     $settings->add(new admin_setting_configtext('enrol_ues/error_threshold',
         $_s('error_threshold'), $_s('error_threshold_desc'), 100));
 

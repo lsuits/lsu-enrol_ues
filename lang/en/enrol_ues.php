@@ -26,6 +26,11 @@ $string['no_errors'] = 'Congratulations! You have handled all the enrollment err
 $string['cron_run'] = 'Daily Cron';
 $string['cron_run_desc'] = 'Enable the daily cron run, or run cron manually.';
 
+$string['sub_days'] = 'Semester in Day Range';
+$string['sub_days_desc'] = 'How many days in the past (and future) should UES query
+the semester source. This might be important for installing the system for the first
+time.';
+
 $string['could_not_enroll'] = 'Could not process enrollment for courses in {$a->year} {$a->name} {$a->campus} {$a->session_key}. Consider changing the Process by Department setting';
 
 $string['running'] = 'Currently Running';
