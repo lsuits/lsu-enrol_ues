@@ -54,9 +54,6 @@ abstract class ues {
 
     // Note: this will erase the idnumber of the sections
     public static function unenroll_users(array $sections, $silent = true) {
-        global $CFG;
-        require_once $CFG->dirroot . '/course/lib.php';
-
         $enrol = enrol_get_plugin('ues');
 
         $enrol->is_silent = $silent;
@@ -73,9 +70,6 @@ abstract class ues {
 
     // Note: this will cause manifestation (course creation if need be)
     public static function enroll_users(array $sections, $silent = true) {
-        global $CFG;
-        require_once $CFG->dirroot . '/course/lib.php';
-
         $enrol = enrol_get_plugin('ues');
 
         $enrol->is_silent = $silent;

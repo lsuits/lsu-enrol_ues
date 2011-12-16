@@ -765,6 +765,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $roleid = $this->setting($shortname . '_role');
 
+            // Ignore pending statuses for users who have no role assignment
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            if (!is_enrolled($context, $user->userid)) {
+                continue;
+            }
+
             groups_remove_member($group->id, $user->userid);
 
             $to_status = $user->status == ues::PENDING ?
@@ -823,18 +829,11 @@ class enrol_ues_plugin extends enrol_plugin {
     private function manifest_course($semester, $course, $section) {
         global $DB;
 
-        $teacher_params = array(
-            'sectionid = ' . $section->id,
-            'primary_flag = 1',
-            "(status = '".ues::PROCESSED."' OR status = '".ues::ENROLLED."')"
-        );
-
-        $primary_teacher = current(ues_teacher::get_select($teacher_params));
+        $primary_teacher = $section->primary();
 
         if (!$primary_teacher) {
-            $teacher_params[1] = 'primary_flag = 0';
 
-            $primary_teacher = current(ues_teacher::get_select($teacher_params));
+            $primary_teacher = current($section->teachers());
         }
 
         $assumed_idnumber = $semester->year . $semester->name .

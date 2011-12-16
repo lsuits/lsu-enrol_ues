@@ -11,7 +11,7 @@ class ues_semester extends ues_dao {
         }
 
         $filters = array(
-            'classes_start <= ' . $when,
+            'classes_start <= '. $when,
             '(grades_due >= ' . $when . ' OR grades_due IS NULL)'
         );
 
@@ -150,8 +150,12 @@ class ues_section extends ues_dao {
 
     protected function qualified() {
         return array(
-            'sectionid = '.$this->id,
-            '(status = "'.ues::ENROLLED.'" OR status = "'.ues::PROCESSED.'")'
+            'sectionid = '. $this->id,
+            '(status = :enrolled OR status = :processed)',
+            'params' => array(
+                'enrolled' => ues::ENROLLED,
+                'processed' => ues::PROCESSED
+            )
         );
     }
 
@@ -275,13 +279,16 @@ abstract class user_handler extends ues_dao {
 
     protected function qualified($by_status = null) {
         if (empty($by_status)) {
-            $status = '(status = "'.ues::ENROLLED.'" OR status = "'.
-                ues::PROCESSED.'")';
+            $status = '(status = :enrolled OR status = :processed)';
+            $params = array('params' => array(
+                'enrolled' => ues::ENROLLED, 'processed' => ues::PROCESSED
+            ));
         } else {
-            $status = 'status = "'.$by_status.'"';
+            $status = 'status = :status';
+            $params = array('params' => array('status' => $by_status));
         }
 
-        return array('userid = ' . $this->userid, $status);
+        return array('userid = ' . $this->userid, $status) + $params;
     }
 
     public function sections_by_status($status) {

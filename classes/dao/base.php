@@ -1,6 +1,24 @@
 <?php
 
 abstract class ues_base {
+
+    private static function select_filters($filters) {
+        if (is_array($filters)) {
+            $paramable = (isset($filters['params']) and is_array($filters['params']));
+
+            $params = $paramable ? $filters['params'] : array();
+
+            unset($filters['params']);
+
+            $where = implode(' AND ', $filters);
+        } else {
+            $where = $filters;
+            $params = array();
+        }
+
+        return array($where, $params);
+    }
+
     /** Protected static helper function to maintain calling class static
      * overrides
      */
@@ -36,9 +54,9 @@ abstract class ues_base {
     protected static function get_select_internal($filters, $trans = null) {
         global $DB;
 
-        $where = is_array($filters) ? implode(' AND ', $filters) : $filters;
+        list($where, $params) = self::select_filters($filters);
 
-        $records = $DB->get_records_select(self::call('tablename'), $where);
+        $records = $DB->get_records_select(self::call('tablename'), $where, $params);
 
         $ret = array();
         foreach ($records as $record) {
@@ -71,9 +89,9 @@ abstract class ues_base {
     public static function count_select($filters = array()) {
         global $DB;
 
-        $where = is_array($filters) ? implode(' AND ', $filters) : $filters;
+        list($where, $params) = self::select_filters($filters);
 
-        return $DB->count_records_select(self::call('tablename'), $where);
+        return $DB->count_records_select(self::call('tablename'), $where, $params);
     }
 
     public static function update(array $fields, array $params = array()) {
@@ -137,7 +155,10 @@ abstract class ues_base {
         $sql .= ' SET ' . $set;
 
         if ($filters) {
-            $sql .= ' WHERE ' . implode(' AND ', $filters);
+            list($where, $params) = self::select_filters($filters);
+            $sql .= ' WHERE ' . $where;
+
+            $set_params += $params;
         }
 
         return $DB->execute($sql, $set_params);
