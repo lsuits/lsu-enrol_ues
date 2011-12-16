@@ -128,7 +128,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $email_text = implode("\n", $this->emaillog);
 
             foreach ($admins as $admin) {
-                email_to_user($admin, $CFG->noreplyaddress,
+                email_to_user($admin, ues::_s('pluginname'),
                     'UES Log', $email_text);
             }
         }
@@ -137,7 +137,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $error_text = implode("\n", $this->errors);
 
             foreach ($admins as $admin) {
-                email_to_user($admin, $CFG->noreplyaddress,
+                email_to_user($admin, ues::_s('pluginname'),
                     '[SEVERE] UES Errors', $error_text);
             }
         }
