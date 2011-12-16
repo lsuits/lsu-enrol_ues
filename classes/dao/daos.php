@@ -402,7 +402,11 @@ class ues_user extends ues_dao {
 
         $filters = array (
             'userid = ' . $userid,
-            '(status = "'.ues::PROCESSED.'" OR status = "'.ues::ENROLLED.'")'
+            '(status = :processed OR status = :enrolled)',
+            'params' => array(
+                'enrolled' => ues::ENROLLED,
+                'processed' => ues::PROCESSED
+            )
         );
 
         return $filters;
