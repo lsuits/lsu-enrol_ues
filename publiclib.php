@@ -183,6 +183,16 @@ abstract class ues {
 
         $enrol = enrol_get_plugin('ues');
 
+        $amount = count($errors);
+
+        if ($amount) {
+            $e_txt = $amount === 1 ? 'error' : 'errors';
+
+            $enrol->log('-------------------------------------');
+            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $e_txt . ':');
+            $enrol->log('-------------------------------------');
+        }
+
         foreach ($errors as $error) {
             $enrol->log('Executing error code: ' . $error->name);
 
