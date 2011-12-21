@@ -124,7 +124,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $admins = get_admins();
 
-        if ($this->setting('email_report')) {
+        if ($this->setting('email_report') and !empty($this->emaillog)) {
             $email_text = implode("\n", $this->emaillog);
 
             foreach ($admins as $admin) {
