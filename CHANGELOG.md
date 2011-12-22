@@ -12,4 +12,4 @@
 
 ## v0.0.1 (Snapshot)
 
-- Initial Release
+- Initial Release (see the [wiki](https://github.com/lsuits/ues/wiki) for more details)
