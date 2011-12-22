@@ -4,6 +4,7 @@
 - Better _from_ field in email log [#3](https://github.com/lsuits/ues/issues/3)
 - Does not send blank emails [#6](https://github.com/lsuits/ues/issues/6)
 - Added sort field to DAO API [#7](https://github.com/lsuits/ues/issues/7)
+- Fixed user creation [#8](https://github.com/lsuits/ues/issues/8)
 - Email header when reprocessing errors
 
 ## v0.0.2 (Snapshot)
