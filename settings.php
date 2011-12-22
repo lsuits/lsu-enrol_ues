@@ -57,6 +57,15 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/user_confirm',
         $_s('user_confirm'), $_s('user_confirm_desc'), 1));
 
+    $auths = get_plugin_list('auth');
+    $ath_options = array();
+    foreach ($auths as $auth => $unused) {
+        $auth_options[$auth] = get_string('pluginname', "auth_{$auth}");
+    }
+
+    $settings->add(new admin_setting_configselect('enrol_ues/user_auth',
+        $_s('user_auth'), $_s('user_auth_desc'), 'manual', $auth_options));
+
     $settings->add(new admin_setting_configtext('enrol_ues/user_city',
         $_s('user_city'), $_s('user_city_desc'), ''));
 

@@ -74,6 +74,8 @@ $string['user_city'] = 'City/town';
 $string['user_city_desc'] = 'The created user will have this default city assigned to them.';
 $string['user_country'] = 'Country';
 $string['user_country_desc'] = 'The created user will have this default country assigned to them.';
+$string['user_auth'] = 'Authentication Method';
+$string['user_auth_desc'] = 'The created user will have this authentication method assigned to them.';
 
 $string['course_settings'] = 'Course Creation Settings';
 $string['course_visible_desc'] = 'Upon creation the course will be visible to students.';

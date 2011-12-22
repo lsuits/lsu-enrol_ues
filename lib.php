@@ -932,11 +932,16 @@ class enrol_ues_plugin extends enrol_plugin {
         } else if ($prev = ues_user::get($by_username, true)) {
             $user->id = $prev->id;
         } else {
+            global $CFG;
+
             $user->email = $user->username . $this->setting('user_email');
             $user->confirmed = $this->setting('user_confirm');
             $user->city = $this->setting('user_city');
             $user->country = $this->setting('user_country');
             $user->firstaccess = time();
+            $user->timecreated = $user->firstaccess;
+            $user->auth = $this->setting('user_auth');
+            $user->mnethostid = $CFG->mnet_localhost_id; // always local user
 
             $created = true;
         }
