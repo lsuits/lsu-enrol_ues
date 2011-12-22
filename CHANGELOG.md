@@ -1,3 +1,7 @@
+## v0.0.4 (Snapshot)
+
+- Made cron interval 12 hours instead of 24
+
 ## v0.0.3 (Snapshot)
 
 - Removed the UES enrollment banner [#2](https://github.com/lsuits/ues/issues/2)
