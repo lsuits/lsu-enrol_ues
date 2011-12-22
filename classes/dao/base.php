@@ -33,13 +33,13 @@ abstract class ues_base {
     }
 
     protected static function get_internal(array $params, $fields = '*', $trans = null) {
-        return current(self::get_all_internal($params, $fields, $trans));
+        return current(self::get_all_internal($params, '', $fields, $trans));
     }
 
-    protected static function get_all_internal(array $params, $fields = '*', $trans = null) {
+    protected static function get_all_internal(array $params, $sort = '', $fields='*', $trans = null) {
         global $DB;
 
-        $res = $DB->get_records(self::call('tablename'), $params, '', $fields);
+        $res = $DB->get_records(self::call('tablename'), $params, $sort, $fields);
 
         $ret = array();
         foreach ($res as $r) {
@@ -51,12 +51,12 @@ abstract class ues_base {
         return $ret;
     }
 
-    protected static function get_select_internal($filters, $trans = null) {
+    protected static function get_select_internal($filters, $sort = '', $trans = null) {
         global $DB;
 
         list($where, $params) = self::select_filters($filters);
 
-        $records = $DB->get_records_select(self::call('tablename'), $where, $params);
+        $records = $DB->get_records_select(self::call('tablename'), $where, $params, $sort);
 
         $ret = array();
         foreach ($records as $record) {

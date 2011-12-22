@@ -15,7 +15,7 @@ class ues_semester extends ues_dao {
             '(grades_due >= ' . $when . ' OR grades_due IS NULL)'
         );
 
-        return self::get_select($filters, true);
+        return self::get_select($filters, '', true);
     }
 
     public function sections() {

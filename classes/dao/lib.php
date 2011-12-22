@@ -41,12 +41,12 @@ abstract class ues_dao extends ues_base implements meta_information {
 
     public static function get(array $params, $meta = false, $fields = '*') {
         return self::with_class(function ($class) use ($params, $meta, $fields) {
-            return current($class::get_all($params, $meta, $fields));
+            return current($class::get_all($params, $meta, '', $fields));
         });
     }
 
-    public static function get_select($filters, $meta = false) {
-        return self::get_select_internal($filters, function ($object) use ($meta) {
+    public static function get_select($filters, $sort = '', $meta = false) {
+        return self::get_select_internal($filters, $sort, function ($object) use ($meta) {
             if ($meta) {
                 $object->fill_meta();
             }
@@ -54,7 +54,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         });
     }
 
-    public static function get_all(array $params = array(), $meta = false, $fields = '*') {
+    public static function get_all(array $params = array(), $meta = false, $sort = '', $fields = '*') {
         global $DB;
 
         $meta_fields = self::call('meta_fields', $params);
@@ -92,12 +92,15 @@ abstract class ues_dao extends ues_base implements meta_information {
                 }
             }
 
+            $order = empty($sort) ? '' : 'ORDER BY ' . $sort;
+
             $sql = "SELECT ". implode(',', $z_fields) . ' FROM ' .
-                implode(',', $tables) . ' WHERE ' . implode(' AND ', $filters);
+                implode(',', $tables) . ' WHERE ' . implode(' AND ', $filters) .
+                $order;
 
             $res = $DB->get_records_sql($sql);
         } else {
-            return self::get_all_internal($params, $fields, $handler);
+            return self::get_all_internal($params, $sort, $fields, $handler);
         }
 
         $ret = array();
