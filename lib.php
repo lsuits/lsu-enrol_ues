@@ -525,6 +525,8 @@ class enrol_ues_plugin extends enrol_plugin {
             $will_enroll = ($count('teacher') or $count('student'));
 
             if ($will_enroll) {
+                // Make sure theIS and will be enrolled
+                ues_teacher::reset_status($section, ues::PROCESSED, ues::ENROLLED);
                 $section->status = ues::PROCESSED;
             }
 
@@ -688,8 +690,8 @@ class enrol_ues_plugin extends enrol_plugin {
         $general_params = array('sectionid' => $section->id);
 
         $actions = array(
-            ues::PENDING => 'unenroll',
-            ues::PROCESSED => 'enroll'
+            ues::PROCESSED => 'enroll',
+            ues::PENDING => 'unenroll'
         );
 
         $unenroll_count = $enroll_count = 0;
@@ -946,18 +948,21 @@ class enrol_ues_plugin extends enrol_plugin {
             $created = true;
         }
 
-        $user->save();
-
-        // TODO: should we fire updated ???
         if (!empty($created)) {
+            $user->save();
+
             events_trigger('user_created', $user);
         } else if ($prev and
             (fullname($prev) != fullname($user) and
             $prev->username != $user->username and
             $prev->idnumber != $user->idnumber)) {
 
+            $user->save();
+
             events_trigger('user_updated', $user);
         }
+
+        // Else means no change, there for nothing to do
 
         return $user;
     }
