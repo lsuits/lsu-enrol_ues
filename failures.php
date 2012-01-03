@@ -59,7 +59,9 @@ if ($posted and $data = data_submitted()) {
             $msg = ues::_s('reprocess_success');
 
             echo $out->notification($msg, 'notifysuccess');
-            echo html_writer::tag('pre', ues::reprocess_errors($posted));
+            echo html_writer::start_tag('pre');
+            ues::reprocess_errors($posted);
+            echo html_writer::end_tag('pre');
         };
     } else {
         $handler = function($out) use ($posted) {

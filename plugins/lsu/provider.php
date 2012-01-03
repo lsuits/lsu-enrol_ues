@@ -165,15 +165,13 @@ class lsu_enrollment_provider extends enrollment_provider {
                 } catch (Exception $e) {
                     $handler = new stdClass;
 
-                    $handler->function = function($enrol, $params) {
-                        extract($params);
+                    $handler->file = '/enrol/ues/plugins/lsu/errors.php';
+                    $handler->function = array(
+                        'lsu_provider_error_handlers',
+                        'reprocess_' . $key
+                    );
 
-                        $semester = ues_semester::get(array('id' => $semesterid));
-
-                        $enrol->provider()->process_data_source($source, $semester);
-                    };
-
-                    $params = array('source' => $source, 'semesterid' => $semester->id);
+                    $params = array('semesterid' => $semester->id);
 
                     ues_error::custom($handler, $params)->save();
                 }
