@@ -1,7 +1,7 @@
 ## v0.0.5 (Snapshot)
 
 - Fixed _Closure Serialization Exception_ in `lsu` provider [#10](https://github.com/lsuits/ues/issues/10)
-- Enrollment order was causing an enrollment exception [#10](https://github.com/lsuits/ues/issues/10)
+- Enrollment order was causing an enrollment exception [0ed6bd](https://github.com/lsuits/ues/commit/0ed6bd2b68496ce6b29d969139ae562c5aa2982a)
 
 ## v0.0.4 (Snapshot)
 
