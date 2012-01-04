@@ -1,3 +1,8 @@
+## v0.0.5 (Snapshot)
+
+- Fixed _Closure Serialization Exception_ in `lsu` provider [#10](https://github.com/lsuits/ues/issues/10)
+- Enrollment order was causing an enrollment exception [#10](https://github.com/lsuits/ues/issues/10)
+
 ## v0.0.4 (Snapshot)
 
 - Made cron interval 12 hours instead of 24
