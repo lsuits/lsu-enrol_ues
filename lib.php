@@ -689,8 +689,8 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($new_primary and $old_primary) {
             events_trigger('ues_primary_change', array(
                 'section' => $section,
-                'old_teacher' => $old_teacher,
-                'new_teacher' => $new_teacher
+                'old_teacher' => $old_primary,
+                'new_teacher' => $new_primary
             ));
         }
 
@@ -904,9 +904,23 @@ class enrol_ues_plugin extends enrol_plugin {
             // Actually needs to happen, before the create call
             events_trigger('ues_course_create', $moodle_course);
 
-            $moodle_course = create_course($moodle_course);
+            try {
+                $moodle_course = create_course($moodle_course);
 
-            $this->add_instance($moodle_course);
+                $this->add_instance($moodle_course);
+            } catch (Exception $e) {
+                $this->errors[] = ues::_s('error_shortname', $moodle_course);
+
+                $course_params = array('shortname' => $moodle_course->shortname);
+                $idnumber = $moodle_course->idnumber;
+
+                $moodle_course = $DB->get_record('course', $course_params);
+                $moodle_course->idnumber = $idnumber;
+
+                if (!$DB->update_record('course', $moodle_course)) {
+                    $this->errors[] = 'Could not update course: ' . $moodle_course->idnumber;
+                }
+            }
         }
 
         if (!$section->idnumber) {

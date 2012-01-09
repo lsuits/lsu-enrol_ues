@@ -52,6 +52,7 @@ $string['error_threshold_log'] = 'There are too many errors to reprocess automat
 
 $string['error_params'] = 'Parameters';
 $string['error_when'] = 'Timestamp';
+$string['error_shortname'] = 'Tried to create a course, but failed because the course appears to have already been created: {$a->shortname}';
 
 $string['general_settings'] = 'General Settings';
 $string['management'] = 'Internal Links';
