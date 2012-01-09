@@ -86,11 +86,13 @@ class ues_course extends ues_dao {
         return $courses;
     }
 
-    public function teachers($semester = null) {
+    public function teachers($semester = null, $is_primary = true) {
         if (empty($this->teachers)) {
             $filters = $this->section_filters($semester);
 
-            $filters[] = 'primary_flag = 1';
+            if ($is_primary) {
+                $filters[] = 'primary_flag = 1';
+            }
 
             $this->teachers = ues_teacher::get_select($filters);
         }
