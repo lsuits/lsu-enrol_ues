@@ -23,6 +23,8 @@ $string['delete_success'] = 'Successfully deleted errors';
 
 $string['no_errors'] = 'Congratulations! You have handled all the enrollment errors.';
 
+$string['already_running'] = 'UES did not run, but it was supposed to. UES may have failed unexpectingly in the last run, or the request to cron.php may have been killed during the enrollment process. An admin should disable the running status by going to Settings -> Site Administration -> Plugins -> Enrolments -> UES Enrollment or $a. Once enabled, UES will run as expected.';
+
 $string['cron_run'] = 'Daily Cron';
 $string['cron_run_desc'] = 'Enable the daily cron run, or run cron manually.';
 

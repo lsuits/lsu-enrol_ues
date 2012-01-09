@@ -70,6 +70,24 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $right_time = ($current_hour == $acceptable_hour);
 
+            $lastrun = (int)$this->get_config('lastcron');
+
+            // An hour grace period
+            $ran_more_than_hour_ago = (time() - $lastrun) > 3600;
+
+            $is_late = ($running and $ran_more_than_hour_ago);
+
+            $is_supposed_to_run = ($right_time and parent::is_cron_required());
+
+            if ($is_late and $is_supposed_to_run) {
+                global $CFG;
+                $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
+                $this->errors[] = ues::_s('already_running', $url);
+
+                $this->email_reports();
+                return false;
+            }
+
             return (
                 $right_time and
                 parent::is_cron_required() and
