@@ -503,6 +503,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private function release($type, $users) {
         foreach ($users as $user) {
+            // No reason to release a second time
+            if ($user->status == ues::PENDING or $user->status == ues::UNENROLLED) {
+                continue;
+            }
+
             $user->status = ues::PENDING;
             $user->save();
 
