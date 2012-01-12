@@ -1,10 +1,14 @@
-## v0.0.5 (Snapshot)
+## v0.0.6 (Snapshot)
 
 - Supports idnumber restoring if the course no longer has one [#12](https://github.com/lsuits/ues/issues/12)
 - Now emails admin if the cron failed and stopped running for a while [#11](https://github.com/lsuits/ues/issues/11)
 - Fixed a bug that would fire release on all released members [abe8d9](https://github.com/lsuits/ues/commit/abe8d9d46e05f631b3ca97d9b8f6d145b02687c5)
 - Fixed _Closure Serialization Exception_ in `lsu` provider [#10](https://github.com/lsuits/ues/issues/10)
 - Enrollment order was causing an enrollment exception [0ed6bd](https://github.com/lsuits/ues/commit/0ed6bd2b68496ce6b29d969139ae562c5aa2982a)
+
+## v0.0.5 (Snapshot)
+
+- Emergency bump
 
 ## v0.0.4 (Snapshot)
 
