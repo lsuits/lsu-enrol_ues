@@ -37,6 +37,9 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('enrol_ues/starttime',
         $_s('starttime'), $_s('starttime_desc'), 0));
 
+    $settings->add(new admin_setting_configtext('enrol_ues/grace_period',
+        $_s('grace_period'), $_s('grace_period_desc'), 3600));
+
     $hours = range(0, 23);
 
     $settings->add(new admin_setting_configselect('enrol_ues/cron_hour',

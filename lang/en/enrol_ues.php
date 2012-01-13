@@ -43,6 +43,9 @@ __Note__: One of the easiest ways to know the process has ended is to enable ema
 $string['starttime'] = 'Last start time';
 $string['starttime_desc'] = 'This the timestamp of its last started cron run. This timestamp differentiates itself from the _lastcron_, as this field represents when the cron started not finished.';
 
+$string['grace_period'] = 'Grace Period';
+$string['grace_period_desc'] = 'Wait this long (in seconds) after the _'.$string['starttime'].'_ before sending out the running notification. Typically, an hour is long enough, but some runs may exceed an hour.';
+
 $string['cron_hour'] = 'Starting Hour';
 $string['cron_hour_desc'] = 'Start the automatic cron on this hour.';
 

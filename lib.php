@@ -70,10 +70,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $right_time = ($current_hour == $acceptable_hour);
 
-            // An hour grace period from last started job
+            // Grace period from last started job
             $starttime = (int)$this->setting('starttime');
+            $grace_period = (int)$this->setting('grace_period');
 
-            $ran_more_than_hour_ago = (time() - $starttime) > 3600;
+            $ran_more_than_hour_ago = (time() - $starttime) > $grace_period;
 
             $is_late = ($running and $ran_more_than_hour_ago);
 
