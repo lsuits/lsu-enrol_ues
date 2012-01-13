@@ -34,6 +34,9 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/running',
         $_s('running'), $_s('running_desc'), 0));
 
+    $settings->add(new admin_setting_configtext('enrol_ues/starttime',
+        $_s('starttime'), $_s('starttime_desc'), 0));
+
     $hours = range(0, 23);
 
     $settings->add(new admin_setting_configselect('enrol_ues/cron_hour',

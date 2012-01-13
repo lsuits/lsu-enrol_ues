@@ -70,10 +70,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $right_time = ($current_hour == $acceptable_hour);
 
-            $lastrun = (int)$this->get_config('lastcron');
+            // An hour grace period from last started job
+            $starttime = (int)$this->setting('starttime');
 
-            // An hour grace period
-            $ran_more_than_hour_ago = (time() - $lastrun) > 3600;
+            $ran_more_than_hour_ago = (time() - $starttime) > 3600;
 
             $is_late = ($running and $ran_more_than_hour_ago);
 
@@ -113,6 +113,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function cron() {
         $this->setting('running', true);
+
+        $this->setting('starttime', time());
 
         if ($this->provider()) {
             $this->log('------------------------------------------------');
