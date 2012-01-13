@@ -1,3 +1,8 @@
+## v0.0.7 (Snapshot)
+
+- Added a setting for a grace period [f5a082](https://github.com/lsuits/ues/commit/f5a082fe3052ad26c54bb22e8b63544c9b046083)
+- Fixed broken running notification [#13](https://github.com/lsuits/ues/issues/13)
+
 ## v0.0.6 (Snapshot)
 
 - Supports idnumber restoring if the course no longer has one [#12](https://github.com/lsuits/ues/issues/12)
