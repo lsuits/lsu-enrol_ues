@@ -736,7 +736,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        if ($unenroll_count and $enroll_count) {
+        if ($unenroll_count or $enroll_count) {
             $this->log('Manifesting enrollment for: ' . $moodle_course->idnumber .
             ' ' . $section->sec_number);
 

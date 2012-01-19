@@ -168,7 +168,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         $to_delete = $DB->get_records(self::call('metatablename'), $params);
 
         foreach ($to_delete as $record) {
-            $query_params[self::call('get_name').'id'] = $record->id;
+            $query_params['id'] = $record->id;
             $DB->delete_records(self::call('metatablename'), $query_params);
         }
     }
