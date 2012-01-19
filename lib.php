@@ -730,8 +730,15 @@ class enrol_ues_plugin extends enrol_plugin {
                 ${$action . '_count'} = $class::count($action_params);
 
                 if (${$action . '_count'}) {
-                    $to_action = $class::get_all($action_params);
-                    $this->{$action . '_users'}($group, $to_action);
+                    // This will only happen if there are no more
+                    // teachers and students are set to be enrolled
+                    // We should log it as a potential error and continue.
+                    try {
+                        $to_action = $class::get_all($action_params);
+                        $this->{$action . '_users'}($group, $to_action);
+                    } catch (Exception $e) {
+                        $this->errors[] = ues::_s('error_no_group', $group);
+                    }
                 }
             }
         }
@@ -807,12 +814,26 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $sections = $user->sections_by_status(ues::ENROLLED);
 
-            $enrolled_sections = array_filter($sections, function($section) use ($course) {
-                return $section->idnumber == $course->idnumber;
-            });
+            $is_enrolled = false;
+            $same_section = false;
 
-            if (!count($enrolled_sections)) {
+            foreach ($sections as $section) {
+                if ($section->idnumber == $course->idnumber) {
+                    $is_enrolled = true;
+                }
+
+                // This user is enroll as another role in the same section
+                if ($section->id == $user->sectionid) {
+                    $same_section = true;
+                }
+            }
+
+            // This user is enrolled as another role (teacher) in the same
+            // section so keep groups alive
+            if (!$is_enrolled) {
                 $this->unenrol_user($instance, $user->userid, $roleid);
+            } else if ($same_section) {
+                groups_add_member($group->id, $user->userid);
             }
 
             if ($to_status == ues::UNENROLLED) {

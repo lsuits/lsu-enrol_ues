@@ -60,6 +60,8 @@ $string['error_params'] = 'Parameters';
 $string['error_when'] = 'Timestamp';
 $string['error_shortname'] = 'Tried to create a course, but failed because the course appears to have already been created: {$a->shortname}';
 
+$string['error_no_group'] = 'UES tried to add someone to the deleted group (name = {$a->name}) for course (id = {$a->courseid}). UES has reason to believe that this group should not be in existence (no more teachers are enrolled). Please verify the UES enrollment data (unmanifested entries) in the selected course, and file a bug report if the data looks sound and should have been manifested.';
+
 $string['general_settings'] = 'General Settings';
 $string['management'] = 'Internal Links';
 $string['management_links'] = '
