@@ -40,6 +40,10 @@ abstract class ues {
         return strftime('%Y-%m-%d', $time);
     }
 
+    public static function where($field) {
+        return new ues_dao_filter($field);
+    }
+
     public static function inject_manifest(array $sections, $inject = null, $silent = true) {
         self::unenroll_users($sections, $silent);
 
