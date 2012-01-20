@@ -31,12 +31,18 @@ class ues_dao_filter {
     protected $fields;
     protected $current;
 
-    function __construct($field) {
-        $this->plus($field);
+    function __construct($field = null) {
+        if ($field) {
+            $this->plus($field);
+        }
     }
 
     function get() {
         return $this->fields;
+    }
+
+    function __toString() {
+        return $this->sql();
     }
 
     function sql($handler = null) {
@@ -68,8 +74,12 @@ class ues_dao_filter {
 
     // Delegate dsl words to current
     function __call($word, $args) {
-        call_user_func_array(array($this->current, $word), $args);
-        return $this;
+        if (method_exists($this->current, $word)) {
+            call_user_func_array(array($this->current, $word), $args);
+            return $this;
+        } else {
+            return $this->plus($word);
+        }
     }
 }
 

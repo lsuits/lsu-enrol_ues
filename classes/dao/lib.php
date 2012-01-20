@@ -54,10 +54,17 @@ abstract class ues_dao extends ues_base implements meta_information {
         });
     }
 
-    public static function get_all(array $params = array(), $meta = false, $sort = '', $fields = '*') {
+    public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*') {
         global $DB;
 
-        $meta_fields = self::call('meta_fields', $params);
+        $is_dao_filter = !is_array($params);
+
+        if ($is_dao_filter) {
+            $obtained = $params->get();
+            $meta_fields = self::call('meta_fields', $obtained);
+        } else {
+            $meta_fields = self::call('meta_fields', $params);
+        }
 
         $tablename = self::call('tablename');
 
@@ -83,12 +90,29 @@ abstract class ues_dao extends ues_base implements meta_information {
                 $letter = $alpha[$i];
                 $tables[] = '{'.self::call('metatablename').'} '.$letter;
                 $filters[] = $letter.'.name' . " = '" . $key ."'";
-                $filters[] = $letter.'.value' . " = '" . $params[$key] . "'";
+
+                if ($is_dao_filter) {
+                    $filters[] = $obtained[$key]->sql($letter.'.value');
+                    unset($obtained[$key]);
+                } else {
+                    $filters[] = $letter.'.value' . " = '" . $params[$key] . "'";
+                    unset($params[$key]);
+                }
 
                 if ($i > 0) {
                     $i --;
                     $prev = $alpha[$i];
                     $filters[] = "{$letter}.{$name}id = {$prev}.{$name}id";
+                }
+            }
+
+            if ($is_dao_filter) {
+                foreach ($obtained as $key => $f) {
+                    $filters[] = $f->sql($key);
+                }
+            } else {
+                foreach ($params as $k => $v) {
+                    $filters[] = $k . " = '$v'";
                 }
             }
 
@@ -253,11 +277,17 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         $name = self::call('get_name');
 
-        return array_filter(array_keys($fields), function ($field) use ($name) {
-            if ($field == 'id') return false;
+        $meta = array();
 
-            return preg_match('/^'.$name.'_/', $field);
-        });
+        foreach (array_keys($fields) as $field) {
+            if ($field == 'id') continue;
+
+            if (preg_match('/^'.$name.'_/', $field)) {
+                $meta[] = $field;
+            }
+        }
+
+        return $meta;
     }
 
 }

@@ -32,14 +32,30 @@ abstract class ues_base {
         });
     }
 
-    protected static function get_internal(array $params, $fields = '*', $trans = null) {
+    protected static function by_id($id) {
+        return self::get_internal(array('id' => $id));
+    }
+
+    protected static function get_internal($params, $fields = '*', $trans = null) {
         return current(self::get_all_internal($params, '', $fields, $trans));
     }
 
-    protected static function get_all_internal(array $params, $sort = '', $fields='*', $trans = null) {
+    protected static function get_all_internal($params = array(), $sort = '', $fields='*', $trans = null) {
         global $DB;
 
-        $res = $DB->get_records(self::call('tablename'), $params, $sort, $fields);
+        $tablename = self::call('tablename');
+
+        if (is_array($params)) {
+            $res = $DB->get_records($tablename, $params, $sort, $fields);
+        } else {
+            $where = $params->sql();
+
+            $order = !empty($sort) ? ' ORDER BY '. $sort : '';
+
+            $sql = 'SELECT '.$fields.' FROM {'.$tablename.'} WHERE '.$where . $order;
+
+            $res = $DB->get_records_sql($sql);
+        }
 
         $ret = array();
         foreach ($res as $r) {

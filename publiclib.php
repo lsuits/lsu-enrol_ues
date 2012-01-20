@@ -27,6 +27,7 @@ abstract class ues {
         require_once $dao . '/lib.php';
         require_once $dao . '/daos.php';
         require_once $dao . '/error.php';
+        require_once $dao . '/filter.php';
     }
 
     public static function require_extensions() {
@@ -40,7 +41,7 @@ abstract class ues {
         return strftime('%Y-%m-%d', $time);
     }
 
-    public static function where($field) {
+    public static function where($field = null) {
         return new ues_dao_filter($field);
     }
 
