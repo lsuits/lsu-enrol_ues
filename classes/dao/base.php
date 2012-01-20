@@ -1,24 +1,6 @@
 <?php
 
 abstract class ues_base {
-
-    private static function select_filters($filters) {
-        if (is_array($filters)) {
-            $paramable = (isset($filters['params']) and is_array($filters['params']));
-
-            $params = $paramable ? $filters['params'] : array();
-
-            unset($filters['params']);
-
-            $where = implode(' AND ', $filters);
-        } else {
-            $where = $filters;
-            $params = array();
-        }
-
-        return array($where, $params);
-    }
-
     /** Protected static helper function to maintain calling class static
      * overrides
      */
@@ -67,50 +49,36 @@ abstract class ues_base {
         return $ret;
     }
 
-    protected static function get_select_internal($filters, $sort = '', $trans = null) {
+    protected static function delete_all_internal($params = array(), $trans = null) {
         global $DB;
 
-        list($where, $params) = self::select_filters($filters);
+        $tablename = self::call('tablename');
 
-        $records = $DB->get_records_select(self::call('tablename'), $where, $params, $sort);
-
-        $ret = array();
-        foreach ($records as $record) {
-            $transformed = self::call('upgrade', $record);
-
-            $ret[$record->id] = $trans ? $trans($transformed) : $transformed;
-        }
-
-        return $ret;
-    }
-
-    protected static function delete_all_internal(array $params, $trans = null) {
-        global $DB;
-
-        $to_delete = $DB->count_records(self::call('tablename'), $params);
+        $to_delete = $DB->count_records($tablename, $params);
 
         if ($trans and $to_delete) {
-            $trans(self::call('tablename'));
+            $trans($tablename);
         }
 
-        return $DB->delete_records(self::call('tablename'), $params);
+        return $DB->delete_records($tablename, $params);
     }
 
-    public static function count(array $params = array()) {
+    public static function count($params = array()) {
         global $DB;
 
-        return $DB->count_records(self::call('tablename'), $params);
+        $tablename = self::call('tablename');
+
+        if (is_array($params)) {
+            return $DB->count_records($tablename, $params);
+        } else {
+            $where = $params->sql();
+            $sql = 'SELECT COUNT(*) FROM {' . $tablename . '} WHERE ' . $where;
+
+            return $DB->count_records_sql($sql);
+        }
     }
 
-    public static function count_select($filters = array()) {
-        global $DB;
-
-        list($where, $params) = self::select_filters($filters);
-
-        return $DB->count_records_select(self::call('tablename'), $where, $params);
-    }
-
-    public static function update(array $fields, array $params = array()) {
+    public static function update(array $fields, $params = array()) {
         global $DB;
 
         list($map, $trans) = self::update_helpers();
@@ -121,16 +89,20 @@ abstract class ues_base {
 
         $sql = 'UPDATE {' . self::call('tablename') .'} SET ' . $set;
 
-        if ($params) {
+        if ($params and is_array($params)) {
             $where_keys = array_keys($params);
             $where_params = array_map($map, $where_keys, $where_keys);
 
             $where = implode(' AND ', $where_params);
 
             $sql .= ' WHERE ' . $where;
+
+            $set_params += $params;
+        } else if($params) {
+            $sql .= ' WHERE ' . $params->sql();
         }
 
-        return $DB->execute($sql, $set_params + $params);
+        return $DB->execute($sql, $set_params);
     }
 
     private static function update_helpers() {
@@ -152,32 +124,6 @@ abstract class ues_base {
         };
 
         return array($map, $trans);
-    }
-
-    public static function update_select($values, $filters = null, $tables = null) {
-        global $DB;
-
-        list($map, $trans) = self::update_helpers();
-
-        $sql = 'UPDATE {' . self::call('tablename') . '}';
-
-        if ($tables) {
-            $sql .= ' this, ' . implode(', ', $tables);
-        }
-
-        list($set_params, $set_keys) = $trans('set', $values);
-        $set = implode(' ,', $set_keys);
-
-        $sql .= ' SET ' . $set;
-
-        if ($filters) {
-            list($where, $params) = self::select_filters($filters);
-            $sql .= ' WHERE ' . $where;
-
-            $set_params += $params;
-        }
-
-        return $DB->execute($sql, $set_params);
     }
 
     public static function get_name() {

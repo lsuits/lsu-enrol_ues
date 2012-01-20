@@ -27,9 +27,11 @@ abstract class ues_dao_helpers {
     }
 }
 
-class ues_dao_filter {
+abstract class ues_dao_filter_builder {
     protected $fields;
     protected $current;
+
+    abstract function create_field($field);
 
     function __construct($field = null) {
         if ($field) {
@@ -63,7 +65,7 @@ class ues_dao_filter {
 
     function plus($field) {
         if (!isset($this->fields[$field])) {
-            $this->current = new ues_dao_field($field);
+            $this->current = $this->create_field($field);
             $this->fields[$field] = $this->current;
         }
 
@@ -74,12 +76,22 @@ class ues_dao_filter {
 
     // Delegate dsl words to current
     function __call($word, $args) {
-        if (method_exists($this->current, $word)) {
-            call_user_func_array(array($this->current, $word), $args);
-            return $this;
-        } else {
-            return $this->plus($word);
+        if (!method_exists($this->current, $word)) {
+            throw new Exception('Trying to build ' . $word . ' but field does not support it');
         }
+
+        call_user_func_array(array($this->current, $word), $args);
+        return $this;
+    }
+
+    function __get($name) {
+        return $this->plus($name);
+    }
+}
+
+class ues_dao_filter extends ues_dao_filter_builder {
+    function create_field($field) {
+        return new ues_dao_field($field);
     }
 }
 
@@ -139,6 +151,11 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
 
     function in() {
         $values = func_get_args();
+
+        if (is_array(current($values))) {
+            $values = current($values);
+        }
+
         $cleaned = array_map(array($this, 'clean'), $values);
 
         return $this->add_to('IN (' . implode(', ', $cleaned) . ')');

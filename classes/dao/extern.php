@@ -9,7 +9,7 @@ abstract class ues_external extends ues_base {
         return current(self::get_all($params, '', $fields));
     }
 
-    public static function delete_all(array $params = array()) {
+    public static function delete_all($params = array()) {
         return self::delete_all_internal($params);
     }
 }

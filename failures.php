@@ -45,8 +45,7 @@ echo $OUTPUT->heading($action);
 if ($reprocess_all or $delete_all) {
     $posted = ues_error::get_all();
 } else if ($errorids and is_array($errorids)) {
-    $ids = implode(',', $errorids);
-    $posted = ues_error::get_select('id IN ('.$ids.')');
+    $posted = ues_error::get_all(ues::where()->id->in($errorids));
 } else {
     $posted = array();
 }

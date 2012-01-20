@@ -13,9 +13,9 @@ interface meta_information {
 
     public static function metatablename();
 
-    public static function delete_meta(array $params);
+    public static function delete_meta($params);
 
-    public static function delete_all_meta(array $params);
+    public static function delete_all_meta($params);
 }
 
 abstract class ues_dao extends ues_base implements meta_information {
@@ -42,15 +42,6 @@ abstract class ues_dao extends ues_base implements meta_information {
     public static function get(array $params, $meta = false, $fields = '*') {
         return self::with_class(function ($class) use ($params, $meta, $fields) {
             return current($class::get_all($params, $meta, '', $fields));
-        });
-    }
-
-    public static function get_select($filters, $sort = '', $meta = false) {
-        return self::get_select_internal($filters, $sort, function ($object) use ($meta) {
-            if ($meta) {
-                $object->fill_meta();
-            }
-            return $object;
         });
     }
 
@@ -158,7 +149,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         return parent::delete($id);
     }
 
-    public static function delete_all(array $params = array()) {
+    public static function delete_all($params = array()) {
 
         $metatable = self::call('metatablename');
         $name = self::call('get_name');
@@ -176,7 +167,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         return self::delete_all_internal($params, $handler);
     }
 
-    public static function delete_meta(array $params) {
+    public static function delete_meta($params = array()) {
         global $DB;
 
         $meta_fields = self::call('meta_fields', $params);
@@ -197,7 +188,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
     }
 
-    public static function delete_all_meta(array $params = array()) {
+    public static function delete_all_meta($params = array()) {
         global $DB;
 
         $to_delete = $DB->get_records(self::call('tablename'), $params);
