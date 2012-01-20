@@ -277,7 +277,7 @@ class lsu_students extends lsu_source implements student_processor {
             $student->username = (string) $xml_student->PRIMARY_ACCESS_ID;
             $student->firstname = $first;
             $student->lastname = $last;
-            $student->user_ferpa = (string) $xml_student->WITHHOLD_DIR_FLG == 'P' ? 1 : 0;
+            $student->user_ferpa = trim((string)$xml_student->WITHHOLD_DIR_FLG) == 'P' ? 1 : 0;
 
             $students[] = $student;
         }
@@ -313,8 +313,8 @@ class lsu_student_data extends lsu_source {
             $stud_data->user_college = (string) $xml_student_data->COLLEGE_CODE;
             $stud_data->user_major = (string) $xml_student_data->CURRIC_CODE;
             $stud_data->user_reg_status = $reg == 'null' ? NULL : $this->parse_date($reg);
-            $stud_data->user_keypadid = (string) $xml_student_data->KEYPADID;
-            $stud_data->idnumber = (string) $xml_student_data->LSU_ID;
+            $stud_data->user_keypadid = (string) $xml_student_data->KEYPAD_ID;
+            $stud_data->idnumber = trim((string)$xml_student_data->LSU_ID);
 
             $student_data[$stud_data->idnumber] = $stud_data;
         }
