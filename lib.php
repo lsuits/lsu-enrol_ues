@@ -240,7 +240,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         foreach ($departments as $department => $courseids) {
             $filters = ues::where()
-                ->semesterid->equal($semesterid)
+                ->semesterid->equal($semester->id)
                 ->courseid->in($courseids);
 
             $current_sections = ues_section::get_all($filters);
