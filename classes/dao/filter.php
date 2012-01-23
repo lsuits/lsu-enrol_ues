@@ -40,6 +40,10 @@ abstract class ues_dao_filter_builder {
     }
 
     function get() {
+        if (empty($this->fields)) {
+            throw new Exception("Intent to filter, but no fields specified");
+        }
+
         return $this->fields;
     }
 
@@ -48,10 +52,6 @@ abstract class ues_dao_filter_builder {
     }
 
     function sql($handler = null) {
-        if (empty($this->fields)) {
-            throw new Exception("Intent to filter, but no fields specified");
-        }
-
         $transform = function($field) use ($handler) {
             list($key, $built) = $field->get();
 
@@ -62,7 +62,7 @@ abstract class ues_dao_filter_builder {
             return $field->sql($key);
         };
 
-        $transformed = array_map($transform, $this->fields);
+        $transformed = array_map($transform, $this->get());
 
         return implode(' AND ', $transformed);
     }
