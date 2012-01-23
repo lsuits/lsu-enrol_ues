@@ -48,6 +48,10 @@ abstract class ues_dao_filter_builder {
     }
 
     function sql($handler = null) {
+        if (empty($this->fields)) {
+            throw new Exception("Intent to filter, but no fields specified");
+        }
+
         $transform = function($field) use ($handler) {
             list($key, $built) = $field->get();
 
