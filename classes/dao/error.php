@@ -51,7 +51,7 @@ class ues_error extends ues_external implements ues_error_types {
                 $department = $params['department'];
 
                 $ids = ues_section::ids_by_course_department($semester, $department);
-                $sections = ues_section::get_select(array('id IN ('.$ids.')'));
+                $sections = ues_section::get_all(ues::where()->id->in($ids));
 
                 $enrollment->process_enrollment_by_department(
                     $semester, $department, $sections

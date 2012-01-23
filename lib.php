@@ -239,12 +239,11 @@ class enrol_ues_plugin extends enrol_plugin {
         $departments = ues_course::flatten_departments($courses);
 
         foreach ($departments as $department => $courseids) {
-            $filters = array(
-                'semesterid = '.$semester->id,
-                'courseid IN ('.implode(',', $courseids).')',
-            );
+            $filters = ues::where()
+                ->semesterid->equal($semester->id)
+                ->courseid->in($courseids);
 
-            $current_sections = ues_section::get_select($filters);
+            $current_sections = ues_section::get_all($filters);
 
             $this->process_enrollment_by_department(
                 $semester, $department, $current_sections
@@ -319,12 +318,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $sectionids = ues_section::ids_by_course_department($semester, $department);
 
-            $filter = array('sectionid IN ('.$sectionids.')');
-            $current_teachers = ues_teacher::get_select($filter);
-            $current_students = ues_student::get_select($filter);
+            $filter = ues::where('sectionid')->in($sectionids);
+            $current_teachers = ues_teacher::get_all($filter);
+            $current_students = ues_student::get_all($filter);
 
-            $ids_param = array('id IN ('.$sectionids.')');
-            $all_sections = ues_section::get_select($ids_param);
+            $ids_param = ues::where('id')->in($sectionids);
+            $all_sections = ues_section::get_all($ids_param);
 
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
             $this->process_students_by_department($semester, $department, $students, $current_students);
@@ -339,11 +338,10 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Drop remaining
-            $remaining = implode(', ', array_keys($all_sections));
-            if (!empty($remaining)) {
-                ues_section::update_select(
+            if (!empty($all_sections)) {
+                ues_section::update(
                     array('status' => ues::PENDING),
-                    array('id IN ('. $remaining .')')
+                    ues::where('id')->in(array_keys($all_sections))
                 );
             }
 
@@ -522,12 +520,11 @@ class enrol_ues_plugin extends enrol_plugin {
         // Process section only if teachers can be processed
         // Take into consideration outside forces manipulating
         // processed numbers through event handlers
-        $by_processed = array(
-            "status IN ('". ues::PROCESSED . "', '" . ues::ENROLLED ."')",
-            'sectionid = ' .$section->id
-        );
+        $by_processed = ues::where()
+            ->status->in(ues::PROCESSED, ues::ENROLLED)
+            ->sectionid->equal($section->id);
 
-        $processed_teachers = ues_teacher::count_select($by_processed);
+        $processed_teachers = ues_teacher::count($by_processed);
 
         // A section _can_ be processed only if they have a teacher
         if (!empty($processed_teachers)) {
@@ -538,20 +535,19 @@ class enrol_ues_plugin extends enrol_plugin {
             $previous_status = $section->status;
 
             $count = function ($type) use ($section) {
-                $enrollment = array(
-                    'sectionid = '.$section->id,
-                    "status IN ('".ues::PENDING."','".ues::PROCESSED."')"
-                );
+                $enrollment = ues::where()
+                    ->sectionid->equal($section->id)
+                    ->status->in(ues::PROCESSED, ues::PENDING);
 
                 $class = 'ues_'.$type;
 
-                return $class::count_select($enrollment);
+                return $class::count($enrollment);
             };
 
             $will_enroll = ($count('teacher') or $count('student'));
 
             if ($will_enroll) {
-                // Make sure theIS and will be enrolled
+                // Make sure the teacher will be enrolled
                 ues_teacher::reset_status($section, ues::PROCESSED, ues::ENROLLED);
                 $section->status = ues::PROCESSED;
             }
