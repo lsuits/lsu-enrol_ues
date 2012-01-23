@@ -1,3 +1,11 @@
+## v0.0.8 (Snapshot)
+
+- Better reprocessing error reporting [#12](https://github.com/lsuits/ues/issues/12)
+- Added the DAO DSL [a73b6cd](https://github.com/lsuits/ues/commit/a73b6cd14dc98c31c4aa5ee7abd5ba54ae57b2b0)
+- Fixed an [lsu provider][lsu] bug for student data [62a0b83](https://github.com/lsuits/ues/commit/62a0b83d68d17cc9aad5834080cf7b4b100c0fe8)
+- Fixed a bug in teacher demotion / promotion [#17](https://github.com/lsuits/ues/issues/17)
+- Fixed a small bug in meta retrieval and reporting [a53b5fe](https://github.com/lsuits/ues/commit/a53b5fe5f1bc83c598c2b307cc55c11d0d0321a1)
+
 ## v0.0.7 (Snapshot)
 
 - Added a setting for a grace period [f5a082](https://github.com/lsuits/ues/commit/f5a082fe3052ad26c54bb22e8b63544c9b046083)
@@ -35,3 +43,5 @@
 ## v0.0.1 (Snapshot)
 
 - Initial Release (see the [wiki](https://github.com/lsuits/ues/wiki) for more details)
+
+[lsu]: https://github.com/lsuits/ues/tree/master/plugins/lsu
