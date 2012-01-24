@@ -54,13 +54,19 @@ abstract class ues_base {
 
         $tablename = self::call('tablename');
 
-        $to_delete = $DB->count_records($tablename, $params);
+        $to_delete = self::count($params);
 
         if ($trans and $to_delete) {
             $trans($tablename);
         }
 
-        return $DB->delete_records($tablename, $params);
+        if (is_array($params)) {
+            return $DB->delete_records($tablename, $params);
+        } else {
+            $sql = 'DELETE FROM {'.$tablename.'} WHERE ' . $params->sql();
+
+            return $DB->execute($sql);
+        }
     }
 
     public static function count($params = array()) {

@@ -45,19 +45,59 @@ abstract class ues_dao extends ues_base implements meta_information {
         });
     }
 
-    public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*', $offset = 0, $limit = 0) {
-        global $DB;
+    private static function meta_sql_builder($params) {
 
-        $is_dao_filter = !is_array($params);
-
-        if ($is_dao_filter) {
-            $obtained = $params->get();
-            $meta_fields = self::call('meta_fields', $obtained);
-        } else {
-            $meta_fields = self::call('meta_fields', $params);
-        }
+        $meta_fields = self::call('meta_fields', $params);
 
         $tablename = self::call('tablename');
+
+        $alpha = range('a', 'x');
+
+        $name = self::call('get_name');
+
+        $tables = array('{'.$tablename.'} z');
+        $filters = array('z.id = a.'.$name.'id');
+
+        foreach ($meta_fields as $i => $key) {
+            $letter = $alpha[$i];
+            $tables[] = '{'.self::call('metatablename').'} '.$letter;
+            $filters[] = $letter.'.name' . " = '" . $key ."'";
+
+            if (method_exists($params[$key], 'sql')) {
+                $filter = $params[$key]->sql($letter.'.value');
+            } else {
+                $filter = $letter.'.value' . " = '" . $params[$key] . "'";
+            }
+
+            $filters[] = $filter;
+
+            unset($params[$key]);
+
+            if ($i > 0) {
+                $i --;
+                $prev = $alpha[$i];
+                $filters[] = "{$letter}.{$name}id = {$prev}.{$name}id";
+            }
+        }
+
+        foreach ($params as $key => $f) {
+            if (method_exists($params[$key], 'sql')) {
+                $filter = $f->sql($key);
+            } else {
+                $filter = "$key = '$f'";
+            }
+
+            $filters[] = $filter;
+        }
+
+        return array(
+            implode(', ', $tables),
+            implode(' AND ', $filters)
+        );
+    }
+
+    public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*', $offset = 0, $limit = 0) {
+        global $DB;
 
         $handler = function ($object) use ($meta) {
             if ($meta) {
@@ -66,54 +106,24 @@ abstract class ues_dao extends ues_base implements meta_information {
             return $object;
         };
 
-        if ($meta_fields) {
+        $contains_meta = self::call('params_contains_meta', $params);
+
+        if ($contains_meta) {
             $z_fields = array_map(function($field) { return 'z.' . $field; },
                 explode(',', $fields));
 
             $alpha = range('a', 'x');
 
-            $name = self::call('get_name');
+            $send = is_array($params) ? $params : $params->get();
 
-            $tables = array('{'.$tablename.'} z');
-            $filters = array('z.id = a.'.self::call('get_name').'id');
-
-            foreach ($meta_fields as $i => $key) {
-                $letter = $alpha[$i];
-                $tables[] = '{'.self::call('metatablename').'} '.$letter;
-                $filters[] = $letter.'.name' . " = '" . $key ."'";
-
-                if ($is_dao_filter) {
-                    $filters[] = $obtained[$key]->sql($letter.'.value');
-                    unset($obtained[$key]);
-                } else {
-                    $filters[] = $letter.'.value' . " = '" . $params[$key] . "'";
-                    unset($params[$key]);
-                }
-
-                if ($i > 0) {
-                    $i --;
-                    $prev = $alpha[$i];
-                    $filters[] = "{$letter}.{$name}id = {$prev}.{$name}id";
-                }
-            }
-
-            if ($is_dao_filter) {
-                foreach ($obtained as $key => $f) {
-                    $filters[] = $f->sql($key);
-                }
-            } else {
-                foreach ($params as $k => $v) {
-                    $filters[] = $k . " = '$v'";
-                }
-            }
+            list($tables, $filters) = self::meta_sql_builder($send);
 
             $order = empty($sort) ? '' : 'ORDER BY ' . $sort;
 
             $sql = "SELECT ". implode(',', $z_fields) . ' FROM ' .
-                implode(',', $tables) . ' WHERE ' . implode(' AND ', $filters) .
-                $order;
+                $tables . ' WHERE ' . $filters . $order;
 
-            $res = $DB->get_records_sql($sql, null, $offset, $limit);
+            $res = $DB->get_records_sql($sql, array(), $offset, $limit);
         } else {
             return self::get_all_internal($params, $sort, $fields, $offset, $limit, $handler);
         }
@@ -125,6 +135,22 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
 
         return $ret;
+    }
+
+    public static function count($params = array()) {
+        global $DB;
+
+        if (self::call('params_contains_meta', $params)) {
+            $send = is_array($params) ? $params : $params->get();
+
+            list($tables, $filters) = self::meta_sql_builder($send);
+
+            $sql = 'SELECT COUNT(*) FROM ' . $tables . ' WHERE ' . $filters;
+
+            return $DB->count_records_sql($sql);
+        } else {
+            return parent::count($params);
+        }
     }
 
     public static function metatablename() {
@@ -154,17 +180,23 @@ abstract class ues_dao extends ues_base implements meta_information {
         $metatable = self::call('metatablename');
         $name = self::call('get_name');
 
-        $handler = function ($tablename) use ($params, $metatable, $name) {
+        $records = self::get_all($params);
+
+        $handler = function ($tablename) use ($records, $metatable, $name) {
             global $DB;
 
-            $to_delete = $DB->get_records($tablename, $params);
-
-            $ids = implode(',', array_keys($to_delete));
+            $ids = implode(',', array_keys($records));
 
             $DB->delete_records_select($metatable, $name.'id in ('.$ids.')');
         };
 
-        return self::delete_all_internal($params, $handler);
+        if (self::call('params_contains_meta', $params)) {
+            $ids = array_keys($records);
+
+            return self::delete_all_internal(ues::where()->id->in($ids), $handler);
+        } else {
+            return self::delete_all_internal($params, $handler);
+        }
     }
 
     public static function delete_meta($params = array()) {
@@ -264,8 +296,19 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
     }
 
-    public static function meta_fields($fields) {
+    public static function params_contains_meta($params) {
+        $name = self::call('get_name');
 
+        foreach ($params as $field => $i) {
+            if (preg_match('/^'.$name.'_/', $field)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function meta_fields($fields) {
         $name = self::call('get_name');
 
         $meta = array();
@@ -280,5 +323,4 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         return $meta;
     }
-
 }
