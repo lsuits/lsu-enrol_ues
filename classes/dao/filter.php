@@ -22,12 +22,12 @@ abstract class ues_dao_helpers {
         } else if(is_null($value)) {
             return 'NULL';
         } else {
-            return "'" . addslashes($value) . "'";
+            return "'" . addslashes(trim($value)) . "'";
         }
     }
 }
 
-abstract class ues_dao_filter_builder {
+abstract class ues_dao_filter_builder implements IteratorAggregate {
     protected $fields;
     protected $current;
 
@@ -37,6 +37,10 @@ abstract class ues_dao_filter_builder {
         if ($field) {
             $this->plus($field);
         }
+    }
+
+    public function getIterator() {
+        return new ArrayIterator($this->get());
     }
 
     function get() {
