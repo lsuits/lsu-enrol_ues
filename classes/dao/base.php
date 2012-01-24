@@ -19,16 +19,16 @@ abstract class ues_base {
     }
 
     protected static function get_internal($params, $fields = '*', $trans = null) {
-        return current(self::get_all_internal($params, '', $fields, $trans));
+        return current(self::get_all_internal($params, '', $fields, 0, 0, $trans));
     }
 
-    protected static function get_all_internal($params = array(), $sort = '', $fields='*', $trans = null) {
+    protected static function get_all_internal($params = array(), $sort = '', $fields='*', $offset = 0, $limit = 0, $trans = null) {
         global $DB;
 
         $tablename = self::call('tablename');
 
         if (is_array($params)) {
-            $res = $DB->get_records($tablename, $params, $sort, $fields);
+            $res = $DB->get_records($tablename, $params, $sort, $fields, $offset, $limit);
         } else {
             $where = $params->sql();
 
@@ -36,7 +36,7 @@ abstract class ues_base {
 
             $sql = 'SELECT '.$fields.' FROM {'.$tablename.'} WHERE '.$where . $order;
 
-            $res = $DB->get_records_sql($sql);
+            $res = $DB->get_records_sql($sql, null, $offset, $limit);
         }
 
         $ret = array();

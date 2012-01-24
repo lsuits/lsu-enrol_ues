@@ -45,7 +45,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         });
     }
 
-    public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*') {
+    public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*', $offset = 0, $limit = 0) {
         global $DB;
 
         $is_dao_filter = !is_array($params);
@@ -113,9 +113,9 @@ abstract class ues_dao extends ues_base implements meta_information {
                 implode(',', $tables) . ' WHERE ' . implode(' AND ', $filters) .
                 $order;
 
-            $res = $DB->get_records_sql($sql);
+            $res = $DB->get_records_sql($sql, null, $offset, $limit);
         } else {
-            return self::get_all_internal($params, $sort, $fields, $handler);
+            return self::get_all_internal($params, $sort, $fields, $offset, $limit, $handler);
         }
 
         $ret = array();
