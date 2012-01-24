@@ -1009,19 +1009,31 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->save();
 
             events_trigger('user_created', $user);
-        } else if ($prev and
-            (fullname($prev) != fullname($user) and
-            $prev->username != $user->username and
-            $prev->idnumber != $user->idnumber)) {
-
+        } else if ($prev and $this->user_changed($prev, $user)) {
             $user->save();
 
             events_trigger('user_updated', $user);
         }
 
-        // Else means no change, there for nothing to do
-
         return $user;
+    }
+
+    private function user_changed($prev, $current) {
+        if (fullname($prev) != fullname($current)) return true;
+
+        if ($prev->idnumber != $current->idnumber) return true;
+
+        if ($prev->username != $current->username) return true;
+
+        $current_meta = $current->meta_fields(get_object_vars($current));
+
+        foreach ($current_meta as $field) {
+            if (!isset($prev->{$field})) return true;
+
+            if ($prev->{$field} != $current->{$field}) return true;
+        }
+
+        return false;
     }
 
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
