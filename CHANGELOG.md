@@ -1,5 +1,6 @@
 ## v0.0.8 (Snapshot)
 
+- Added Limit / offset to retrieval [345502](https://github.com/lsuits/ues/commit/3455022849a14144cf78a48654511b76d31a72a2)
 - Better reprocessing error reporting [#12](https://github.com/lsuits/ues/issues/12)
 - Added the DAO DSL [a73b6cd](https://github.com/lsuits/ues/commit/a73b6cd14dc98c31c4aa5ee7abd5ba54ae57b2b0)
 - Fixed an [lsu provider][lsu] bug for student data [62a0b83](https://github.com/lsuits/ues/commit/62a0b83d68d17cc9aad5834080cf7b4b100c0fe8)
