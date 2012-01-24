@@ -201,7 +201,7 @@ class lsu_students_by_department extends lsu_source implements student_by_depart
             $student->username = (string) $xml_student->PRIMARY_ACCESS_ID;
             $student->firstname = $first;
             $student->lastname = $last;
-            $student->user_ferpa = (string) $xml_student->WITHHOLD_DIR_FLG == 'N' ? 0 : 1;
+            $student->user_ferpa = trim((string)$xml_student->WITHHOLD_DIR_FLG) == 'P' ? 1 : 0;
 
             // Section information
             $student->department = $department;
