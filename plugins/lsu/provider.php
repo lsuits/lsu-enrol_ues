@@ -64,7 +64,8 @@ class lsu_enrollment_provider extends enrollment_provider {
         $optional_pulls = array (
             'student_data' => 1,
             'anonymous_numbers' => 0,
-            'degree_candidates' => 0
+            'degree_candidates' => 0,
+            'sports_information' => 1
         );
 
         $admin_settings = array();
@@ -104,6 +105,10 @@ class lsu_enrollment_provider extends enrollment_provider {
 
     function degree_source() {
         return new lsu_degree($this->username, $this->password, $this->wsdl);
+    }
+
+    function sports_source() {
+        return new lsu_sports($this->username, $this->password, $this->wsdl);
     }
 
     function teacher_department_source() {
@@ -178,6 +183,10 @@ class lsu_enrollment_provider extends enrollment_provider {
                     ues_error::custom($handler, $params)->save();
                 }
             }
+        }
+
+        if ($this->get_setting('sports_information')) {
+
         }
 
         return true;

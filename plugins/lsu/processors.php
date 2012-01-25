@@ -381,52 +381,27 @@ class lsu_anonymous extends lsu_source {
     }
 }
 
-final class lsu_course_cache_strategy extends lsu_source implements lsu_cache_strategy {
-    var $serviceId = 'MOODLE_COURSE_INFO';
+class lsu_sports extends lsu_source {
+    var $serviceId = 'MOODLE_SPORTS';
 
-    public function id() {
-        return 'course_cache';
-    }
+    function student_data($semester) {
+        $term = $this->encode_semester($semester->year, $semester->name);
 
-    public function key($what) {
-        return "$what->department$what->cou_number$what->course_type";
-    }
+        $xml_infos = $this->invoke(array($term));
 
-    public function pull($what) {
-        $course_info = $this->invoke(array(
-            $what->department, $what->cou_number, $what->course_type)
-        )->ROW;
+        $numbers = array();
+        foreach ($xml_infos->ROW as $xml_info) {
+            $number = new stdClass;
 
-        $info = new stdClass;
-        $info->fullname = (string) $course_info->COURSE_TITLE;
-        $info->course_grade_type = (string) $course_info->GRADE_SYSTEM_CODE;
+            $number->idnumber = (string) $xml_info->LSU_ID;
+            $number->user_sport1 = (string) $xml_info->SPORT_CODE_1;
+            $number->user_sport2 = (string) $xml_info->SPORT_CODE_2;
+            $number->user_sport3 = (string) $xml_info->SPORT_CODE_3;
+            $number->user_sport4 = (string) $xml_info->SPORT_CODE_4;
 
-        return $info;
-    }
-}
+            $numbers[$number->idnumber] = $number;
+        }
 
-final class lsu_user_cache_strategy extends lsu_source implements lsu_cache_strategy {
-    var $serviceId = 'MOODLE_PROFILE_INFO';
-
-    public function id() {
-        return 'user_cache';
-    }
-
-    public function key($what) {
-        return $what->idnumber;
-    }
-
-    public function pull($what) {
-        $profile_info = $this->invoke(array($what->idnumber))->ROW;
-
-
-        $info = new stdClass;
-        $info->username = (string) $profile_info->PRIMARY_ACCESS_ID;
-        $info->user_ferpa = (string) $profile_info->WITHHOLD_DIR_FLG == 'P' ? 1 : 0;
-        $info->firstname = $first;
-        $info->lastname = $last;
-
-        return $info;
+        return $numbers;
     }
 }
-
