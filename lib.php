@@ -595,7 +595,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     $class = 'ues_' . $type;
 
                     $params = array(
-                        'sectionid' => $section->id, 'status' => 'enrolled'
+                        'sectionid' => $section->id, 'status' => ues::ENROLLED
                     );
 
                     if ($last_section and $type == 'teacher') {
@@ -617,7 +617,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     events_trigger('ues_course_severed', $course);
                 }
 
-                $section->idnumber = null;
+                $section->idnumber = '';
             }
             $section->status = ues::SKIPPED;
             $section->save();
@@ -886,7 +886,7 @@ class enrol_ues_plugin extends enrol_plugin {
         // Therefore we must check the section's idnumber before creating one
         // Possibility the course was deleted externally
 
-        $idnumber = $section->idnumber ? $section->idnumber : $assumed_idnumber;
+        $idnumber = !empty($section->idnumber) ? $section->idnumber : $assumed_idnumber;
 
         $course_params = array('idnumber' => $idnumber);
 

@@ -203,7 +203,7 @@ class ues_section extends ues_dao {
     }
 
     public function moodle() {
-        if (empty($this->moodle)) {
+        if (empty($this->moodle) and !empty($this->idnumber)) {
             global $DB;
 
             $course_params = array('idnumber' => $this->idnumber);
