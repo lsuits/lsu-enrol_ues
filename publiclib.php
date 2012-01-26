@@ -115,7 +115,13 @@ abstract class ues {
         // Work on making department reprocessing code separate
         ues_error::department($semester, $department)->handle($enrol);
 
-        $enrol->handle_enrollments();
+        $ids = ues_section::ids_by_course_department($semester, $department);
+
+        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
+        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
+
+        $enrol->handle_pending_sections($pending);
+        $enrol->handle_processed_sections($processed);
 
         return true;
     }
@@ -145,7 +151,13 @@ abstract class ues {
             );
         }
 
-        $enrol->handle_enrollments();
+        $ids = array_keys($sections);
+
+        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
+        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
+
+        $enrol->handle_pending_sections($pending);
+        $enrol->handle_processed_sections($processed);
 
         return true;
     }
