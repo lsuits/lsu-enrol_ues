@@ -1,5 +1,6 @@
 ## v0.0.8 (Snapshot)
 
+- Reprocessing no longer steps on nightly [9e1b78e5](https://github.com/lsuits/ues/commit/9e1b78e576361b6ea23c1a3c2db495e3ff24a1bb)
 - Added Limit / offset to retrieval [345502](https://github.com/lsuits/ues/commit/3455022849a14144cf78a48654511b76d31a72a2)
 - Better reprocessing error reporting [#12](https://github.com/lsuits/ues/issues/12)
 - Added the DAO DSL [a73b6cd](https://github.com/lsuits/ues/commit/a73b6cd14dc98c31c4aa5ee7abd5ba54ae57b2b0)
