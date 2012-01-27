@@ -39,7 +39,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         return array_keys($names);
     }
 
-    public static function get(array $params, $meta = false, $fields = '*') {
+    public static function get($params, $meta = false, $fields = '*') {
         return self::with_class(function ($class) use ($params, $meta, $fields) {
             return current($class::get_all($params, $meta, '', $fields));
         });
