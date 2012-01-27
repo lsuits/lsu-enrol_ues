@@ -155,7 +155,8 @@ class lsu_enrollment_provider extends enrollment_provider {
         $attempts = array(
             'student_data' => $this->student_data_source(),
             'anonymous_numbers' => $this->anonymous_source(),
-            'degree_candidates' => $this->degree_source()
+            'degree_candidates' => $this->degree_source(),
+            'sports_information' => $this->sports_source()
         );
 
         foreach ($processed_semesters as $semester) {
@@ -166,6 +167,14 @@ class lsu_enrollment_provider extends enrollment_provider {
                 }
 
                 $enrol->log("Processing $key for $semester...");
+
+                // Clear out sports information on run
+                if ($key == 'sports_information') {
+                    foreach (range(1, 4) as $code) {
+                        $params = array('name' => "user_sport$code");
+                        ues_user::delete_meta($params);
+                    }
+                }
 
                 try {
                     $this->process_data_source($source, $semester);
@@ -183,10 +192,6 @@ class lsu_enrollment_provider extends enrollment_provider {
                     ues_error::custom($handler, $params)->save();
                 }
             }
-        }
-
-        if ($this->get_setting('sports_information')) {
-
         }
 
         return true;

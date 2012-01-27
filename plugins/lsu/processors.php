@@ -363,6 +363,10 @@ class lsu_anonymous extends lsu_source {
     var $serviceId = 'MOODLE_LAW_ANON_NBR';
 
     function student_data($semester) {
+        if ($semester->campus == 'LSU') {
+            return array();
+        }
+
         $term = $this->encode_semester($semester->year, $semester->name);
 
         $xml_numbers = $this->invoke(array($term));
@@ -384,10 +388,29 @@ class lsu_anonymous extends lsu_source {
 class lsu_sports extends lsu_source {
     var $serviceId = 'MOODLE_SPORTS';
 
-    function student_data($semester) {
-        $term = $this->encode_semester($semester->year, $semester->name);
+    function find_season($time) {
+        $now = getdate($time);
 
-        $xml_infos = $this->invoke(array($term));
+        $june = 615;
+        $dec = 1231;
+
+        $cur = (int)($now['mon'] . $now['mday']);
+
+        if ($cur >= $june and $cur <= $dec) {
+            return ($now['year']) . substr($now['year'] + 1, 2);
+        } else {
+            return ($now['year'] - 1) . substr($now['year'], 2);
+        }
+    }
+
+    function student_data($semester) {
+        if ($semester->campus == 'LAW') {
+            return array();
+        }
+
+        $now = time();
+
+        $xml_infos = $this->invoke(array($this->find_season($now)));
 
         $numbers = array();
         foreach ($xml_infos->ROW as $xml_info) {
