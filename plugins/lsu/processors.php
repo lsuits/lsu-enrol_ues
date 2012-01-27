@@ -386,7 +386,7 @@ class lsu_anonymous extends lsu_source {
 }
 
 class lsu_sports extends lsu_source {
-    var $serviceId = 'MOODLE_SPORTS';
+    var $serviceId = 'MOODLE_STUDENTS_ATH';
 
     function find_season($time) {
         $now = getdate($time);
