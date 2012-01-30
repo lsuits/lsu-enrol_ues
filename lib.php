@@ -174,7 +174,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function full_process() {
 
-        $this->provider()->preprocess();
+        $this->provider()->preprocess($this);
 
         $provider_name = $this->provider()->get_name();
 
@@ -185,7 +185,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('Begin manifestation ...');
         $this->handle_enrollments();
 
-        if (!$this->provider()->postprocess()) {
+        if (!$this->provider()->postprocess($this)) {
             $this->errors[] = 'Error during postprocess.';
         }
     }
