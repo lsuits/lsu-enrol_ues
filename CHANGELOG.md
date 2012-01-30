@@ -1,5 +1,6 @@
 ## v0.0.8 (Snapshot)
 
+- Self passed to provider `postprocess` and optimized `delete_meta` [d87670ed](https://github.com/lsuits/ues/commit/d87670ed215ce162c4669d7863236b96e3fed26c)
 - Added [lsu provider] sports info [#15](https://github.com/lsuits/ues/issues/15)
 - Minor Bug fix in `get` for `ues_dao` base class [36e9c2e](https://github.com/lsuits/ues/commit/36e9c2e16add34217cb432b0803250ed3416d084)
 - Reprocessing no longer steps on nightly [9e1b78e5](https://github.com/lsuits/ues/commit/9e1b78e576361b6ea23c1a3c2db495e3ff24a1bb)
