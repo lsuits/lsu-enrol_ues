@@ -159,6 +159,9 @@ $string['lsu_anonymous_numbers_desc'] = 'This will enable processing anonymous n
 $string['lsu_degree_candidates'] = 'Process Degree Candidacy';
 $string['lsu_degree_candidates_desc'] = 'This will enabled processing degree candidate information in the `postprocess` section of the LSU provider';
 
+$string['lsu_sports_information'] = 'Sports Information';
+$string['lsu_sports_information_desc'] = 'This will enable the pulling of student athletic information in the `postprocess` section of the LSU provider';
+
 // Fake for testing
 $string['fake_name'] = 'Fake Source Enrollment Provider';
 $string['fake_course_variant'] = 'Course Variations';

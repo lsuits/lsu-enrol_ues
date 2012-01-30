@@ -64,7 +64,8 @@ class lsu_enrollment_provider extends enrollment_provider {
         $optional_pulls = array (
             'student_data' => 1,
             'anonymous_numbers' => 0,
-            'degree_candidates' => 0
+            'degree_candidates' => 0,
+            'sports_information' => 1
         );
 
         $admin_settings = array();
@@ -104,6 +105,10 @@ class lsu_enrollment_provider extends enrollment_provider {
 
     function degree_source() {
         return new lsu_degree($this->username, $this->password, $this->wsdl);
+    }
+
+    function sports_source() {
+        return new lsu_sports($this->username, $this->password, $this->wsdl);
     }
 
     function teacher_department_source() {
@@ -150,7 +155,8 @@ class lsu_enrollment_provider extends enrollment_provider {
         $attempts = array(
             'student_data' => $this->student_data_source(),
             'anonymous_numbers' => $this->anonymous_source(),
-            'degree_candidates' => $this->degree_source()
+            'degree_candidates' => $this->degree_source(),
+            'sports_information' => $this->sports_source()
         );
 
         foreach ($processed_semesters as $semester) {
@@ -161,6 +167,14 @@ class lsu_enrollment_provider extends enrollment_provider {
                 }
 
                 $enrol->log("Processing $key for $semester...");
+
+                // Clear out sports information on run
+                if ($key == 'sports_information' and $semester->campus == 'LSU') {
+                    foreach (range(1, 4) as $code) {
+                        $params = array('name' => "user_sport$code");
+                        ues_user::delete_meta($params);
+                    }
+                }
 
                 try {
                     $this->process_data_source($source, $semester);
