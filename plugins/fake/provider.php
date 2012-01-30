@@ -265,7 +265,7 @@ class fake_enrollment_provider extends enrollment_provider {
         }
     }
 
-    function postprocess() {
+    function postprocess($enrol) {
         if ($this->get_setting('cleanuprun')) {
             require_once dirname(__FILE__) . '/lib.php';
 

@@ -114,7 +114,7 @@ class lsu_enrollment_provider extends enrollment_provider {
         return new lsu_students_by_department($this->username, $this->password, $this->wsdl);
     }
 
-    function postprocess() {
+    function postprocess($enrol) {
         $semesters_in_session = ues_semester::in_session();
 
         $now = time();
@@ -159,6 +159,8 @@ class lsu_enrollment_provider extends enrollment_provider {
                 if (!$this->get_setting($key)) {
                     continue;
                 }
+
+                $enrol->log("Processing $key for $semester...");
 
                 try {
                     $this->process_data_source($source, $semester);

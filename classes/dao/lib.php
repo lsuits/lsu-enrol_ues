@@ -157,7 +157,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         return sprintf('enrol_%smeta', get_called_class());
     }
 
-    public static function upgrade_and_get($object, array $params) {
+    public static function upgrade_and_get($object, $params) {
         return self::with_class(function ($class) use ($object, $params) {
             $ues = $class::upgrade($object);
 
@@ -207,17 +207,15 @@ abstract class ues_dao extends ues_base implements meta_information {
         $query_params = array();
         if ($meta_fields) {
             foreach ($meta_fields as $field) {
-                $query_params[$field] = $params[$field];
+                $query_params['name'] = $field;
+                $query_params['value'] = $params[$field];
                 unset($params[$field]);
             }
         }
 
-        $to_delete = $DB->get_records(self::call('metatablename'), $params);
+        $meta_table = self::call('metatablename');
 
-        foreach ($to_delete as $record) {
-            $query_params['id'] = $record->id;
-            $DB->delete_records(self::call('metatablename'), $query_params);
-        }
+        return $DB->delete_records($meta_table, $params + $query_params);
     }
 
     public static function delete_all_meta($params = array()) {
