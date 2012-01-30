@@ -1,6 +1,7 @@
 ## v0.0.8 (Snapshot)
 
-- Minor nug fix in `get` for `ues_dao` base class [36e9c2e](https://github.com/lsuits/ues/commit/36e9c2e16add34217cb432b0803250ed3416d084)
+- Added [lsu provider] sports info [#15](https://github.com/lsuits/ues/issues/15)
+- Minor Bug fix in `get` for `ues_dao` base class [36e9c2e](https://github.com/lsuits/ues/commit/36e9c2e16add34217cb432b0803250ed3416d084)
 - Reprocessing no longer steps on nightly [9e1b78e5](https://github.com/lsuits/ues/commit/9e1b78e576361b6ea23c1a3c2db495e3ff24a1bb)
 - Added Limit / offset to retrieval [345502](https://github.com/lsuits/ues/commit/3455022849a14144cf78a48654511b76d31a72a2)
 - Better reprocessing error reporting [#12](https://github.com/lsuits/ues/issues/12)
