@@ -169,7 +169,7 @@ class lsu_enrollment_provider extends enrollment_provider {
                 $enrol->log("Processing $key for $semester...");
 
                 // Clear out sports information on run
-                if ($key == 'sports_information') {
+                if ($key == 'sports_information' and $semester->campus == 'LSU') {
                     foreach (range(1, 4) as $code) {
                         $params = array('name' => "user_sport$code");
                         ues_user::delete_meta($params);
