@@ -770,6 +770,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
             groups_add_member($group->id, $user->userid);
 
+            if ($this->setting('recover_grades')) {
+                global $CFG;
+                require_once $CFG->libdir . '/gradelib.php';
+
+                grade_recover_history_grades($user->userid, $instance->courseid);
+            }
+
             $user->status = ues::ENROLLED;
             $user->save();
 

@@ -114,6 +114,9 @@ if ($ADMIN->fulltree) {
             $_s($shortname.'_role'), $_s($shortname.'_role_desc'), $typeid ,$roles));
     }
 
+    $settings->add(new admin_setting_configcheckbox('enrol_ues/recover_grades',
+        $_s('recover_grades'), $_s('recover_grades_desc'), 1));
+
     $provider = ues::provider_class();
 
     if ($provider) {

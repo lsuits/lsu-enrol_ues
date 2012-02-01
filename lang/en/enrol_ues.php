@@ -35,6 +35,9 @@ time.';
 
 $string['could_not_enroll'] = 'Could not process enrollment for courses in {$a->year} {$a->name} {$a->campus} {$a->session_key}. Consider changing the Process by Department setting';
 
+$string['recover_grades'] = 'Recover Grades';
+$string['recover_grades_desc'] = 'Recover grade history grades on enrollment, if grades were present on unenrollment.';
+
 $string['running'] = 'Currently Running';
 $string['running_desc'] = 'If this is checked then it either means that the process is still running, or the process died unexpectingly. Uncheck this if you think the process should be enabled.
 
