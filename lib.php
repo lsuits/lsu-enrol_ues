@@ -762,6 +762,21 @@ class enrol_ues_plugin extends enrol_plugin {
     private function enroll_users($group, $users) {
         $instance = $this->get_instance($group->courseid);
 
+        // Pull this setting once
+        $recover = $this->setting('recover_grades');
+
+        // Require check once
+        if ($recover and !function_exists('grade_recover_history_grades')) {
+            global $CFG;
+            require_once $CFG->libdir . '/gradelib.php';
+        }
+
+        $recover_grades_for = function($user) use ($recover, $instance) {
+            if ($recover) {
+                grade_recover_history_grades($user->userid, $instance->courseid);
+            }
+        };
+
         foreach ($users as $user) {
             $shortname = $this->determine_role($user);
             $roleid = $this->setting($shortname . '_role');
@@ -770,12 +785,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             groups_add_member($group->id, $user->userid);
 
-            if ($this->setting('recover_grades')) {
-                global $CFG;
-                require_once $CFG->libdir . '/gradelib.php';
-
-                grade_recover_history_grades($user->userid, $instance->courseid);
-            }
+            $recover_grades_for($user);
 
             $user->status = ues::ENROLLED;
             $user->save();
