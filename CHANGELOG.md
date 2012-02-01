@@ -1,3 +1,7 @@
+## v0.0.9 (Snapshot)
+
+- Grade history recovering [#22](https://github.com/lsuits/ues/issues/22)
+
 ## v0.0.8 (Snapshot)
 
 - Self passed to provider `postprocess` and optimized `delete_meta` [d87670ed](https://github.com/lsuits/ues/commit/d87670ed215ce162c4669d7863236b96e3fed26c)
