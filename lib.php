@@ -912,15 +912,18 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $moodle_course = $DB->get_record('course', $course_params);
 
+        // Handle system creation defaults
+        $settings = array(
+            'visible','format','lang','groupmode','groupmodeforce',
+            'newsitems','showgrades','showreports','maxbytes','enablecompletion',
+            'completionstartonenrol','numsections'
+        );
+
         if (!$moodle_course) {
             $user = $primary_teacher->user();
 
             $session = empty($semester->session_key) ? '' :
                 '(' . $semester->session_key . ') ';
-
-            $assumed_fullname = sprintf('%s %s %s %s%s for %s', $semester->year,
-                $semester->name, $course->department, $session, $course->cou_number,
-                fullname($user));
 
             $category = $this->manifest_category($course);
 
@@ -931,10 +934,13 @@ class enrol_ues_plugin extends enrol_plugin {
             $a->department = $course->department;
             $a->course_number = $course->cou_number;
             $a->fullname = fullname($user);
+            $a->userid = $user->id;
 
-            $pattern = $this->setting('course_shortname');
+            $sn_pattern = $this->setting('course_shortname');
+            $fn_pattern = $this->setting('course_fullname');
 
-            $shortname = ues::format_string($pattern, $a);
+            $shortname = ues::format_string($sn_pattern, $a);
+            $assumed_fullname = ues::format_string($fn_pattern, $a);
 
             $moodle_course->idnumber = $idnumber;
             $moodle_course->shortname = $shortname;
@@ -942,9 +948,11 @@ class enrol_ues_plugin extends enrol_plugin {
             $moodle_course->category = $category->id;
             $moodle_course->summary = $course->fullname;
             $moodle_course->startdate = $semester->classes_start;
-            $moodle_course->visible = $this->setting('course_visible');
-            $moodle_course->format = $this->setting('course_format');
-            $moodle_course->numsections = $this->setting('course_numsections');
+
+            // Set system defaults
+            foreach ($settings as $key) {
+                $moodle_course->$key = get_config('moodlecourse', $key);
+            }
 
             // Actually needs to happen, before the create call
             events_trigger('ues_course_create', $moodle_course);

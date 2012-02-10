@@ -19,6 +19,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('enrol_ues_internal_links',
         $_s('management'), $_s('management_links', $urls)));
 
+    // --------------------- General Settings --------------------------------
     $settings->add(new admin_setting_heading('enrol_ues_genernal_settings',
         $_s('general_settings'), ''));
 
@@ -54,6 +55,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/email_report',
         $_s('email_report'), $_s('email_report_desc'), 1));
 
+    // ------------------ User Creation Settings -----------------------------
     $settings->add(new admin_setting_heading('enrol_ues_user_settings',
         $_s('user_settings'), ''));
 
@@ -79,29 +81,18 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('enrol_ues/user_country',
         $_s('user_country'), $_s('user_country_desc'), $CFG->country, $countries));
 
+    // ------------------ Course Creation Settings ---------------------------
     $settings->add(new admin_setting_heading('enrol_ues_course_settings',
         $_s('course_settings'), ''));
+
+    $settings->add(new admin_setting_configtext('enrol_ues/course_fullname',
+        get_string('fullname'), '', $_s('course_shortname')));
 
     $settings->add(new admin_setting_configtext('enrol_ues/course_shortname',
         get_string('shortname'), $_s('course_shortname_desc'),
         $_s('course_shortname')));
 
-    $courseformats = get_plugin_list('format');
-    $formats = array();
-    foreach ($courseformats as $format => $dir) {
-        $formats[$format] = get_string('pluginname', 'format_' . $format);
-    }
-
-    $settings->add(new admin_setting_configselect('enrol_ues/course_format',
-        get_string('format'), $_s('course_format_desc'), 'weeks', $formats));
-
-    $options = array_combine(range(1, 52), range(1, 52));
-    $settings->add(new admin_setting_configselect('enrol_ues/course_numsections',
-        get_string('numberweeks'), $_s('course_numsections_desc'), 17, $options));
-
-    $settings->add(new admin_setting_configcheckbox('enrol_ues/course_visible',
-        get_string('visible'), $_s('course_visible_desc'), 0));
-
+    // ------------------ User Enrollment Settings ---------------------------
     $settings->add(new admin_setting_heading('enrol_ues_enrol_settings',
         $_s('enrol_settings'), ''));
 
@@ -117,6 +108,8 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/recover_grades',
         $_s('recover_grades'), $_s('recover_grades_desc'), 1));
 
+
+    // ------------------ Specific Provider Settings -------------------------
     $provider = ues::provider_class();
 
     if ($provider) {
