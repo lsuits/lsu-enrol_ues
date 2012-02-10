@@ -1,3 +1,7 @@
+## v0.0.10 (Snapshot)
+
+- Course createion defaults adhere to system settings [#23](https://github.com/lsuits/ues/issues/23)
+
 ## v0.0.9 (Snapshot)
 
 - Grade history recovering [#22](https://github.com/lsuits/ues/issues/22)
