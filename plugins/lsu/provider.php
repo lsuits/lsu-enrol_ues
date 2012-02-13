@@ -119,7 +119,7 @@ class lsu_enrollment_provider extends enrollment_provider {
         return new lsu_students_by_department($this->username, $this->password, $this->wsdl);
     }
 
-    function postprocess($enrol) {
+    function postprocess($enrol = null) {
         $semesters_in_session = ues_semester::in_session();
 
         $now = time();
@@ -166,7 +166,9 @@ class lsu_enrollment_provider extends enrollment_provider {
                     continue;
                 }
 
-                $enrol->log("Processing $key for $semester...");
+                If ($enrol) {
+                    $enrol->log("Processing $key for $semester...");
+                }
 
                 // Clear out sports information on run
                 if ($key == 'sports_information' and $semester->campus == 'LSU') {

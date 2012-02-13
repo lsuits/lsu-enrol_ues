@@ -39,11 +39,11 @@ abstract class enrollment_provider implements enrollment_factory {
     }
 
     // Override for special behavior hooks
-    function preprocess($enrol) {
+    function preprocess($enrol = null) {
         return true;
     }
 
-    function postprocess($enrol) {
+    function postprocess($enrol = null) {
         return true;
     }
 
