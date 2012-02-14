@@ -916,7 +916,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $settings = array(
             'visible','format','lang','groupmode','groupmodeforce',
             'newsitems','showgrades','showreports','maxbytes','enablecompletion',
-            'completionstartonenrol','numsections'
+            'completionstartonenrol','numsections', 'legacyfiles'
         );
 
         if (!$moodle_course) {
