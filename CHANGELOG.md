@@ -1,6 +1,6 @@
-## v0.0.10 (Snapshot)
+## v1.0.0
 
-- Course createion defaults adhere to system settings [#23](https://github.com/lsuits/ues/issues/23)
+- Course creation defaults adhere to system settings [#23](https://github.com/lsuits/ues/issues/23)
 
 ## v0.0.9 (Snapshot)
 
