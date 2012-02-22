@@ -141,7 +141,9 @@ class ues_course extends ues_dao {
 class ues_section extends ues_dao {
     var $semester;
     var $course;
+
     var $moodle;
+    var $group;
 
     var $primary;
     var $teachers;
@@ -211,6 +213,26 @@ class ues_section extends ues_dao {
         }
 
         return $this->moodle;
+    }
+
+    public function group() {
+        if (!$this->is_manifested()) {
+            return null;
+        }
+
+        if (empty($this->group)) {
+            global $DB;
+
+            $course = $this->course();
+            $moodle = $this->moodle();
+            $name = "$course->department $course->cou_number $this->sec_number";
+
+            $params = array('name' => $name, 'courseid' => $moodle->id);
+
+            $this->group = $DB->get_record('group', $params);
+        }
+
+        return $this->group;
     }
 
     public function is_manifested() {

@@ -43,6 +43,10 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return new ArrayIterator($this->get());
     }
 
+    function is_empty() {
+        return empty($this->fields);
+    }
+
     function get() {
         if (empty($this->fields)) {
             throw new Exception("Intent to filter, but no fields specified");
@@ -199,5 +203,9 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
 
     function is_not($value) {
         return $this->comparison('is not', $value);
+    }
+
+    function raw($sql) {
+        return $this->add_to($sql);
     }
 }
