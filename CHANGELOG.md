@@ -1,3 +1,9 @@
+## v1.0.1
+
+- Small DAO bug fixes and improvements [#24](https://github.com/lsuits/ues/issues/24)
+- Section can pull Moodle group
+- Filter supports raw sql with `raw` word.
+
 ## v1.0.0
 
 - Course creation defaults adhere to system settings [#23](https://github.com/lsuits/ues/issues/23)
