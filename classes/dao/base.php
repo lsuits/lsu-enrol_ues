@@ -14,10 +14,6 @@ abstract class ues_base {
         });
     }
 
-    protected static function by_id($id) {
-        return self::get_internal(array('id' => $id));
-    }
-
     protected static function get_internal($params, $fields = '*', $trans = null) {
         return current(self::get_all_internal($params, '', $fields, 0, 0, $trans));
     }
@@ -47,6 +43,18 @@ abstract class ues_base {
         }
 
         return $ret;
+    }
+
+    public static function by_sql($sql, $params = null, $offset = 0, $limit = 0, $trans = null) {
+        global $DB;
+
+        $results = array();
+        foreach ($DB->get_records_sql($sql, $params, $offset, $limit) as $record) {
+            $upped = self::call('upgrade', $record);
+            $results[$upped->id] = $trans ? $trans($upped) : $upped;
+        }
+
+        return $results;
     }
 
     protected static function delete_all_internal($params = array(), $trans = null) {
@@ -137,8 +145,14 @@ abstract class ues_base {
         return implode('_', array_slice($names, 1));
     }
 
-    public static function tablename() {
-        return sprintf('enrol_%s', get_called_class() . 's');
+    public static function tablename($alias = '') {
+        $name = sprintf('enrol_%s', get_called_class() . 's');
+
+        if (!empty($alias)) {
+            return '{' . $name . '} ' . $alias;
+        } else {
+            return $name;
+        }
     }
 
     public static function upgrade($db_object) {

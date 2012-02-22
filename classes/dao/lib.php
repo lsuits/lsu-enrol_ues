@@ -11,7 +11,7 @@ interface meta_information {
 
     public static function get_meta_names();
 
-    public static function metatablename();
+    public static function metatablename($alias = '');
 
     public static function delete_meta($params);
 
@@ -39,6 +39,10 @@ abstract class ues_dao extends ues_base implements meta_information {
         return array_keys($names);
     }
 
+    public static function by_id($id, $meta = false) {
+        return self::get(array('id' => $id), $meta);
+    }
+
     public static function get($params, $meta = false, $fields = '*') {
         return self::with_class(function ($class) use ($params, $meta, $fields) {
             return current($class::get_all($params, $meta, '', $fields));
@@ -60,7 +64,7 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         foreach ($meta_fields as $i => $key) {
             $letter = $alpha[$i];
-            $tables[] = '{'.self::call('metatablename').'} '.$letter;
+            $tables[] = self::call('metatablename', $letter);
             $filters[] = $letter.'.name' . " = '" . $key ."'";
 
             if (method_exists($params[$key], 'sql')) {
@@ -118,7 +122,7 @@ abstract class ues_dao extends ues_base implements meta_information {
 
             list($tables, $filters) = self::meta_sql_builder($send);
 
-            $order = empty($sort) ? '' : 'ORDER BY ' . $sort;
+            $order = empty($sort) ? '' : ' ORDER BY ' . $sort;
 
             $sql = "SELECT ". implode(',', $z_fields) . ' FROM ' .
                 $tables . ' WHERE ' . $filters . $order;
@@ -153,8 +157,14 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
     }
 
-    public static function metatablename() {
-        return sprintf('enrol_%smeta', get_called_class());
+    public static function metatablename($alias = '') {
+        $name = sprintf('enrol_%smeta', get_called_class());
+
+        if (empty($alias)) {
+            return $name;
+        } else {
+            return '{' . $name . '} ' . $alias;
+        }
     }
 
     public static function upgrade_and_get($object, $params) {
