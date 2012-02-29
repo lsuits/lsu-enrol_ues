@@ -425,6 +425,19 @@ class ues_user extends ues_dao {
         return !empty($count);
     }
 
+    public static function is_teacher_in($sections, $primary = false, $userid = null) {
+        $filters = self::qualified($userid);
+
+        $filters->sectionid->in(array_keys($sections));
+
+        if ($primary) {
+            $filters->primary_flag->equal(1);
+        }
+
+        $count = ues_teacher::count($filters);
+        return !empty($count);
+    }
+
     public static function sections($primary = false) {
         if (!self::is_teacher()) {
             return array();
