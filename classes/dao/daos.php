@@ -229,7 +229,7 @@ class ues_section extends ues_dao {
 
             $params = array('name' => $name, 'courseid' => $moodle->id);
 
-            $this->group = $DB->get_record('group', $params);
+            $this->group = $DB->get_record('groups', $params);
         }
 
         return $this->group;
@@ -268,6 +268,7 @@ class ues_section extends ues_dao {
             foreach ($sections as $section) {
                 $section->course();
                 $section->semester();
+                $section->moodle = $course;
             }
         }
 
