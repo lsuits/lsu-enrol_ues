@@ -1,8 +1,11 @@
-## v1.0.1
+## v1.1.0
 
 - Small DAO bug fixes and improvements [#24](https://github.com/lsuits/ues/issues/24)
-- Section can pull Moodle group
-- Filter supports raw sql with `raw` word.
+- Section can pull Moodle group [f5ffbfb2][commit-1]
+- Filter supports raw sql with `raw` word. [f5ffbfb2][commit-1]
+- `ues_section::from_course` populates moodle course [0757305](https://github.com/lsuits/ues/commit/075730511fb6df52c407161ab3d9bc302549faf9)
+
+[commit-1]: https://github.com/lsuits/ues/commit/f5ffbfb20bf74b681f41f145413fd3759e1c7184
 
 ## v1.0.0
 
