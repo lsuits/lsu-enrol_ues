@@ -104,6 +104,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $error_threshold = $this->setting('error_threshold');
 
+        $running = (bool)$this->setting('running');
+
+        // Don't reprocess if the module is running
+        if ($running) {
+            return;
+        }
+
         if (count($errors) > $error_threshold) {
             $this->errors[] = ues::_s('error_threshold_log');
             return;
@@ -914,7 +921,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Handle system creation defaults
         $settings = array(
-            'visible','format','lang','groupmode','groupmodeforce',
+            'visible','format','lang','groupmode','groupmodeforce', 'hiddensections',
             'newsitems','showgrades','showreports','maxbytes','enablecompletion',
             'completionstartonenrol','numsections', 'legacyfiles'
         );
