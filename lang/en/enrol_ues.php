@@ -97,8 +97,19 @@ $string['course_shortname_desc'] = 'Generated Shortname for the course';
 $string['course_shortname'] = '{year} {name} {department} {session}{course_number} for {fullname}';
 $string['course_fullname_desc'] = 'Generated Fullname for the course';
 $string['course_fullname'] = '{year} {name} {department} {session}{course_number} for {fullname}';
-$string['course_format_desc'] = 'Creates a course that uses this format as its default.';
-$string['course_numsections_desc'] = 'Creates a course with this many sections as its default.';
+
+$string['course_form_replace'] = 'Replace course form';
+$string['course_form_replace_desc'] = 'Displays a more friendly version of the
+course form';
+
+$string['course_restricted_fields'] = 'Restricted form fields';
+$string['course_restricted_fields_desc'] = 'Will not allow the user to edit the
+selected form fields. Fields not listed in the select means there is a capability
+to hide the fields
+
+__Note__: If used in conjuction with _Replace course form_, then the selected fields will be hidden.';
+
+$string['bad_field'] = 'This setting cannot be changed.';
 
 $string['provider'] = 'Enrollment Provider';
 $string['provider_desc'] = 'This enrollment provider will be used to pull enrollment data.';

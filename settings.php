@@ -92,6 +92,29 @@ if ($ADMIN->fulltree) {
         get_string('shortname'), $_s('course_shortname_desc'),
         $_s('course_shortname')));
 
+    $settings->add(new admin_setting_configcheckbox('enrol_ues/course_form_replace',
+        $_s('course_form_replace'), $_s('course_form_replace_desc'), 0));
+
+    $fields = array(
+        'format' => get_string('format'),
+        'numberweeks' => get_string('numberweeks'),
+        'hiddensections' => get_string('hiddensections'),
+        'newsitems' => get_string('newsitemsnumber'),
+        'showgrades' => get_string('showgrades'),
+        'showreport' => get_string('showreports'),
+        'maximumupload' => get_string('maximumupload'),
+        'legacyfiles' => get_string('courselegacyfiles'),
+        'groupmode' => get_string('groupmode'),
+        'groupmodeforce' => get_string('groupmodeforce'),
+        'lang' => get_string('forcelanguage')
+    );
+
+    $defaults = array('groupmode', 'groupmodeforce');
+
+    $settings->add(new admin_setting_configmultiselect('enrol_ues/course_restricted_fields',
+        $_s('course_restricted_fields'), $_s('course_restricted_fields_desc'),
+        $defaults, $fields));
+
     // ------------------ User Enrollment Settings ---------------------------
     $settings->add(new admin_setting_heading('enrol_ues_enrol_settings',
         $_s('enrol_settings'), ''));
