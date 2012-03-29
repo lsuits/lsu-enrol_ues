@@ -4,7 +4,7 @@ require_once $CFG->dirroot . '/course/edit_form.php';
 
 class ues_course_edit_form extends course_edit_form {
     function definition() {
-        global $USER;
+        global $USER, $DB;
         parent::definition();
 
         $m =& $this->_form;
@@ -21,5 +21,24 @@ class ues_course_edit_form extends course_edit_form {
             }
             $m->removeElement($field);
         }
+
+        $disable_grouping = (
+            in_array('groupmode', $restricted_fields) and
+            in_array('groupmodeforce', $restricted_fields)
+        );
+
+        if ($disable_grouping) {
+            $m->hardFreeze('defaultgroupingid');
+        }
+
+        $roles = $DB->get_records('role');
+        foreach ($roles as $id => $role) {
+            $name = 'role_' . $id;
+            if ($m->elementExists($name)) {
+                $m->removeElement($name);
+            }
+        }
+
+        $m->removeElement('rolerenaming');
     }
 }
