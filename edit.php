@@ -24,7 +24,7 @@ require_capability('moodle/course:update', $context);
 // From course/edit.php
 $editoroptions = array(
     'maxfiles' => EDITOR_UNLIMITED_FILES,
-    'maxbytes'=>$CFG->maxbytes,
+    'maxbytes' => $CFG->maxbytes,
     'trusttext' => false,
     'noclean' => true
 );

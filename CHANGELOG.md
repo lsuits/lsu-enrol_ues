@@ -1,3 +1,14 @@
+## v1.1.1
+
+- Automatic error handler only runs if not currently running [#25](https://github.com/lsuits/ues/issues/25)
+- Restrict course form fields
+- Replace course edit form
+- New extention injections points:
+  - `ues_course_settings_navigation`: Allows plugins to interact with Settings block
+  - `ues_course_edit_form`: Allows plugins to add custom fields to course form
+  - `ues_course_edit_validation`: Allows plugins to validate submitted form
+  - `course_updated`: Allows plugins to handle submitted data on course form
+
 ## v1.1.0
 
 - Small DAO bug fixes and improvements [#24](https://github.com/lsuits/ues/issues/24)
