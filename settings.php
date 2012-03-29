@@ -97,12 +97,12 @@ if ($ADMIN->fulltree) {
 
     $fields = array(
         'format' => get_string('format'),
-        'numberweeks' => get_string('numberweeks'),
+        'numsections' => get_string('numberweeks'),
         'hiddensections' => get_string('hiddensections'),
         'newsitems' => get_string('newsitemsnumber'),
         'showgrades' => get_string('showgrades'),
-        'showreport' => get_string('showreports'),
-        'maximumupload' => get_string('maximumupload'),
+        'showreports' => get_string('showreports'),
+        'maxbytes' => get_string('maximumupload'),
         'legacyfiles' => get_string('courselegacyfiles'),
         'groupmode' => get_string('groupmode'),
         'groupmodeforce' => get_string('groupmodeforce'),

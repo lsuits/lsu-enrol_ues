@@ -72,9 +72,16 @@ class enrol_ues_plugin extends enrol_plugin {
             return $errors;
         }
 
+        $system = get_context_instance(CONTEXT_SYSTEM);
+        $can_change = has_capability('moodle/course:update', $system);
+
         $restricted = explode(',', $this->setting('course_restricted_fields'));
 
         foreach ($restricted as $field) {
+            if ($can_change) {
+                continue;
+            }
+
             $default = get_config('moodlecourse', $field);
             if (isset($data[$field]) and $data[$field] != $default) {
                 $errors[$field] = ues::_s('bad_field');
