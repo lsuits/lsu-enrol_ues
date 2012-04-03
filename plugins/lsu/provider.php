@@ -202,6 +202,7 @@ class lsu_enrollment_provider extends enrollment_provider {
     function process_data_source($source, $semester) {
         $datas = $source->student_data($semester);
 
+        $name = get_class($source);
         foreach ($datas as $data) {
             $params = array('idnumber' => $data->idnumber);
 
@@ -212,6 +213,7 @@ class lsu_enrollment_provider extends enrollment_provider {
             }
 
             $user->save();
+            events_trigger('ues_' . $name . '_updated', $user);
         }
     }
 }
