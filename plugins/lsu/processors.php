@@ -94,15 +94,19 @@ class lsu_courses extends lsu_source implements course_processor {
 
         $courses = array();
 
-        if ($semester->campus == 'LAW') {
-            return $courses;
-        }
-
         $xml_courses = $this->invoke(array($semester_term, $semester->session_key));
 
         foreach ($xml_courses->ROW as $xml_course) {
             $department = (string) $xml_course->DEPT_CODE;
             $course_number = (string) $xml_course->COURSE_NBR;
+
+            $law_not = ($semester->campus == 'LAW' and $department != 'LAW');
+            $lsu_not = ($semester->campus == 'LSU' and $department == 'LAW');
+
+            // Course is not semester applicable
+            if ($law_not or $lsu_not) {
+                continue;
+            }
 
             $is_unique = function ($course) use ($department, $course_number) {
                 return ($course->department != $department or
@@ -125,7 +129,7 @@ class lsu_courses extends lsu_source implements course_processor {
             }
 
             $section = new stdClass;
-            $section->sec_number= (string) $xml_course->SECTION_NBR;
+            $section->sec_number = (string) $xml_course->SECTION_NBR;
 
             $course->sections[] = $section;
         }
@@ -140,13 +144,20 @@ class lsu_teachers_by_department extends lsu_source implements teacher_by_depart
     function teachers($semester, $department) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
 
-        $campus = $semester->campus == 'LSU' ? self::LSU_CAMPUS : self::LAW_CAMPUS;
+        $teachers = array();
+
+        // LAW teachers should NOT be processed on an incoming LSU semester
+        if ($department == 'LAW' and $semester->campus == 'LSU') {
+            return $teachers;
+        }
+
+        // Always use LSU campus code
+        $campus = self::LSU_CAMPUS;
 
         $params = array($semester->session_key, $department, $semester_term, $campus);
 
         $xml_teachers = $this->invoke($params);
 
-        $teachers = array();
         foreach ($xml_teachers->ROW as $xml_teacher) {
 
             $primary_flag = trim($xml_teacher->PRIMARY_INSTRUCTOR);
@@ -221,14 +232,20 @@ class lsu_teachers extends lsu_source implements teacher_processor {
     function teachers($semester, $course, $section) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
 
-        $campus = $semester->campus == 'LSU' ? self::LSU_CAMPUS : self::LAW_CAMPUS;
+        $teachers = array();
+
+        // LAW teachers should NOT be processed on an incoming LSU semester
+        if ($department == 'LAW' and $semester->campus == 'LSU') {
+            return $teachers;
+        }
+
+        $campus = self::LSU_CAMPUS;
 
         $params = array($course->cou_number, $semester->session_key,
             $section->sec_number, $course->department, $semester_term, $campus);
 
         $xml_teachers = $this->invoke($params);
 
-        $teachers = array();
         foreach ($xml_teachers->ROW as $xml_teacher) {
 
             $primary_flag = trim($xml_teacher->PRIMARY_INSTRUCTOR);
