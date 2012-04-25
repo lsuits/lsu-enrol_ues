@@ -1,3 +1,9 @@
+## v1.1.2
+
+- [lsu provider][lsu] Properly handles LAW enrollments [#28][28]
+
+[28]: https://github.com/lsuits/ues/issues/28
+
 ## v1.1.1
 
 - Automatic error handler only runs if not currently running [#25](https://github.com/lsuits/ues/issues/25)
