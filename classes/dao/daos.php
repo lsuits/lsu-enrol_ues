@@ -261,7 +261,11 @@ class ues_section extends ues_dao {
     }
 
     /** Expects a Moodle course, returns an optionally full ues_section */
-    public static function from_course(stdClass $course, $fill = true) {
+    public static function from_course(stdClass $course, $fill = false) {
+        if (empty($course->idnumber)) {
+            return array();
+        }
+
         $sections = ues_section::get_all(array('idnumber' => $course->idnumber));
 
         if ($sections and $fill) {
