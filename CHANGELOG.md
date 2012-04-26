@@ -1,8 +1,10 @@
 ## v1.1.2
 
 - [lsu provider][lsu] Properly handles LAW enrollments [#28][28]
+- Saner `ues_section::from_course` default, and short circuit [e12c8de][e12c8de]
 
 [28]: https://github.com/lsuits/ues/issues/28
+[e12c8de]: https://github.com/lsuits/ues/commit/e12c8dec65c6e7b5c0dbc0500d2267d443af3926)
 
 ## v1.1.1
 
