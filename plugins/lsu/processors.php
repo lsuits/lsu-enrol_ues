@@ -235,7 +235,7 @@ class lsu_teachers extends lsu_source implements teacher_processor {
         $teachers = array();
 
         // LAW teachers should NOT be processed on an incoming LSU semester
-        if ($department == 'LAW' and $semester->campus == 'LSU') {
+        if ($course->department == 'LAW' and $semester->campus == 'LSU') {
             return $teachers;
         }
 
