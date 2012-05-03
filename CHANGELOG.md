@@ -1,3 +1,11 @@
+## v1.1.3
+
+- [lsu provider][lsu] section source handles LAW categories correctly [9612e7][9612e7]
+- Publicize the `manifest_category` for outside modules [18a5c2][18a5c2]
+
+[9612e7]: https://github.com/lsuits/ues/commit/9612e7a41d997b1f39de934f7b3961e087ec958a
+[18a5c2]: https://github.com/lsuits/ues/commit/18a5c2e111ae64945a0b34c6c0a176162054a123
+
 ## v1.1.2
 
 - [lsu provider][lsu] Properly handles LAW enrollments [#28][28]
