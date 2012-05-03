@@ -757,7 +757,25 @@ class enrol_ues_plugin extends enrol_plugin {
         } else {
             return current($attempt);
         }
+    }
 
+    public function manifest_category($course) {
+        global $DB;
+
+        $cat_params = array('name' => $course->department);
+        $category = $DB->get_record('course_categories', $cat_params);
+
+        if (!$category) {
+            $category = new stdClass;
+
+            $category->name = $course->department;
+            $category->sortorder = 999;
+            $category->parent = 0;
+            $category->description = 'Courses under ' . $course->department;
+            $category->id = $DB->insert_record('course_categories', $category);
+        }
+
+        return $category;
     }
 
     private function manifestation($semester, $course, $section) {
@@ -1065,25 +1083,6 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         return $moodle_course;
-    }
-
-    private function manifest_category($course) {
-        global $DB;
-
-        $cat_params = array('name' => $course->department);
-        $category = $DB->get_record('course_categories', $cat_params);
-
-        if (!$category) {
-            $category = new stdClass;
-
-            $category->name = $course->department;
-            $category->sortorder = 999;
-            $category->parent = 0;
-            $category->description = 'Courses under ' . $course->department;
-            $category->id = $DB->insert_record('course_categories', $category);
-        }
-
-        return $category;
     }
 
     private function create_user($u) {
