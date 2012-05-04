@@ -1107,6 +1107,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->confirmed = $this->setting('user_confirm');
             $user->city = $this->setting('user_city');
             $user->country = $this->setting('user_country');
+            $user->lang = $this->setting('user_lang');
             $user->firstaccess = time();
             $user->timecreated = $user->firstaccess;
             $user->auth = $this->setting('user_auth');

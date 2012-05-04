@@ -65,6 +65,10 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/user_confirm',
         $_s('user_confirm'), $_s('user_confirm_desc'), 1));
 
+    $languages = get_string_manager()->get_list_of_translations();
+    $settings->add(new admin_setting_configselect('enrol_ues/user_lang',
+        get_string('language'), '', $CFG->lang, $languages));
+
     $auths = get_plugin_list('auth');
     $ath_options = array();
     foreach ($auths as $auth => $unused) {
