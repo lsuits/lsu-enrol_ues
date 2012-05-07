@@ -337,8 +337,9 @@ class enrol_ues_plugin extends enrol_plugin {
     private function process_semester_by_section($semester, $courses) {
         foreach ($courses as $course) {
             foreach ($course->sections as $section) {
+                $ues_section = ues_section::by_id($section->id);
                 $this->process_enrollment(
-                    $semester, $course, $section
+                    $semester, $course, $ues_section
                 );
             }
         }
@@ -1086,6 +1087,8 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function create_user($u) {
+        $present = !empty($u->idnumber);
+
         $by_idnumber = array('idnumber' => $u->idnumber);
 
         $by_username = array('username' => $u->username);
@@ -1096,7 +1099,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         if ($prev = ues_user::get($exact_params, true)) {
             $user->id = $prev->id;
-        } else if ($prev = ues_user::get($by_idnumber, true)) {
+        } else if ($present and $prev = ues_user::get($by_idnumber, true)) {
             $user->id = $prev->id;
         } else if ($prev = ues_user::get($by_username, true)) {
             $user->id = $prev->id;

@@ -144,8 +144,8 @@ if ($ADMIN->fulltree) {
 
         $adv_settings = $provider::adv_settings();
 
+        $plugin_name = $_s($provider::get_name() . '_name');
         if ($reg_settings or $adv_settings) {
-            $plugin_name = $_s($provider::get_name() . '_name');
             $settings->add(new admin_setting_heading('provider_settings',
                 $_s('provider_settings', $plugin_name), ''));
         }
