@@ -1,3 +1,9 @@
+## v1.1.4
+
+- `$plugin_name` is now in the correct scope [e2dc62][e2dc62]
+
+[e2dc62]: https://github.com/lsuits/ues/commit/e2dc62eb747157755ba9f1aaff9a8cf1c755d8a3
+
 ## v1.1.3
 
 - [lsu provider][lsu] section source handles LAW categories correctly [9612e7][9612e7]
