@@ -86,9 +86,9 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         foreach ($params as $key => $f) {
             if (method_exists($params[$key], 'sql')) {
-                $filter = $f->sql($key);
+                $filter = $f->sql('z.'.$key);
             } else {
-                $filter = "$key = '$f'";
+                $filter = "z.$key = '$f'";
             }
 
             $filters[] = $filter;
@@ -115,8 +115,6 @@ abstract class ues_dao extends ues_base implements meta_information {
         if ($contains_meta) {
             $z_fields = array_map(function($field) { return 'z.' . $field; },
                 explode(',', $fields));
-
-            $alpha = range('a', 'x');
 
             $send = is_array($params) ? $params : $params->get();
 
