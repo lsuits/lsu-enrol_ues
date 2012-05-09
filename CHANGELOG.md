@@ -1,7 +1,9 @@
 ## v1.1.4
 
+- Fixes improper DB aliases on parameter building [9f0100][9f0100]
 - `$plugin_name` is now in the correct scope [e2dc62][e2dc62]
 
+[9f0100]: https://github.com/lsuits/ues/commit/9f0100c5c1f19838d0a30fa2d797297accf4c693
 [e2dc62]: https://github.com/lsuits/ues/commit/e2dc62eb747157755ba9f1aaff9a8cf1c755d8a3
 
 ## v1.1.3
