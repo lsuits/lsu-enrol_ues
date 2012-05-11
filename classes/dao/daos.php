@@ -4,6 +4,7 @@ require_once dirname(__FILE__) . '/lib.php';
 
 class ues_semester extends ues_dao {
     var $sections;
+    var $courses;
 
     public static function in_session($when = null) {
         if (empty($when)) {
@@ -27,8 +28,34 @@ class ues_semester extends ues_dao {
         return $this->sections;
     }
 
+    public function get_session_key() {
+        $s = empty($this->session_key) ? '' : ' (' . $this->session_key . ')';
+
+        return $s;
+    }
+
+    public static function merge_sections(array $sections) {
+        $semesters = array();
+
+        foreach ($sections as $section) {
+            $semesterid = $section->semesterid;
+
+            // Work on different semesters
+            if (isset($semesters[$semesterid])) {
+                continue;
+            }
+
+            $semester = $section->semester();
+            $semester->courses = ues_course::merge_sections($sections, $semester);
+
+            $semesters[$semesterid] = $semester;
+        }
+
+        return $semesters;
+    }
+
     public function __toString() {
-        $session = !empty($this->session_key) ? ' Session '. $this->session_key : '';
+        $session = $this->get_session_key();
         return sprintf('%s %s%s at %s', $this->year, $this->name, $session, $this->campus);
     }
 }
@@ -67,11 +94,16 @@ class ues_course extends ues_dao {
         return ues_course::get_all(array('department' => $dept), true);
     }
 
-    public static function merge_sections(array $sections) {
+    public static function merge_sections(array $sections, $semester = null) {
         $courses = array();
 
         foreach ($sections as $section) {
             $courseid = $section->courseid;
+
+            // Filter on semester
+            if ($semester and $section->semesterid != $semester->id) {
+                continue;
+            }
 
             if (!isset($courses[$courseid])) {
                 $course = $section->course();
