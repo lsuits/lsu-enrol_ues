@@ -132,8 +132,8 @@ class lsu_enrollment_provider extends enrollment_provider {
             } else if ($semester->campus == 'LAW') {
                 return $in;
             } else {
-                $start = $semester->classes_start;
-                $closer = ($start <= $now and $start < $in->classes_start);
+                $end = $semester->grades_due;
+                $closer = ($end >= $now and $end < $in->grades_due);
                 return $closer ? $semester : $in;
             }
         };
@@ -147,6 +147,7 @@ class lsu_enrollment_provider extends enrollment_provider {
         $law_semesters = ues_semester::get_all(array(
             'year' => $lsu_semester->year,
             'name' => $lsu_semester->name,
+            'session_key' => $lsu_semester->session_key,
             'campus' => 'LAW',
         ));
 

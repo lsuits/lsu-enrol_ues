@@ -358,19 +358,43 @@ class enrol_ues_plugin extends enrol_plugin {
             $semesters = $semester_source->semesters($now);
 
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
-            $this->process_semesters($semesters);
+            $p_semesters = $this->process_semesters($semesters);
 
-            $sems_in = function ($time) {
-                return ues_semester::in_session($time);
+            $v = function($s) { return !empty($s->grades_due); };
+
+            list($valids, $failures) = $this->partition($p_semesters, $v);
+
+            // Notify improper semester
+            foreach ($failures as $failed_sem) {
+                $this->errors[] = ues::_s('failed_sem', $failed_sem);
+            }
+
+            $sems_in = function ($sem) use ($time, $sub_days) {
+                $end_check = $time < $sem->grades_due;
+
+                return ($sem->classes_start - $sub_days) < $time && $end_check;
             };
 
-            $processed_semesters = $sems_in($time) + $sems_in($time + $sub_days);
-
-            return $processed_semesters;
+            return array_filter($valids, $sems_in);
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             return array();
         }
+    }
+
+    public function partition($collection, $func) {
+        $pass = array();
+        $fail = array();
+
+        foreach ($collection as $key => $single) {
+            if ($func($single)) {
+                $pass[$key] = $single;
+            } else {
+                $fail[$key] = $single;
+            }
+        }
+
+        return array($pass, $fail);
     }
 
     public function get_courses($semester) {

@@ -69,18 +69,23 @@ class lsu_semesters extends lsu_source implements semester_processor {
                 $semester->classes_start = $date;
 
                 $semesters[] = $semester;
-            } else if (isset($lookup[$campus][$term]) and
-                $lookup[$campus][$term]->session_key == $session) {
+            } else if (isset($lookup[$campus][$term][$session])) {
 
-                $semester =& $lookup[$campus][$term];
+                $semester =& $lookup[$campus][$term][$session];
                 $semester->grades_due = $date;
 
             } else {
                 continue;
             }
 
-            $lookup[$campus][$term] = $semester;
+            if (!isset($lookup[$campus][$term])) {
+                $lookup[$campus][$term] = array();
+            }
+
+            $lookup[$campus][$term][$session] = $semester;
         }
+
+        unset($lookup);
 
         return $semesters;
     }

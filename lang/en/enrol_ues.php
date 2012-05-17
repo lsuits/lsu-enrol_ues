@@ -152,6 +152,8 @@ $string['editingteacher_role_desc'] = 'UES *primary* teachers will be enrolled i
 $string['teacher_role'] = 'Non-Primary Instructor';
 $string['teacher_role_desc'] = 'UES *non-primary* teachers will be enrolled in this Moodle role';
 
+$string['failed_sem'] = 'The following semester does not have an end date: {$a->year} {$a->name} {$a->campus} {$a->session_key}';
+
 /** Behavior Strings go here */
 $string['lsu_name'] = 'LSU Enrollment Provider';
 

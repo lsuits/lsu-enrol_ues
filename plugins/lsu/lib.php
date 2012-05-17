@@ -13,8 +13,8 @@ interface institution_codes {
     const LSU_SEM = 'CLSB';
     const LAW_SEM = 'LAWB';
 
-    const LSU_FINAL = 'PSTGRD';
-    const LAW_FINAL = 'LFGDF';
+    const LSU_FINAL = 'CLSE';
+    const LAW_FINAL = 'LAWE';
 
     const LSU_CAMPUS = '01';
     const LAW_CAMPUS = '08';
