@@ -11,7 +11,7 @@ if (!is_siteadmin($USER->id)) {
     redirect('/my');
 }
 
-$errorids = optional_param('ids', null, PARAM_INT);
+$errorids = optional_param_array('ids', null, PARAM_INT);
 $reprocess_all = optional_param('reprocess_all', null, PARAM_TEXT);
 $delete_all = optional_param('delete_all', null, PARAM_TEXT);
 

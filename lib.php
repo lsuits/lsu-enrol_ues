@@ -370,6 +370,11 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             $sems_in = function ($sem) use ($time, $sub_days) {
+                // Always filter ignored semesters
+                if (!empty($sem->semester_ignore)) {
+                    return false;
+                }
+
                 $end_check = $time < $sem->grades_due;
 
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
@@ -519,6 +524,9 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 $ues->save();
+
+                // Fill in additionally set data
+                $ues->fill_meta();
 
                 events_trigger('ues_semester_process', $ues);
 

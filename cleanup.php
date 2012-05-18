@@ -8,7 +8,7 @@ ues::require_daos();
 require_login();
 
 if (!is_siteadmin($USER->id)) {
-    redirect('/my');
+    redirect(new moodle_url('/my'));
 }
 
 $semesterid = optional_param('id', NULL, PARAM_INT);

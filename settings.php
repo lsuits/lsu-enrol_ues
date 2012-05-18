@@ -15,6 +15,7 @@ if ($ADMIN->fulltree) {
     $urls = new stdClass;
     $urls->cleanup_url = $CFG->wwwroot . '/enrol/ues/cleanup.php';
     $urls->failure_url = $CFG->wwwroot . '/enrol/ues/failures.php';
+    $urls->ignore_url = $CFG->wwwroot . '/enrol/ues/ignore.php';
 
     $settings->add(new admin_setting_heading('enrol_ues_internal_links',
         $_s('management'), $_s('management_links', $urls)));

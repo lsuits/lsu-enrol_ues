@@ -43,6 +43,12 @@ $string['running_desc'] = 'If this is checked then it either means that the proc
 
 __Note__: One of the easiest ways to know the process has ended is to enable email logs.';
 
+$string['ignore'] = 'Ignore';
+$string['please_note'] = 'The following semesters were selected: {$a}';
+
+$string['be_ignored'] = '{$a} - will be ignored';
+$string['be_recoged'] = '{$a} - will be recognized';
+
 $string['starttime'] = 'Last start time';
 $string['starttime_desc'] = 'This the timestamp of its last started cron run. This timestamp differentiates itself from the _lastcron_, as this field represents when the cron started not finished.';
 
@@ -65,12 +71,15 @@ $string['error_shortname'] = 'Tried to create a course, but failed because the c
 
 $string['error_no_group'] = 'UES tried to add someone to the deleted group (name = {$a->name}) for course (id = {$a->courseid}). UES has reason to believe that this group should not be in existence (no more teachers are enrolled). Please verify the UES enrollment data (unmanifested entries) in the selected course, and file a bug report if the data looks sound and should have been manifested.';
 
+$string['semester_ignore'] = 'Semester Ignore';
+
 $string['general_settings'] = 'General Settings';
 $string['management'] = 'Internal Links';
 $string['management_links'] = '
 Below are some internal links to manage the enrollment data.
 
 * ['.$string['semester_cleanup'].']({$a->cleanup_url})
+* ['.$string['semester_ignore'].']({$a->ignore_url})
 * ['.$string['reprocess_failures'].']({$a->failure_url})
 ';
 
