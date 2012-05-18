@@ -1,12 +1,18 @@
 ## v1.1.4
 
+- [LSU provider][lsu] gets configurable service ids [#30][30]
+- Ability to ignore semesters in processing [9dc458][9dc458]
+- Force semester end (when grades are due) dates [1f835f][1f835f]
 - Build a semester tree with `merge_section` on `ues_semester` [fd0d55][fd0d55]
 - Fixes improper DB aliases on parameter building [9f0100][9f0100]
 - `$plugin_name` is now in the correct scope [e2dc62][e2dc62]
 
+[30]: https://github.com/lsuits/ues/issues/30
 [fd0d55]: https://github.com/lsuits/ues/commit/fd0d559dd4f1b8835c41dcae355ce53da033f252
 [9f0100]: https://github.com/lsuits/ues/commit/9f0100c5c1f19838d0a30fa2d797297accf4c693
 [e2dc62]: https://github.com/lsuits/ues/commit/e2dc62eb747157755ba9f1aaff9a8cf1c755d8a3
+[1f835f]: https://github.com/lsuits/ues/commit/1f835f7949e7360ec0c212c8f9e8d4ffc346a9b7
+[9dc458]: https://github.com/lsuits/ues/commit/9dc458630791952a86fbb43178f831160ba449ad
 
 ## v1.1.3
 
