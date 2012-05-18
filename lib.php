@@ -362,19 +362,30 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $v = function($s) { return !empty($s->grades_due); };
 
-            list($valids, $failures) = $this->partition($p_semesters, $v);
+            $i = function($s) { return !empty($s->semester_ignore); };
+
+            list($other, $failures) = $this->partition($p_semesters, $v);
 
             // Notify improper semester
             foreach ($failures as $failed_sem) {
                 $this->errors[] = ues::_s('failed_sem', $failed_sem);
             }
 
-            $sems_in = function ($sem) use ($time, $sub_days) {
-                // Always filter ignored semesters
-                if (!empty($sem->semester_ignore)) {
-                    return false;
-                }
+            list($ignored, $valids) = $this->partition($other, $i);
 
+            // Ignored sections with semesters will be unenrolled
+            foreach ($ignored as $ignored_sem) {
+                $where_manifested = ues::where()
+                    ->semesterid->equal($ignored_sem->id)
+                    ->status->equal(ues::MANIFESTED);
+
+                $to_drop = array('status' => ues::PENDING);
+
+                // This will be caught in regular process
+                ues_section::update($to_drop, $where_manifested);
+            }
+
+            $sems_in = function ($sem) use ($time, $sub_days) {
                 $end_check = $time < $sem->grades_due;
 
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
