@@ -3,7 +3,6 @@
 require_once dirname(__FILE__) . '/lib.php';
 
 class lsu_semesters extends lsu_source implements semester_processor {
-    var $serviceId = 'MOODLE_SEMESTERS';
 
     function parse_term($term) {
         $year = (int)substr($term, 0, 4);
@@ -92,7 +91,6 @@ class lsu_semesters extends lsu_source implements semester_processor {
 }
 
 class lsu_courses extends lsu_source implements course_processor {
-    var $serviceId = 'MOODLE_COURSES';
 
     function courses($semester) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -144,7 +142,6 @@ class lsu_courses extends lsu_source implements course_processor {
 }
 
 class lsu_teachers_by_department extends lsu_source implements teacher_by_department {
-    var $serviceId = 'MOODLE_INSTRUCTORS_BY_DEPT';
 
     function teachers($semester, $department) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -191,7 +188,6 @@ class lsu_teachers_by_department extends lsu_source implements teacher_by_depart
 }
 
 class lsu_students_by_department extends lsu_source implements student_by_department {
-    var $serviceId = 'MOODLE_STUDENTS_BY_DEPT';
 
     function students($semester, $department) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -232,7 +228,6 @@ class lsu_students_by_department extends lsu_source implements student_by_depart
 }
 
 class lsu_teachers extends lsu_source implements teacher_processor {
-    var $serviceId = 'MOODLE_INSTRUCTORS';
 
     function teachers($semester, $course, $section) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -274,7 +269,6 @@ class lsu_teachers extends lsu_source implements teacher_processor {
 }
 
 class lsu_students extends lsu_source implements student_processor {
-    var $serviceId = 'MOODLE_STUDENTS';
 
     function students($semester, $course, $section) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -309,7 +303,6 @@ class lsu_students extends lsu_source implements student_processor {
 }
 
 class lsu_student_data extends lsu_source {
-    var $serviceId = 'MOODLE_STUDENT_DATA';
 
     function student_data($semester) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -346,7 +339,6 @@ class lsu_student_data extends lsu_source {
 }
 
 class lsu_degree extends lsu_source {
-    var $serviceId = 'MOODLE_DEGREE_CANDIDATE';
 
     function student_data($semester) {
         $term = $this->encode_semester($semester->year, $semester->name);
@@ -382,7 +374,6 @@ class lsu_degree extends lsu_source {
 }
 
 class lsu_anonymous extends lsu_source {
-    var $serviceId = 'MOODLE_LAW_ANON_NBR';
 
     function student_data($semester) {
         if ($semester->campus == 'LSU') {
@@ -408,7 +399,6 @@ class lsu_anonymous extends lsu_source {
 }
 
 class lsu_sports extends lsu_source {
-    var $serviceId = 'MOODLE_STUDENTS_ATH';
 
     function find_season($time) {
         $now = getdate($time);

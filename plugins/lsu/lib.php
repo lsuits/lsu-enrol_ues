@@ -32,10 +32,11 @@ abstract class lsu_source implements institution_codes, semester_codes {
     var $password;
     var $wsdl;
 
-    function __construct($username, $password, $wsdl) {
+    function __construct($username, $password, $wsdl, $serviceId) {
         $this->username = $username;
         $this->password = $password;
         $this->wsdl = $wsdl;
+        $this->serviceId = $serviceId;
     }
 
     private function build_parameters(array $params) {

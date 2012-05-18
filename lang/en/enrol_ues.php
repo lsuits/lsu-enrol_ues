@@ -189,6 +189,36 @@ $string['lsu_degree_candidates_desc'] = 'This will enabled processing degree can
 $string['lsu_sports_information'] = 'Sports Information';
 $string['lsu_sports_information_desc'] = 'This will enable the pulling of student athletic information in the `postprocess` section of the LSU provider';
 
+$string['lsu_semester_source'] = 'Semester serviceId';
+$string['lsu_semester_source_desc'] = 'The web service id for campus semesters';
+
+$string['lsu_course_source'] = 'Courses serviceId';
+$string['lsu_course_source_desc'] = 'The web service id for courses per semester';
+
+$string['lsu_teacher_by_department'] = 'Dept instructors serviceId';
+$string['lsu_teacher_by_department_desc'] = 'The web service id for all instructors in a given department';
+
+$string['lsu_student_by_department'] = 'Dept students serviceId';
+$string['lsu_student_by_department_desc'] = 'The web service id for all students in a given department';
+
+$string['lsu_teacher_source'] = 'Sec instructor serviceId';
+$string['lsu_teacher_source_desc'] = 'The web service id for all instructors in a given section';
+
+$string['lsu_student_source'] = 'Sec student serviceId';
+$string['lsu_student_source_desc'] = 'The web service id for all students in a given section';
+
+$string['lsu_student_data_source'] = 'Student data serviceId';
+$string['lsu_student_data_source_desc'] = 'the web service id for all student data in a given semester';
+
+$string['lsu_student_degree_source'] = 'Degree candidate serviceId';
+$string['lsu_student_degree_source_desc'] = 'The web service id for degree candidate info for a given semester';
+
+$string['lsu_student_anonymous_source'] = 'Anonymous # serviceId';
+$string['lsu_student_anonymous_source_desc'] = 'The web service id for anonymous numbers';
+
+$string['lsu_student_ath_source'] = 'Athlete info serviceId';
+$string['lsu_student_ath_source_desc'] = 'The web service id for student athletes';
+
 // Fake for testing
 $string['fake_name'] = 'Fake Source Enrollment Provider';
 $string['fake_course_variant'] = 'Course Variations';

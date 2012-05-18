@@ -56,7 +56,17 @@ class lsu_enrollment_provider extends enrollment_provider {
     public static function settings() {
         return array(
             'credential_location' => 'https://secure.web.lsu.edu/credentials.php',
-            'wsdl_location' => 'webService.wsdl'
+            'wsdl_location' => 'webService.wsdl',
+            'semester_source' => 'MOODLE_SEMESTERS',
+            'course_source' => 'MOODLE_COURSES',
+            'teacher_by_department' => 'MOODLE_INSTRUCTORS_BY_DEPT',
+            'student_by_department' => 'MOODLE_STUDENTS_BY_DEPT',
+            'teacher_source' => 'MOODLE_INSTRUCTORS',
+            'student_source' => 'MOODLE_STUDENTS',
+            'student_data_source' => 'MOODLE_STUDENT_DATA',
+            'student_degree_source' => 'MOODLE_DEGREE_CANDIDATE',
+            'student_anonymous_source' => 'MOODLE_LAW_ANON_NBR',
+            'student_ath_source' => 'MOODLE_STUDENTS_ATH'
         );
     }
 
@@ -80,43 +90,73 @@ class lsu_enrollment_provider extends enrollment_provider {
     }
 
     function semester_source() {
-        return new lsu_semesters($this->username, $this->password, $this->wsdl);
+        return new lsu_semesters(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('semester_source')
+        );
     }
 
     function course_source() {
-        return new lsu_courses($this->username, $this->password, $this->wsdl);
+        return new lsu_courses(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('course_source')
+        );
     }
 
     function teacher_source() {
-        return new lsu_teachers($this->username, $this->password, $this->wsdl);
+        return new lsu_teachers(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('teacher_source')
+        );
     }
 
     function student_source() {
-        return new lsu_students($this->username, $this->password, $this->wsdl);
+        return new lsu_students(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_source')
+        );
     }
 
     function student_data_source() {
-        return new lsu_student_data($this->username, $this->password, $this->wsdl);
+        return new lsu_student_data(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_data_source')
+        );
     }
 
     function anonymous_source() {
-        return new lsu_anonymous($this->username, $this->password, $this->wsdl);
+        return new lsu_anonymous(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_anonymous_source')
+        );
     }
 
     function degree_source() {
-        return new lsu_degree($this->username, $this->password, $this->wsdl);
+        return new lsu_degree(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_degree_source')
+        );
     }
 
     function sports_source() {
-        return new lsu_sports($this->username, $this->password, $this->wsdl);
+        return new lsu_sports(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_ath_source')
+        );
     }
 
     function teacher_department_source() {
-        return new lsu_teachers_by_department($this->username, $this->password, $this->wsdl);
+        return new lsu_teachers_by_department(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('teacher_by_department')
+        );
     }
 
     function student_department_source() {
-        return new lsu_students_by_department($this->username, $this->password, $this->wsdl);
+        return new lsu_students_by_department(
+            $this->username, $this->password,
+            $this->wsdl, $this->get_setting('student_by_department')
+        );
     }
 
     function postprocess($enrol = null) {
