@@ -719,9 +719,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = $section->course();
 
-                $group = $this->manifest_group($course, $ues_course, $section);
-
                 foreach (array('student', 'teacher') as $type) {
+
+                    $group = $this->manifest_group($course, $ues_course, $section);
+
                     $class = 'ues_' . $type;
 
                     $params = array(
