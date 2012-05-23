@@ -1,3 +1,9 @@
+## v1.1.5
+
+- Fixes group DB trap on pending unenrollments [7abb00][7abb00]
+
+[7abb00]: https://github.com/lsuits/ues/commit/7abb0061d1bb1b94cb92ed7028d7d0dacf9c7695
+
 ## v1.1.4
 
 - [LSU provider][lsu] gets configurable service ids [#30][30]
