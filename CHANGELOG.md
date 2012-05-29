@@ -1,8 +1,10 @@
 ## v1.1.5
 
 - Fixes group DB trap on pending unenrollments [7abb00][7abb00]
+- Fixes blind pending flag reset [deb369][deb369]
 
 [7abb00]: https://github.com/lsuits/ues/commit/7abb0061d1bb1b94cb92ed7028d7d0dacf9c7695
+[deb369]: https://github.com/lsuits/ues/commit/deb369738a77bc49e7552d391a3425ea0b7ba1aa
 
 ## v1.1.4
 
