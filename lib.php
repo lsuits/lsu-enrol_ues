@@ -636,7 +636,12 @@ class enrol_ues_plugin extends enrol_plugin {
                 continue;
             }
 
-            // "Unenroll" users that were found pending
+            // Maybe the manifestation process died... leave this user alone
+            if ($user->status == ues::PENDING and $user->section()->status == ues::MANIFESTED) {
+                continue;
+            }
+
+            // Maybe the course hasn't been created... clear the pending flag
             $status = $user->status == ues::PENDING ? ues::UNENROLLED : ues::PENDING;
 
             $user->status = $status;
@@ -701,6 +706,26 @@ class enrol_ues_plugin extends enrol_plugin {
         return $this->fill_role('student', $section, $users, $current_users);
     }
 
+    // Allow public API to reset unenrollments
+    public function reset_unenrollments($section) {
+        $course = $section->moodle();
+
+        $ues_course = $section->course();
+
+        foreach (array('student', 'teacher') as $type) {
+            $group = $this->manifest_group($course, $ues_course, $section);
+
+            $class = 'ues_' . $type;
+
+            $params = array(
+                'sectionid' => $section->id, 'status' => ues::UNENROLLED
+            );
+
+            $users = $class::get_all($params);
+            $this->unenroll_users($group, $users);
+        }
+    }
+
     public function handle_pending_sections($sections) {
         global $DB;
 
@@ -725,12 +750,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
                     $class = 'ues_' . $type;
 
-                    $params = array(
-                        'sectionid' => $section->id, 'status' => ues::ENROLLED
-                    );
+                    $params = ues::where()
+                        ->sectionid->equal($section->id)
+                        ->status->in(ues::ENROLLED, ues::UNENROLLED);
 
                     if ($last_section and $type == 'teacher') {
-                        $params['primary_flag'] = 0;
+                        $params->primary_flag->equal(0);
                     }
 
                     $users = $class::get_all($params);
@@ -967,7 +992,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
             groups_remove_member($group->id, $user->userid);
 
-            $to_status = $user->status == ues::PENDING ?
+            // Don't mark those meat to be unenrolled to processed
+            $prev_status = $user->status;
+
+            $to_status = (
+                $user->status == ues::PENDING or
+                $user->status == ues::UNENROLLED
+            ) ?
                 ues::UNENROLLED :
                 ues::PROCESSED;
 
@@ -998,7 +1029,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 groups_add_member($group->id, $user->userid);
             }
 
-            if ($to_status == ues::UNENROLLED) {
+            if ($to_status != $prev_status and $to_status == ues::UNENROLLED) {
                 $event_params = array(
                     'group' => $group,
                     'ues_user' => $user

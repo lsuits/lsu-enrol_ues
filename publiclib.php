@@ -99,6 +99,18 @@ abstract class ues {
         return $enrol->errors;
     }
 
+    public static function reset_unenrollments(array $sections, $silent = true) {
+        $enrol = enrol_get_plugin('ues');
+
+        $enrol->is_silent = $silent;
+
+        foreach ($sections as $section) {
+            $enrol->reset_unenrollments($section);
+        }
+
+        return $enrol->errors;
+    }
+
     public static function reprocess_department($semester, $department, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
