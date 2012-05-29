@@ -164,21 +164,19 @@ class lsu_enrollment_provider extends enrollment_provider {
 
         $now = time();
 
-        $by_closest_lsu = function ($in, $semester) use ($now) {
-            if (empty($in)) {
-                return $semester;
-            } else if ($in->campus == 'LAW') {
-                return $semester;
-            } else if ($semester->campus == 'LAW') {
-                return $in;
-            } else {
-                $end = $semester->grades_due;
-                $closer = ($end >= $now and $end < $in->grades_due);
-                return $closer ? $semester : $in;
-            }
+        $by_lsu = function($semester) {
+            return $semester->campus == 'LSU';
         };
 
-        $lsu_semester = array_reduce($semesters_in_session, $by_closest_lsu);
+        $by_closest = function ($in, $semester) use ($now) {
+            $end = $semester->grades_due;
+            $closer = ($end >= $now and $end < $in->grades_due);
+            return $closer ? $semester : $in;
+        };
+
+        $lsu_semesters = array_filter($semesters_in_session, $by_lsu);
+
+        $lsu_semester = array_reduce($lsu_semesters, $by_closest);
 
         if (empty($lsu_semester)) {
             return true;

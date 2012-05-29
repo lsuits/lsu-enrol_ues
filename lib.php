@@ -718,7 +718,8 @@ class enrol_ues_plugin extends enrol_plugin {
             $class = 'ues_' . $type;
 
             $params = array(
-                'sectionid' => $section->id, 'status' => ues::UNENROLLED
+                'sectionid' => $section->id,
+                'status' => ues::UNENROLLED
             );
 
             $users = $class::get_all($params);
