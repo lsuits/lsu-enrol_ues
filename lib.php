@@ -710,6 +710,11 @@ class enrol_ues_plugin extends enrol_plugin {
     public function reset_unenrollments($section) {
         $course = $section->moodle();
 
+        // Nothing to do
+        if (empty($course)) {
+            return;
+        }
+
         $ues_course = $section->course();
 
         foreach (array('student', 'teacher') as $type) {
