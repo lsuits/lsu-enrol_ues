@@ -169,6 +169,10 @@ class lsu_enrollment_provider extends enrollment_provider {
         };
 
         $by_closest = function ($in, $semester) use ($now) {
+            if (empty($in)) {
+                return $semester;
+            }
+
             $end = $semester->grades_due;
             $closer = ($end >= $now and $end < $in->grades_due);
             return $closer ? $semester : $in;
