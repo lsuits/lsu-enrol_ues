@@ -1,3 +1,9 @@
+## v1.1.6
+
+- [LSU Provider][lsu] now process user data for simultaneous semesters [a3412d][a3412d]
+
+[a3412d]: https://github.com/lsuits/ues/commit/a3412d5853617cddc211aa8a2d6855e4bca83839
+
 ## v1.1.5
 
 - Fixes group DB trap on pending unenrollments [7abb00][7abb00]
