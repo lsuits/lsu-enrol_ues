@@ -164,37 +164,6 @@ class lsu_enrollment_provider extends enrollment_provider {
 
         $now = time();
 
-        $by_lsu = function($semester) {
-            return $semester->campus == 'LSU';
-        };
-
-        $by_closest = function ($in, $semester) use ($now) {
-            if (empty($in)) {
-                return $semester;
-            }
-
-            $end = $semester->grades_due;
-            $closer = ($end >= $now and $end < $in->grades_due);
-            return $closer ? $semester : $in;
-        };
-
-        $lsu_semesters = array_filter($semesters_in_session, $by_lsu);
-
-        $lsu_semester = array_reduce($lsu_semesters, $by_closest);
-
-        if (empty($lsu_semester)) {
-            return true;
-        }
-
-        $law_semesters = ues_semester::get_all(array(
-            'year' => $lsu_semester->year,
-            'name' => $lsu_semester->name,
-            'session_key' => $lsu_semester->session_key,
-            'campus' => 'LAW',
-        ));
-
-        $processed_semesters = array($lsu_semester) + $law_semesters;
-
         $attempts = array(
             'student_data' => $this->student_data_source(),
             'anonymous_numbers' => $this->anonymous_source(),
@@ -202,14 +171,14 @@ class lsu_enrollment_provider extends enrollment_provider {
             'sports_information' => $this->sports_source()
         );
 
-        foreach ($processed_semesters as $semester) {
+        foreach ($semesters_in_session as $semester) {
 
             foreach ($attempts as $key => $source) {
                 if (!$this->get_setting($key)) {
                     continue;
                 }
 
-                If ($enrol) {
+                if ($enrol) {
                     $enrol->log("Processing $key for $semester...");
                 }
 
