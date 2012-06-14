@@ -10,6 +10,7 @@ interface ues_dao_dsl_words {
     public function greater_equal($value);
     public function less_equal($value);
     public function in();
+    public function not_in();
     public function not_equal($value);
     public function is($value);
     public function is_not($value);
@@ -149,6 +150,14 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
         return $this->add_to($op . ' ' . $this->clean($value));
     }
 
+    protected function arg_handler($values) {
+        if (is_array(current($values))) {
+            $values = current($values);
+        }
+
+        return array_map(array($this, 'clean'), $values);
+    }
+
     function like($value) {
         return $this->add_to("LIKE '%".addslashes($value)."%'");
     }
@@ -162,15 +171,13 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
     }
 
     function in() {
-        $values = func_get_args();
-
-        if (is_array(current($values))) {
-            $values = current($values);
-        }
-
-        $cleaned = array_map(array($this, 'clean'), $values);
-
+        $cleaned = $this->arg_handler(func_get_args());
         return $this->add_to('IN (' . implode(', ', $cleaned) . ')');
+    }
+
+    function not_in() {
+        $cleaned = $this->arg_handler(func_get_args());
+        return $this->add_to('NOT IN (' . implode(', ', $cleaned) . ')');
     }
 
     function equal($value) {
