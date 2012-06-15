@@ -636,11 +636,6 @@ class enrol_ues_plugin extends enrol_plugin {
                 continue;
             }
 
-            // Maybe the manifestation process died... leave this user alone
-            if ($user->status == ues::PENDING and $user->section()->status == ues::MANIFESTED) {
-                continue;
-            }
-
             // Maybe the course hasn't been created... clear the pending flag
             $status = $user->status == ues::PENDING ? ues::UNENROLLED : ues::PENDING;
 
