@@ -31,6 +31,9 @@ abstract class ues_dao_helpers {
 abstract class ues_dao_filter_builder implements IteratorAggregate {
     protected $fields;
     protected $current;
+    protected $joins = array();
+
+    protected $memoized;
 
     abstract function create_field($field);
 
@@ -56,8 +59,32 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $this->fields;
     }
 
+    function join_sql($alias = null) {
+        $joins = $alias ? $alias : '';;
+        foreach ($this->joins as $alias => $statement) {
+            $joins .= ", $statement $alias";
+        }
+
+        return $joins;
+    }
+
     function __toString() {
         return $this->sql();
+    }
+
+    function join($statement, $alias) {
+        $this->joins[$alias] = $statement;
+        end($this->joins);
+        return $this;
+    }
+
+    function on($fieldkey, $joinfield, $alias = null) {
+        if (empty($this->joins)) {
+            throw new Exception('Cannot perform join without a join declaration.');
+        }
+
+        $alias = $alias ? $alias : key($this->joins);
+        return $this->$fieldkey->raw('= ' . $alias . '.' . $joinfield);
     }
 
     function sql($handler = null) {
@@ -65,7 +92,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
             list($key, $built) = $field->get();
 
             if ($handler) {
-                $key = $handler($key);
+                $key = $handler($key, $field);
             }
 
             return $field->sql($key);
@@ -98,6 +125,16 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
     }
 
     function __get($name) {
+        if (!empty($this->memoized)) {
+            $memoized = $this->memoized;
+            unset($this->memoized);
+
+            return $this->plus($memoized . '.' . $name);
+        } else if (isset($this->joins[$name])) {
+            $this->memoized = $name;
+            return $this;
+        }
+
         return $this->plus($name);
     }
 }
@@ -111,14 +148,20 @@ class ues_dao_filter extends ues_dao_filter_builder {
 class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
     protected $built;
     protected $field;
+    protected $aliased;
 
     function __construct($field) {
         $this->field = $field;
+        $this->aliased = preg_match('/\./', $field);
         $this->built = array();
     }
 
     function key() {
         return $this->field;
+    }
+
+    function is_aliased() {
+        return $this->aliased;
     }
 
     function get() {
