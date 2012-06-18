@@ -2,7 +2,9 @@
 
 - [LSU Provider][lsu] now process user data for simultaneous semesters [a3412d][a3412d]
 - Adds `not_in` dao dsl word [7414cf][7414cf]
+- Adds join support for SQL builder [cff6b8][cff6b8]
 
+[cff6b8]: https://github.com/lsuits/ues/commit/cff6b86969e4dc36e48384efd47be0e155befdfb
 [7414cf]: https://github.com/lsuits/ues/commit/7414cfc7ac918d92ea623b952845966bf449c504
 [a3412d]: https://github.com/lsuits/ues/commit/a3412d5853617cddc211aa8a2d6855e4bca83839
 
