@@ -86,7 +86,7 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         foreach ($params as $key => $f) {
             if (method_exists($params[$key], 'sql')) {
-                $filter = $f->sql('z.'.$key);
+                $filter = $f->is_aliased() ? $f->sql() : $f->sql('z.'.$key);
             } else {
                 $filter = "z.$key = '$f'";
             }
@@ -116,14 +116,13 @@ abstract class ues_dao extends ues_base implements meta_information {
             $z_fields = array_map(function($field) { return 'z.' . $field; },
                 explode(',', $fields));
 
-            $send = is_array($params) ? $params : $params->get();
-
+            list($send, $joins) = self::strip_joins($params);
             list($tables, $filters) = self::meta_sql_builder($send);
 
             $order = empty($sort) ? '' : ' ORDER BY ' . $sort;
 
             $sql = "SELECT ". implode(',', $z_fields) . ' FROM ' .
-                $tables . ' WHERE ' . $filters . $order;
+                $tables . $joins . ' WHERE ' . $filters . $order;
 
             $res = $DB->get_records_sql($sql, array(), $offset, $limit);
         } else {
@@ -145,9 +144,11 @@ abstract class ues_dao extends ues_base implements meta_information {
         if (self::call('params_contains_meta', $params)) {
             $send = is_array($params) ? $params : $params->get();
 
+            list($send, $joins) = self::strip_joins($params);
             list($tables, $filters) = self::meta_sql_builder($send);
 
-            $sql = 'SELECT COUNT(*) FROM ' . $tables . ' WHERE ' . $filters;
+            $sql = 'SELECT COUNT(z.id) FROM ' . $tables . $joins .
+                ' WHERE ' . $filters;
 
             return $DB->count_records_sql($sql);
         } else {

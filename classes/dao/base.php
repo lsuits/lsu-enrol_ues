@@ -14,6 +14,15 @@ abstract class ues_base {
         });
     }
 
+    protected static function strip_joins($params) {
+        if (is_array($params)) {
+            return array($params, isset($params['joins']) ?
+                ', ' . implode(', ', $params['joins']) : '');
+        } else {
+            return array($params->get(), $params->join_sql());
+        }
+    }
+
     protected static function get_internal($params, $fields = '*', $trans = null) {
         return current(self::get_all_internal($params, '', $fields, 0, 0, $trans));
     }
@@ -26,11 +35,20 @@ abstract class ues_base {
         if (is_array($params)) {
             $res = $DB->get_records($tablename, $params, $sort, $fields, $offset, $limit);
         } else {
-            $where = $params->sql();
+            $o_fields = array_map(
+                function($field) { return 'original.' . $field; },
+                explode(',', $fields)
+            );
+
+            $joins = $params->join_sql('original');
+            $where = $params->sql(function($key, $field) {
+                return $field->is_aliased() ? $key : 'original.' . $key;
+            });
 
             $order = !empty($sort) ? ' ORDER BY '. $sort : '';
 
-            $sql = 'SELECT '.$fields.' FROM {'.$tablename.'} WHERE '.$where . $order;
+            $sql = 'SELECT '.implode(',', $o_fields). ' FROM {'.$tablename.'} '
+                . $joins . ' WHERE '.$where . $order;
 
             $res = $DB->get_records_sql($sql, null, $offset, $limit);
         }
@@ -71,7 +89,12 @@ abstract class ues_base {
         if (is_array($params)) {
             return $DB->delete_records($tablename, $params);
         } else {
-            $sql = 'DELETE FROM {'.$tablename.'} WHERE ' . $params->sql();
+            $joins = $params->join_sql('original');
+            $aliases = function($key, $field) {
+                return $field->is_aliased() ? $key : 'original.' . $key;
+            };
+            $sql = 'DELETE FROM {'.$tablename.'} ' . $joins .
+                ' WHERE ' . $params->sql($aliases);
 
             return $DB->execute($sql);
         }
@@ -85,8 +108,12 @@ abstract class ues_base {
         if (is_array($params)) {
             return $DB->count_records($tablename, $params);
         } else {
-            $where = $params->sql();
-            $sql = 'SELECT COUNT(*) FROM {' . $tablename . '} WHERE ' . $where;
+            $where = $params->sql(function($key, $field) {
+                return $field->is_aliased() ? $key : 'original.' . $key;
+            });
+            $joins = $params->join_sql('original');
+            $sql = 'SELECT COUNT(original.id) FROM {' . $tablename . '} ' .
+                $joins . ' WHERE ' . $where;
 
             return $DB->count_records_sql($sql);
         }
