@@ -18,9 +18,9 @@ interface ues_dao_dsl_words {
 
 abstract class ues_dao_helpers {
     protected function clean($value) {
-        if (is_numeric($value)) {
+        if (is_int($value) or is_double($value)) {
             return $value;
-        } else if(is_null($value)) {
+        } else if (is_null($value)) {
             return 'NULL';
         } else {
             return "'" . addslashes(trim($value)) . "'";
