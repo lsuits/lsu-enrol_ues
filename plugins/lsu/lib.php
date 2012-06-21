@@ -114,3 +114,46 @@ XML;
         }
     }
 }
+
+abstract class lsu_teacher_format extends lsu_source {
+    public function format_teacher($xml_teacher) {
+        $primary_flag = trim($xml_teacher->PRIMARY_INSTRUCTOR);
+
+        list($first, $last) = $this->parse_name($xml_teacher->INDIV_NAME);
+
+        $teacher = new stdClass;
+
+        $teacher->idnumber = (string) $xml_teacher->LSU_ID;
+        $teacher->primary_flag = (string) $primary_flag == 'Y' ? 1 : 0;
+
+        $teacher->firstname = $first;
+        $teacher->lastname = $last;
+        $teacher->username = (string) $xml_teacher->PRIMARY_ACCESS_ID;
+
+        return $teacher;
+    }
+}
+
+abstract class lsu_student_format extends lsu_source {
+    const AUDIT = 'AU';
+
+    public function format_student($xml_student) {
+        $student = new stdClass;
+
+        $student->idnumber = (string) $xml_student->LSU_ID;
+        $student->credit_hours = (string) $xml_student->CREDIT_HRS;
+
+        if (trim((string) $xml_student->GRADING_CODE) == self::AUDIT) {
+            $student->student_audit = 1;
+        }
+
+        list($first, $last) = $this->parse_name($xml_student->INDIV_NAME);
+
+        $student->username = (string) $xml_student->PRIMARY_ACCESS_ID;
+        $student->firstname = $first;
+        $student->lastname = $last;
+        $student->user_ferpa = trim((string)$xml_student->WITHHOLD_DIR_FLG) == 'P' ? 1 : 0;
+
+        return $student;
+    }
+}
