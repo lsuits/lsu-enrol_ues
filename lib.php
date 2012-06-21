@@ -257,7 +257,9 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function full_process() {
 
-        $this->provider()->preprocess($this);
+        if (!$this->provider()->preprocess($this)) {
+            $this->errors[] = 'Error during preprocess.';
+        }
 
         $provider_name = $this->provider()->get_name();
 
@@ -534,12 +536,13 @@ class enrol_ues_plugin extends enrol_plugin {
                     continue;
                 }
 
+                // Call event before potential insert, as to notify creation
+                events_trigger('ues_semester_process', $ues);
+
                 $ues->save();
 
                 // Fill in additionally set data
                 $ues->fill_meta();
-
-                events_trigger('ues_semester_process', $ues);
 
                 $processed[] = $ues;
             } catch (Exception $e) {
@@ -562,9 +565,9 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = ues_course::upgrade_and_get($course, $params);
 
-                $ues_course->save();
-
                 events_trigger('ues_course_process', $ues_course);
+
+                $ues_course->save();
 
                 $processed_sections = array();
                 foreach ($ues_course->sections as $section) {
@@ -1250,6 +1253,13 @@ class enrol_ues_plugin extends enrol_plugin {
             if ($prev = $class::get($params, true)) {
                 $ues_type->id = $prev->id;
                 unset($current_users[$prev->id]);
+
+                // Intentionally save meta fields before continuing
+                // Meta fields can change without enrollment changes
+                $fields = get_object_vars($ues_type);
+                if ($ues_type->params_contains_meta($fields)) {
+                    $ues_type->save();
+                }
 
                 if (in_array($prev->status, $already_enrolled)) {
                     continue;
