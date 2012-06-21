@@ -16,6 +16,8 @@ interface meta_information {
     public static function delete_meta($params);
 
     public static function delete_all_meta($params);
+
+    public static function update_meta($params);
 }
 
 abstract class ues_dao extends ues_base implements meta_information {
@@ -236,6 +238,25 @@ abstract class ues_dao extends ues_base implements meta_information {
 
         return $DB->delete_records_select(self::call('metatablename'), null,
             self::call('get_name').'id in ('.$ids.')');
+    }
+
+    public static function update_meta($params = array()) {
+        global $DB;
+
+        $meta_fields = self::call('meta_fields', $params);
+
+        if (empty($meta_fields)) {
+            return true;
+        }
+
+        $field = current($meta_fields);
+        $query = array('name' => $field, 'value' => $params[$field]);
+
+        $meta_table = self::call('metatablename');
+
+        $sql = 'UPDATE {'. $meta_table .'} SET value = :value WHERE name = :name';
+
+        return $DB->execute($sql, $query);
     }
 
     public function fill_meta() {
