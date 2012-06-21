@@ -141,7 +141,7 @@ class lsu_courses extends lsu_source implements course_processor {
     }
 }
 
-class lsu_teachers_by_department extends lsu_source implements teacher_by_department {
+class lsu_teachers_by_department extends lsu_teacher_format implements teacher_by_department {
 
     function teachers($semester, $department) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -161,19 +161,7 @@ class lsu_teachers_by_department extends lsu_source implements teacher_by_depart
         $xml_teachers = $this->invoke($params);
 
         foreach ($xml_teachers->ROW as $xml_teacher) {
-
-            $primary_flag = trim($xml_teacher->PRIMARY_INSTRUCTOR);
-
-            list($first, $last) = $this->parse_name($xml_teacher->INDIV_NAME);
-
-            $teacher = new stdClass;
-
-            $teacher->idnumber = (string) $xml_teacher->LSU_ID;
-            $teacher->primary_flag = (string) $primary_flag == 'Y' ? 1 : 0;
-
-            $teacher->firstname = $first;
-            $teacher->lastname = $last;
-            $teacher->username = (string) $xml_teacher->PRIMARY_ACCESS_ID;
+            $teacher = $this->format_teacher($xml_teacher);
 
             // Section information
             $teacher->department = $department;
@@ -187,7 +175,7 @@ class lsu_teachers_by_department extends lsu_source implements teacher_by_depart
     }
 }
 
-class lsu_students_by_department extends lsu_source implements student_by_department {
+class lsu_students_by_department extends lsu_student_format implements student_by_department {
 
     function students($semester, $department) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -203,17 +191,7 @@ class lsu_students_by_department extends lsu_source implements student_by_depart
         $students = array();
         foreach ($xml_students->ROW as $xml_student) {
 
-            $student = new stdClass;
-
-            $student->idnumber = (string) $xml_student->LSU_ID;
-            $student->credit_hours = (string) $xml_student->CREDIT_HRS;
-
-            list($first, $last) = $this->parse_name($xml_student->INDIV_NAME);
-
-            $student->username = (string) $xml_student->PRIMARY_ACCESS_ID;
-            $student->firstname = $first;
-            $student->lastname = $last;
-            $student->user_ferpa = trim((string)$xml_student->WITHHOLD_DIR_FLG) == 'P' ? 1 : 0;
+            $student = $this->format_student($xml_student);
 
             // Section information
             $student->department = $department;
@@ -227,7 +205,7 @@ class lsu_students_by_department extends lsu_source implements student_by_depart
     }
 }
 
-class lsu_teachers extends lsu_source implements teacher_processor {
+class lsu_teachers extends lsu_teacher_format implements teacher_processor {
 
     function teachers($semester, $course, $section) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -248,27 +226,14 @@ class lsu_teachers extends lsu_source implements teacher_processor {
 
         foreach ($xml_teachers->ROW as $xml_teacher) {
 
-            $primary_flag = trim($xml_teacher->PRIMARY_INSTRUCTOR);
-
-            list($first, $last) = $this->parse_name($xml_teacher->INDIV_NAME);
-
-            $teacher = new stdClass;
-
-            $teacher->idnumber = (string) $xml_teacher->LSU_ID;
-            $teacher->primary_flag = (string) $primary_flag == 'Y' ? 1 : 0;
-
-            $teacher->firstname = $first;
-            $teacher->lastname = $last;
-            $teacher->username = (string) $xml_teacher->PRIMARY_ACCESS_ID;
-
-            $teachers[] = $teacher;
+            $teachers[] = $this->format_teacher($xml_teacher);
         }
 
         return $teachers;
     }
 }
 
-class lsu_students extends lsu_source implements student_processor {
+class lsu_students extends lsu_student_format implements student_processor {
 
     function students($semester, $course, $section) {
         $semester_term = $this->encode_semester($semester->year, $semester->name);
@@ -283,19 +248,7 @@ class lsu_students extends lsu_source implements student_processor {
         $students = array();
         foreach ($xml_students->ROW as $xml_student) {
 
-            $student = new stdClass;
-
-            $student->idnumber = (string) $xml_student->LSU_ID;
-            $student->credit_hours = (string) $xml_student->CREDIT_HRS;
-
-            list($first, $last) = $this->parse_name($xml_student->INDIV_NAME);
-
-            $student->username = (string) $xml_student->PRIMARY_ACCESS_ID;
-            $student->firstname = $first;
-            $student->lastname = $last;
-            $student->user_ferpa = trim((string)$xml_student->WITHHOLD_DIR_FLG) == 'P' ? 1 : 0;
-
-            $students[] = $student;
+            $students[] = $this->format_student($xml_student);
         }
 
         return $students;

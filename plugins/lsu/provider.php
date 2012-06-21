@@ -159,6 +159,11 @@ class lsu_enrollment_provider extends enrollment_provider {
         );
     }
 
+    function preprocess($enrol = null) {
+        // Clear student auditing flag on each run; It'll be set in processor
+        return ues_student::update_meta(array('student_audit' => 0));
+    }
+
     function postprocess($enrol = null) {
         $semesters_in_session = ues_semester::in_session();
 
