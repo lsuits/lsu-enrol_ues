@@ -89,12 +89,8 @@ abstract class ues_base {
         if (is_array($params)) {
             return $DB->delete_records($tablename, $params);
         } else {
-            $joins = $params->join_sql('original');
-            $aliases = function($key, $field) {
-                return $field->is_aliased() ? $key : 'original.' . $key;
-            };
-            $sql = 'DELETE original.* FROM {'.$tablename.'} ' . $joins .
-                ' WHERE ' . $params->sql($aliases);
+            // DELETE SQL standard does not support joins, neither do we
+            $sql = 'DELETE FROM {'.$tablename.'}  WHERE ' . $params->sql();
 
             return $DB->execute($sql);
         }
