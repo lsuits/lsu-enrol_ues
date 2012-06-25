@@ -93,7 +93,7 @@ abstract class ues_base {
             $aliases = function($key, $field) {
                 return $field->is_aliased() ? $key : 'original.' . $key;
             };
-            $sql = 'DELETE FROM {'.$tablename.'} ' . $joins .
+            $sql = 'DELETE original.* FROM {'.$tablename.'} ' . $joins .
                 ' WHERE ' . $params->sql($aliases);
 
             return $DB->execute($sql);
