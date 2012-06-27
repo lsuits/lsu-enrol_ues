@@ -1,3 +1,9 @@
+## v1.1.7
+
+- [LSU Provider][lsu] now properly clears the graduate flag [f842c0][f842c0]
+
+[f842c0]: https://github.com/lsuits/ues/commit/f842c086ab99751a8c59d12047f9c26c5818c3b4
+
 ## v1.1.6
 
 - [LSU Provider][lsu] now process user data for simultaneous semesters [a3412d][a3412d]
