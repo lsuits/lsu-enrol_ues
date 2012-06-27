@@ -161,7 +161,11 @@ class lsu_enrollment_provider extends enrollment_provider {
 
     function preprocess($enrol = null) {
         // Clear student auditing flag on each run; It'll be set in processor
-        return ues_student::update_meta(array('student_audit' => 0));
+        // Clear graduating students
+        return (
+            ues_student::update_meta(array('student_audit' => 0)) and
+            ues_user::update_meta(array('user_degree' => 0))
+        );
     }
 
     function postprocess($enrol = null) {
