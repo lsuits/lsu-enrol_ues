@@ -1,23 +1,28 @@
 (function(){
-  $(document).ready(function() {
+  M.ues = {};
+  M.ues.failures = function(Y) {
     var buttonCheck, grab;
     grab = function(buttonName) {
-      return $("input[name='" + buttonName + "']");
+      return Y.one("input[name='" + buttonName + "']");
     };
     buttonCheck = function() {
       var disabled, selected;
-      selected = $("input[name^='ids']:checked");
+      selected = [];
+      Y.all(".ids").each(function(node, i, nl) {
+        if ((node.get('checked'))) {
+          return selected.push(node);
+        }
+      });
       disabled = selected.length === 0;
-      $(grab('reprocess')).attr('disabled', disabled);
-      return $(grab('delete')).attr('disabled', disabled);
+      grab('reprocess').set('disabled', disabled);
+      return grab('delete').set('disabled', disabled);
     };
-    $("input[name^='ids']").change(buttonCheck);
-    return $("input[name='select_all']").change(function() {
+    Y.all(".ids").on('change', buttonCheck);
+    return Y.one('input[name=select_all]').on('change', function() {
       var selected;
-      selected = $(this).attr('checked');
-      selected = selected ? selected : false;
-      $("input[name^='ids']").attr('checked', selected);
+      selected = this.get('checked');
+      Y.all(".ids").set('checked', selected);
       return buttonCheck();
     });
-  });
+  };
 })();

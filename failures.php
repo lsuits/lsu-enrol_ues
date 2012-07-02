@@ -35,9 +35,13 @@ $PAGE->navbar->add($blockname, $base_url);
 
 $PAGE->navbar->add($action);
 
-// LSU requirement
-$PAGE->requires->js(new moodle_url('/lib/jquery.js'));
-$PAGE->requires->js(new moodle_url('/enrol/ues/js/failure.js'));
+$module = array(
+    'name' => 'ues',
+    'fullpath' => '/enrol/ues/js/failure.js',
+    'requires' => array('base', 'dom')
+);
+
+$PAGE->requires->js_init_call('M.ues.failures', null, false, $module);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($action);
@@ -102,7 +106,7 @@ foreach ($errors as $error) {
         $error->name,
         html_writer::tag('pre', print_r($params, true)),
         date('Y-m-d h:i:s a', $error->timestamp),
-        html_writer::checkbox('ids[]', $error->id, false)
+        html_writer::checkbox('ids[]', $error->id, false, '',  array('class' => 'ids'))
     );
 
     $table->data[] = new html_table_row($line);
