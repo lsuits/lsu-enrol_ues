@@ -359,7 +359,7 @@ class lsu_sports extends lsu_source {
         $june = 615;
         $dec = 1231;
 
-        $cur = (int)($now['mon'] . $now['mday']);
+        $cur = (int)(sprintf('%d%02d', $now['mon'], $now['mday']));
 
         if ($cur >= $june and $cur <= $dec) {
             return ($now['year']) . substr($now['year'] + 1, 2);
