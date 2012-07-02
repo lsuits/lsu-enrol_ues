@@ -439,8 +439,8 @@ class ues_student extends user_handler {
 
 class ues_user extends ues_dao {
 
-    public static function tablename() {
-        return 'user';
+    public static function tablename($alias='') {
+        return !empty($alias) ? "{user} $alias" : 'user';
     }
 
     private static function qualified($userid = null) {
