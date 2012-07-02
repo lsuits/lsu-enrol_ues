@@ -102,11 +102,13 @@ abstract class enrollment_provider implements enrollment_factory {
 
     // Display name
     public static function get_name() {
-        return get_string('pluginname', self::plugin_key());
+        $class = get_called_class();
+        return get_string('pluginname', $class::plugin_key());
     }
 
     public static function translate_error($code) {
-        return get_string($code, self::plugin_key());
+        $class = get_called_class();
+        return get_string($code, $class::plugin_key());
     }
 
     // Returns the Moodle plugin key for this provider

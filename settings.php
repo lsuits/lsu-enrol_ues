@@ -26,7 +26,7 @@ if ($ADMIN->fulltree) {
 
     if (!empty($plugins)) {
         $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
-            $_s('provider'), $_s('provider_desc'), 'fake', $plugins));
+            $_s('provider'), $_s('provider_desc'), key($plugins), $plugins));
     }
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
@@ -159,7 +159,7 @@ if ($ADMIN->fulltree) {
             }
 
             $a = new stdClass;
-            $a->name = $plugin_name;
+            $a->name = $test_provider->get_name();
             $a->list = '';
 
             if ($test_provider->supports_department_lookups()) {
