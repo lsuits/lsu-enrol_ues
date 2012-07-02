@@ -297,33 +297,20 @@ abstract class ues {
         return $pattern;
     }
 
-    public static function plugin_base() {
-        return self::base('plugins');
-    }
-
     public static function base($dir='') {
         return dirname(__FILE__) . (empty($dir) ? '' : '/'.$dir);
     }
 
     public static function list_plugins() {
 
-        $base = self::plugin_base();
+        $data = new stdClass;
+        // The plugins array should be allocated thusly:
+        // $data->plugins += array('plugin_name' => 'Plugin name');
+        $data->plugins = array();
 
-        $all_files_folders = scandir($base);
+        events_trigger('ues_list_provider', $data);
 
-        $plugins = array_filter($all_files_folders, function ($file) use ($base) {
-            return is_dir($base . '/' . $file) and !preg_match('/^\./', $file);
-        });
-
-        if (empty($plugins)) {
-            return array();
-        }
-
-        $provide_append = function ($name) {
-            return ues::_s("{$name}_name");
-        };
-
-        return array_combine($plugins, array_map($provide_append, $plugins));
+        return $data->plugins;
     }
 
     public static function provider_class() {
@@ -333,21 +320,23 @@ abstract class ues {
             return false;
         }
 
-        $class_file = self::plugin_base() . '/' . $provider_name . '/provider.php';
+        $plugins = self::list_plugins();
 
-        if (!file_exists($class_file)) {
+        if (!isset($plugins[$provider_name])) {
             return false;
         }
 
         // Require library code
         self::require_libs();
 
-        // Require client code
-        require_once $class_file;
+        $data = new stdClass;
+        $data->provider_class = "{$provider_name}_enrollment_provider";
 
-        $provider_class = "{$provider_name}_enrollment_provider";
+        // Handlers should provide the correct provider class and
+        // libs so it can be instantiated
+        events_trigger("ues_load_{$provider_name}_provider", $data);
 
-        return $provider_class;
+        return $data->provider_class;
     }
 
     public static function create_provider() {
@@ -365,11 +354,11 @@ abstract class ues {
         if ($code == "enrollment_unsupported") {
             $problem = self::_s($code);
         } else {
-            $problem = self::_s($provider_name . '_' . $code);
+            $problem = $provider_class::translate_error($code);
         }
 
         $a = new stdClass;
-        $a->pluginname = self::_s($provider_name.'_name');
+        $a->pluginname = $provider_name;
         $a->problem = $problem;
 
         return $a;

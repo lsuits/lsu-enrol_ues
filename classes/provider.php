@@ -21,16 +21,14 @@ interface enrollment_factory {
 }
 
 abstract class enrollment_provider implements enrollment_factory {
+    // Simple settings array('key' => 'default');
+    var $settings = array();
 
     function get_setting($key, $default=false) {
+        $attempt = get_config($this->plugin_key(), $key);
 
-        $attempt = get_config('enrol_ues', $this->setting_key($key));
-
-        // Try generated setting defaults first
-        $reg_settings = $this->settings();
-
-        if (isset($reg_settings[$key])) {
-            $def = empty($reg_settings[$key]) ? $default : $reg_settings[$key];
+        if (isset($this->settings[$key])) {
+            $def = empty($this->settings[$key]) ? $default : $this->settings[$key];
         } else {
             $def = $default;
         }
@@ -50,6 +48,14 @@ abstract class enrollment_provider implements enrollment_factory {
     function supports_reverse_lookups() {
         $source = $this->teacher_info_source();
         return !empty($source);
+    }
+
+    function supports_section_lookups() {
+        return !(is_null($this->student_source()) or is_null($this->teacher_source()));
+    }
+
+    function supports_department_lookups() {
+        return !(is_null($this->teacher_source()) or is_null($this->teacher_department_source()));
     }
 
     // Optionally return a source for reverse lookups
@@ -73,34 +79,36 @@ abstract class enrollment_provider implements enrollment_factory {
         return null;
     }
 
-    function supports_section_lookups() {
-        return !(is_null($this->student_source()) or is_null($this->teacher_source()));
+    protected function simple_settings($settings) {
+        $plugin_key = $this->plugin_key();
+
+        $_s = ues::gen_str($plugin_key);
+        foreach ($this->settings as $key => $default) {
+            $settings->add(new admin_setting_configtext("$plugin_key/$key",
+                $_s($key), $_s("{$key}_desc"), $default));
+        }
     }
 
-    function supports_department_lookups() {
-        return !(is_null($this->teacher_source()) or is_null($this->teacher_department_source()));
+    // Override this function for displaying settings on the UES page as well
+    public function settings($settings) {
+
+        if (!empty($this->settings)) {
+            $settings->add(new admin_setting_heading('provider_heading',
+                $this->get_name(), ''));
+
+            $this->simple_settings($settings);
+        }
     }
 
-    function setting_key($key) {
-        return $this->get_name() . '_' . $key;
-    }
-
+    // Display name
     public static function get_name() {
-        return current(explode('_enrollment_provider', get_called_class()));
+        return get_string('pluginname', self::plugin_key());
     }
 
-    /**
-     * Return key / value pair of potential $CFG->$name_key_$key values
-     * The values become default values. Entries are assumed to be textboxes
-     */
-    public static function settings() {
-        return array();
+    public static function translate_error($code) {
+        return get_string($code, self::plugin_key());
     }
 
-    /**
-     * Return admin_setting_* classes for the $ADMIN config tree
-     */
-    public static function adv_settings() {
-        return array();
-    }
+    // Returns the Moodle plugin key for this provider
+    public abstract static function plugin_key();
 }

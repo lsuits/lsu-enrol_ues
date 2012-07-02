@@ -1,10 +1,13 @@
 <?php
 
 $string['pluginname'] = 'UES Enrollment';
-$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university
-criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.
+$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is
+a pluggable enrollment system that adheres to common university criterion
+including Semesters, Courses, Sections tied to coures, and teacher and student
+enrollment tied to Sections.
 
-The Moodle enrollment module will scan for behaviors defined in _{$a}_. A fully defined behavior will show up in the dropdown below.';
+The enrollment module will load any enrollment provider that handles the
+`ues_list_provider`. A fully defined provider will show up in the dropdown below.';
 
 $string['semester_cleanup'] = 'Semester Cleanup';
 $string['reprocess_failures'] = 'Reprocess Failures';

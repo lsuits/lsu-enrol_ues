@@ -10,7 +10,7 @@ if ($ADMIN->fulltree) {
     $_s = ues::gen_str();
 
     $settings->add(new admin_setting_heading('enrol_ues_settings', '',
-        $_s('pluginname_desc', ues::plugin_base())));
+        $_s('pluginname_desc')));
 
     $urls = new stdClass;
     $urls->cleanup_url = $CFG->wwwroot . '/enrol/ues/cleanup.php';
@@ -24,8 +24,10 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('enrol_ues_genernal_settings',
         $_s('general_settings'), ''));
 
-    $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
-        $_s('provider'), $_s('provider_desc'), 'fake', $plugins));
+    if (!empty($plugins)) {
+        $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
+            $_s('provider'), $_s('provider_desc'), 'fake', $plugins));
+    }
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
         $_s('process_by_department'), $_s('process_by_department_desc'), 1));
@@ -141,33 +143,11 @@ if ($ADMIN->fulltree) {
     $provider = ues::provider_class();
 
     if ($provider) {
-        $reg_settings = $provider::settings();
-
-        $adv_settings = $provider::adv_settings();
-
-        $plugin_name = $_s($provider::get_name() . '_name');
-        if ($reg_settings or $adv_settings) {
-            $settings->add(new admin_setting_heading('provider_settings',
-                $_s('provider_settings', $plugin_name), ''));
-        }
-
-        if ($reg_settings) {
-            foreach ($reg_settings as $key => $default) {
-                $actual_key = $provider::get_name() . '_' . $key;
-                $settings->add(new admin_setting_configtext('enrol_ues/'.$actual_key,
-                    $_s($actual_key), $_s($actual_key.'_desc', $CFG), $default));
-            }
-        }
-
-        if ($adv_settings) {
-            foreach ($adv_settings as $setting) {
-                $settings->add($setting);
-            }
-        }
-
         try {
             // Attempting to create the provider
             $test_provider = new $provider();
+
+            $test_provider->settings($settings);
 
             $works = (
                 $test_provider->supports_section_lookups() or
