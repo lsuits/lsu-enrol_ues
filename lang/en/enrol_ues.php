@@ -166,62 +166,6 @@ $string['teacher_role_desc'] = 'UES *non-primary* teachers will be enrolled in t
 
 $string['failed_sem'] = 'The following semester does not have an end date: {$a->year} {$a->name} {$a->campus} {$a->session_key}';
 
-/** Behavior Strings go here */
-$string['lsu_name'] = 'LSU Enrollment Provider';
-
-$string['lsu_credential_location'] = 'Credential Location';
-$string['lsu_credential_location_desc'] = 'For security purposes, the login credentials for the LSU web service is stored on a local secure server. This is the complete url to access the credentials.';
-
-$string['lsu_wsdl_location'] = 'SOAP WSDL';
-$string['lsu_wsdl_location_desc'] = 'This is the wsdl used in SOAP requests to LSU\'s Data Access Service. The Moodle data directory *{$a->dataroot}* is assumed as the path base.';
-
-$string['lsu_bad_file'] = 'Provide a *.wsdl* file';
-$string['lsu_no_file'] = 'The WSDL does not exists in wsdl_location';
-$string['lsu_bad_url'] = 'Provide a valid url (define either a http or https protocol)';
-$string['lsu_bad_resp'] = 'Invalid credentials in credential location request';
-
-$string['lsu_student_data'] = 'Process Student Data';
-$string['lsu_student_data_desc'] = 'This will enable processing student data in the `postprocess` section of the LSU provider';
-
-$string['lsu_anonymous_numbers'] = 'Process LAW Numbers';
-$string['lsu_anonymous_numbers_desc'] = 'This will enable processing anonymous numbers in the `postprocess` section of the LSU provider';
-
-$string['lsu_degree_candidates'] = 'Process Degree Candidacy';
-$string['lsu_degree_candidates_desc'] = 'This will enabled processing degree candidate information in the `postprocess` section of the LSU provider';
-
-$string['lsu_sports_information'] = 'Sports Information';
-$string['lsu_sports_information_desc'] = 'This will enable the pulling of student athletic information in the `postprocess` section of the LSU provider';
-
-$string['lsu_semester_source'] = 'Semester serviceId';
-$string['lsu_semester_source_desc'] = 'The web service id for campus semesters';
-
-$string['lsu_course_source'] = 'Courses serviceId';
-$string['lsu_course_source_desc'] = 'The web service id for courses per semester';
-
-$string['lsu_teacher_by_department'] = 'Dept instructors serviceId';
-$string['lsu_teacher_by_department_desc'] = 'The web service id for all instructors in a given department';
-
-$string['lsu_student_by_department'] = 'Dept students serviceId';
-$string['lsu_student_by_department_desc'] = 'The web service id for all students in a given department';
-
-$string['lsu_teacher_source'] = 'Sec instructor serviceId';
-$string['lsu_teacher_source_desc'] = 'The web service id for all instructors in a given section';
-
-$string['lsu_student_source'] = 'Sec student serviceId';
-$string['lsu_student_source_desc'] = 'The web service id for all students in a given section';
-
-$string['lsu_student_data_source'] = 'Student data serviceId';
-$string['lsu_student_data_source_desc'] = 'the web service id for all student data in a given semester';
-
-$string['lsu_student_degree_source'] = 'Degree candidate serviceId';
-$string['lsu_student_degree_source_desc'] = 'The web service id for degree candidate info for a given semester';
-
-$string['lsu_student_anonymous_source'] = 'Anonymous # serviceId';
-$string['lsu_student_anonymous_source_desc'] = 'The web service id for anonymous numbers';
-
-$string['lsu_student_ath_source'] = 'Athlete info serviceId';
-$string['lsu_student_ath_source_desc'] = 'The web service id for student athletes';
-
 $string['no_semester'] = 'The semester you have selected does not exists.';
 $string['no_semesters'] = 'There are no semesters in your system. Consider running the enrollment process.';
 
