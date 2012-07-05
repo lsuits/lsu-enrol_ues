@@ -302,7 +302,6 @@ abstract class ues {
     }
 
     public static function list_plugins() {
-
         $data = new stdClass;
         // The plugins array should be allocated thusly:
         // $data->plugins += array('plugin_name' => 'Plugin name');

@@ -263,7 +263,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $provider_name = $this->provider()->get_name();
 
-        $this->log('Pulling information from ' . ues::_s($provider_name . '_name'));
+        $this->log('Pulling information from ' . $provider_name);
         $this->process_all();
         $this->log('------------------------------------------------');
 
