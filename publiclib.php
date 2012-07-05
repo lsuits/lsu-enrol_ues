@@ -347,19 +347,21 @@ abstract class ues {
 
     public static function translate_error($e) {
         $provider_class = self::provider_class();
-        $provider_name = $provider_class::get_name();
 
         $code = $e->getMessage();
 
+        $a = new stdClass;
+
         if ($code == "enrollment_unsupported") {
-            $problem = self::_s($code);
+            $a->problem = self::_s($code);
         } else {
-            $problem = $provider_class::translate_error($code);
+            $a->problem = $provider_class::translate_error($code);
         }
 
-        $a = new stdClass;
-        $a->pluginname = $provider_name;
-        $a->problem = $problem;
+        $a->pluginname =
+            $provider_class ?
+            $provider_class::get_name() :
+            get_config('enrol_ues', 'enrollment_provider');
 
         return $a;
     }
