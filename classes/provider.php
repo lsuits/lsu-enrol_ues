@@ -80,12 +80,14 @@ abstract class enrollment_provider implements enrollment_factory {
     }
 
     protected function simple_settings($settings) {
+        global $CFG;
+
         $plugin_key = $this->plugin_key();
 
         $_s = ues::gen_str($plugin_key);
         foreach ($this->settings as $key => $default) {
             $settings->add(new admin_setting_configtext("$plugin_key/$key",
-                $_s($key), $_s("{$key}_desc"), $default));
+                $_s($key), $_s("{$key}_desc", $CFG), $default));
         }
     }
 
