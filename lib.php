@@ -56,7 +56,7 @@ class enrol_ues_plugin extends enrol_plugin {
         return $this->_provider;
     }
 
-    function course_updated($inserted, $course, $data) {
+    public function course_updated($inserted, $course, $data) {
         // UES is the one to create the course
         if ($inserted) {
             return;
@@ -66,7 +66,7 @@ class enrol_ues_plugin extends enrol_plugin {
         events_trigger('ues_course_updated', array($course, $data));
     }
 
-    function course_edit_validation($instance, $data, $context) {
+    public function course_edit_validation($instance, array $data, $context) {
         $errors = array();
         if (is_null($instance)) {
             return $errors;
@@ -100,7 +100,7 @@ class enrol_ues_plugin extends enrol_plugin {
         return $event->errors;
     }
 
-    function course_edit_form($instance, $form, $data, $context) {
+    public function course_edit_form($instance, MoodleQuickForm $form, $data, $context) {
         if (is_null($instance)) {
             return;
         }
@@ -115,7 +115,7 @@ class enrol_ues_plugin extends enrol_plugin {
         events_trigger('ues_course_edit_form', $event);
     }
 
-    function add_course_navigation($nodes, $instance) {
+    public function add_course_navigation($nodes, stdClass $instance) {
         // Only interfere with UES courses
         if (is_null($instance)) {
             return;
