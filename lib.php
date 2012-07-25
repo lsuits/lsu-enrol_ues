@@ -1111,7 +1111,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $category = $this->manifest_category($course);
 
-            $a = new stdclass;
+            $a = new stdClass;
             $a->year = $semester->year;
             $a->name = $semester->name;
             $a->session = $session;
@@ -1126,6 +1126,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $shortname = ues::format_string($sn_pattern, $a);
             $assumed_fullname = ues::format_string($fn_pattern, $a);
 
+            $moodle_course = new stdClass;
             $moodle_course->idnumber = $idnumber;
             $moodle_course->shortname = $shortname;
             $moodle_course->fullname = $assumed_fullname;
