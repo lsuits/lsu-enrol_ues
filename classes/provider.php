@@ -114,5 +114,7 @@ abstract class enrollment_provider implements enrollment_factory {
     }
 
     // Returns the Moodle plugin key for this provider
-    public abstract static function plugin_key();
+    public static function plugin_key() {
+        return "enrol_ues";
+    }
 }
