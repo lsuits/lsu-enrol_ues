@@ -12,6 +12,7 @@ $category = $DB->get_record(
     'course_categories', array('id' => $course->category), '*', MUST_EXIST
 );
 
+
 $PAGE->set_pagelayout('admin');
 $PAGE->set_url('/course/edit.php', array('id' => $courseid));
 
@@ -26,23 +27,14 @@ $editoroptions = array(
     'maxfiles' => EDITOR_UNLIMITED_FILES,
     'maxbytes' => $CFG->maxbytes,
     'trusttext' => false,
-    'noclean' => true
+    'noclean' => true,
+    'context' => $context
 );
 
-$allowedmodules = array();
-if ($am = $DB->get_records('course_allowed_modules', array('course'=>$course->id))) {
-    foreach ($am as $m) {
-        $allowedmodules[] = $m->module;
-    }
-} else {
-    if (empty($course->restrictmodules) and !empty($CFG->defaultallowedmodules)) {
-        $allowedmodules[] = explode(',', $CFG->defaultallowedmodules);
-    }
-}
-
-$course->allowedmods = $allowedmodules;
-$editoroptions['context'] = $context;
-$course = file_prepare_standard_editor($course, 'summary', $editoroptions, null, 'course', 'summary',0);
+$course = file_prepare_standard_editor(
+    $course, 'summary', $editoroptions,
+    $context, 'course', 'summary', 0
+);
 
 $form = new ues_course_edit_form(null, array(
     'course' => $course,
@@ -57,6 +49,7 @@ if ($form->is_cancelled()) {
     redirect($return);
 } else if ($data = $form->get_data()) {
     update_course($data, $editoroptions);
+    rebuild_course_cache($courseid);
     redirect($return);
 }
 
