@@ -869,11 +869,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Campuses may want to handle primary instructor changes differently
         if ($new_primary and $old_primary) {
-            events_trigger('ues_primary_change', array(
-                'section' => $section,
-                'old_teacher' => $old_primary,
-                'new_teacher' => $new_primary
-            ));
+            $data = new stdClass;
+            $data->section = $section;
+            $data->old_primary = $old_primary;
+            $data->new_primary = $new_primary;
+            events_trigger('ues_primary_change', $data);
+
+            $section = $data->section;
         }
 
         // For certain we are working with a real course
