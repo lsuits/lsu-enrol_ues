@@ -473,7 +473,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         } catch (Exception $e) {
             $info = "$semester $department";
-            $rea = $e->getTraceAsString();
+            $rea = $e->getMessage();
             $this->errors[] = sprintf('Failed to process %s: %s', $info, $rea);
 
             ues_error::department($semester, $department)->save();
@@ -1206,7 +1206,20 @@ class enrol_ues_plugin extends enrol_plugin {
 
             events_trigger('user_created', $user);
         } else if ($prev and $this->user_changed($prev, $user)) {
-            $user->save();
+            // Re-throw exception with more helpful information
+            try {
+                $user->save();
+            } catch (Exception $e) {
+                $rea = $e->getMessage();
+
+                $new_err = "%s | Current %s | Stored %s";
+                $log = "(%s: '%s')";
+
+                $curr = sprintf($log, $user->username, $user->idnumber);
+                $prev = sprintf($log, $prev->username, $prev->idnumber);
+
+                throw new Exception(sprintf($new_err, $rea, $curr, $prev));
+            }
 
             events_trigger('user_updated', $user);
         }
