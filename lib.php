@@ -473,7 +473,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
         } catch (Exception $e) {
             $info = "$semester $department";
-            $this->errors[] = 'Failed to process enrollment for ' . $info;
+            $rea = $e->getTraceAsString();
+            $this->errors[] = sprintf('Failed to process %s: %s', $info, $rea);
 
             ues_error::department($semester, $department)->save();
         }
