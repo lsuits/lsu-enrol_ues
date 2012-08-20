@@ -1187,6 +1187,8 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->id = $prev->id;
         } else if ($present and $prev = ues_user::get($by_idnumber, true)) {
             $user->id = $prev->id;
+            // Update email
+            $user->email = $user->username . $this->setting('user_email');
         } else if ($prev = ues_user::get($by_username, true)) {
             $user->id = $prev->id;
         } else {
