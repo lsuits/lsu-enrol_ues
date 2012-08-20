@@ -33,6 +33,10 @@ class enrol_ues_plugin extends enrol_plugin {
         try {
             $this->_provider = ues::create_provider();
 
+            if (empty($this->_provider)) {
+                throw new Exception('enrollment_unsupported');
+            }
+
             $works = (
                 $this->_provider->supports_section_lookups() or
                 $this->_provider->supports_department_lookups()
