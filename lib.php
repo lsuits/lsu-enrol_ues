@@ -124,7 +124,10 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($this->setting('course_form_replace')) {
             $url = new moodle_url('/enrol/ues/edit.php', array('id' => $instance->courseid));
 
-            $nodes->parent->parent->get(1)->action = $url;
+            $list = $nodes->parent->parent->get_children_key_list();
+            $index = count($list) < 4 ? 1 : 2;
+
+            $nodes->parent->parent->get($index)->action = $url;
         }
 
         // Allow outside interjection
