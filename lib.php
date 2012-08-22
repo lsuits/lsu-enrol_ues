@@ -33,6 +33,10 @@ class enrol_ues_plugin extends enrol_plugin {
         try {
             $this->_provider = ues::create_provider();
 
+            if (empty($this->_provider)) {
+                throw new Exception('enrollment_unsupported');
+            }
+
             $works = (
                 $this->_provider->supports_section_lookups() or
                 $this->_provider->supports_department_lookups()
@@ -56,7 +60,7 @@ class enrol_ues_plugin extends enrol_plugin {
         return $this->_provider;
     }
 
-    function course_updated($inserted, $course, $data) {
+    public function course_updated($inserted, $course, $data) {
         // UES is the one to create the course
         if ($inserted) {
             return;
@@ -66,7 +70,7 @@ class enrol_ues_plugin extends enrol_plugin {
         events_trigger('ues_course_updated', array($course, $data));
     }
 
-    function course_edit_validation($instance, $data, $context) {
+    public function course_edit_validation($instance, array $data, $context) {
         $errors = array();
         if (is_null($instance)) {
             return $errors;
@@ -100,7 +104,7 @@ class enrol_ues_plugin extends enrol_plugin {
         return $event->errors;
     }
 
-    function course_edit_form($instance, $form, $data, $context) {
+    public function course_edit_form($instance, MoodleQuickForm $form, $data, $context) {
         if (is_null($instance)) {
             return;
         }
@@ -115,7 +119,7 @@ class enrol_ues_plugin extends enrol_plugin {
         events_trigger('ues_course_edit_form', $event);
     }
 
-    function add_course_navigation($nodes, $instance) {
+    public function add_course_navigation($nodes, stdClass $instance) {
         // Only interfere with UES courses
         if (is_null($instance)) {
             return;
@@ -124,7 +128,10 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($this->setting('course_form_replace')) {
             $url = new moodle_url('/enrol/ues/edit.php', array('id' => $instance->courseid));
 
-            $nodes->parent->parent->get(1)->action = $url;
+            $list = $nodes->parent->parent->get_children_key_list();
+            $index = count($list) < 4 ? 1 : 2;
+
+            $nodes->parent->parent->get($index)->action = $url;
         }
 
         // Allow outside interjection
@@ -263,7 +270,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $provider_name = $this->provider()->get_name();
 
-        $this->log('Pulling information from ' . ues::_s($provider_name . '_name'));
+        $this->log('Pulling information from ' . $provider_name);
         $this->process_all();
         $this->log('------------------------------------------------');
 
@@ -646,7 +653,26 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->status = $status;
             $user->save();
 
+            // Specific release for instructor
             events_trigger('ues_' . $type . '_release', $user);
+
+            // Drop manifested sections for teacher POTENTIAL drops
+            if ($user->status == ues::PENDING and $type == 'teacher') {
+                $existing = ues_teacher::get_all(ues::where()
+                    ->status->in(ues::PROCESSED, ues::ENROLLED)
+                );
+
+                // No other primary, so we can safely flip the switch
+                if (empty($existing)) {
+                    ues_section::update(
+                        array('status' => ues::PENDING),
+                        array(
+                            'status' => ues::MANIFESTED,
+                            'id' => $user->sectionid
+                        )
+                    );
+                }
+            }
         }
     }
 
@@ -1111,7 +1137,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $category = $this->manifest_category($course);
 
-            $a = new stdclass;
+            $a = new stdClass;
             $a->year = $semester->year;
             $a->name = $semester->name;
             $a->session = $session;
@@ -1126,6 +1152,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $shortname = ues::format_string($sn_pattern, $a);
             $assumed_fullname = ues::format_string($fn_pattern, $a);
 
+            $moodle_course = new stdClass;
             $moodle_course->idnumber = $idnumber;
             $moodle_course->shortname = $shortname;
             $moodle_course->fullname = $assumed_fullname;
@@ -1183,6 +1210,8 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->id = $prev->id;
         } else if ($present and $prev = ues_user::get($by_idnumber, true)) {
             $user->id = $prev->id;
+            // Update email
+            $user->email = $user->username . $this->setting('user_email');
         } else if ($prev = ues_user::get($by_username, true)) {
             $user->id = $prev->id;
         } else {
