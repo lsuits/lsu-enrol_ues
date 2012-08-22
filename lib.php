@@ -653,7 +653,26 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->status = $status;
             $user->save();
 
+            // Specific release for instructor
             events_trigger('ues_' . $type . '_release', $user);
+
+            // Drop manifested sections for teacher POTENTIAL drops
+            if ($user->status == ues::PENDING and $type == 'teacher') {
+                $existing = ues_teacher::get_all(ues::where()
+                    ->status->in(ues::PROCESSED, ues::ENROLLED)
+                );
+
+                // No other primary, so we can safely flip the switch
+                if (empty($existing)) {
+                    ues_section::update(
+                        array('status' => ues::PENDING),
+                        array(
+                            'status' => ues::MANIFESTED,
+                            'id' => $user->sectionid
+                        )
+                    );
+                }
+            }
         }
     }
 
