@@ -1,8 +1,16 @@
-## v1.1.7
+## v2.0.0
 
-- [LSU Provider][lsu] now properly clears the graduate flag [f842c0][f842c0]
+- Subplugins are now supported through events [#31][31]
+  - Fake enrollment provider has [moved][ues_fake]
+  - LSU enrollment provider has [moved][ues_lsu]
+- jQuery dependency has been removed [db4dac][db4dac]
+- Appropriately handles teacher drops [f2454d][f2454d]
 
-[f842c0]: https://github.com/lsuits/ues/commit/f842c086ab99751a8c59d12047f9c26c5818c3b4
+[31]: https://github.com/lsuits/ues/pull/31
+[db4dac]: https://github.com/lsuits/ues/commit/db4dacaaa9b0781f4a44f0e60a60e6e2bb14975c
+[f2454d]: https://github.com/lsuits/ues/commit/f2454db932dab86402081af70c36cb31a27b10d7
+[ues_fake]: https://github.com/lsuits/ues_fake_provider
+[ues_lsu]: https://github.com/lsuits/ues_lsu_enrollment
 
 ## v1.1.6
 
