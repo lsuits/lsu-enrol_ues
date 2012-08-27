@@ -12,6 +12,7 @@ $category = $DB->get_record(
     'course_categories', array('id' => $course->category), '*', MUST_EXIST
 );
 
+
 $PAGE->set_pagelayout('admin');
 $PAGE->set_url('/course/edit.php', array('id' => $courseid));
 

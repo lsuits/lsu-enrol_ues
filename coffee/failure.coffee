@@ -1,19 +1,23 @@
-$(document).ready ->
+M.ues = {}
 
-    grab = (buttonName) -> $("input[name='" + buttonName + "']")
+M.ues.failures = (Y) ->
+    grab = (buttonName) -> Y.one "input[name='" + buttonName + "']"
 
     buttonCheck = ->
-        selected = $("input[name^='ids']:checked")
+        selected = []
+        Y.all(".ids").each (node, i, nl) ->
+            if (node.get 'checked')
+                selected.push node
+
         disabled = selected.length == 0
 
-        $(grab 'reprocess').attr 'disabled', disabled
-        $(grab 'delete').attr 'disabled', disabled
+        grab('reprocess').set 'disabled', disabled
+        grab('delete').set 'disabled', disabled
 
-    $("input[name^='ids']").change buttonCheck
+    Y.all(".ids").on 'change', buttonCheck
 
-    $("input[name='select_all']").change ->
-        selected = $(this).attr 'checked'
-        selected = if selected then selected else false
+    Y.one('input[name=select_all]').on 'change', ->
+        selected = this.get 'checked'
 
-        $("input[name^='ids']").attr 'checked', selected
+        Y.all(".ids").set 'checked', selected
         buttonCheck()
