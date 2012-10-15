@@ -425,26 +425,28 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("-> Classes_start  is set as %s (%s)", array($sem->classes_start, $_sft($sem->classes_start)));
                 $that->debug("-> Grades_due     is set as %s (%s)", array($sem->grades_due, $_sft($sem->grades_due)));
                 $that->debug("-> the Time now   is set as %s (%s)", array($time, $_sft($time)));
-
                 $that->debug();
                 $that->debug("Do math...");
 
                 $end_check = $time < $sem->grades_due;
+
                 $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
+                $expr_dbg_body = "%-15s < %18s";
+                $expr_dbg = vsprintf($expr_dbg_body,array("\$time","\$sem->grades_due"));
+                $that->debug("-> Determine end_check based on       %s",array($expr_dbg));
+                $that->debug("-> evaluates as                       {$expr_dbg_body}",array($end_check, $time, $sem->grades_due));
+                $that->debug("-> and further simplifies as          {$expr_dbg_body}",array($end_check_dbg, $_sft($time), $_sft($sem->grades_due)));
+                $that->debug();
 
-                $expr_dbr = "\$time  <  \$sem->grades_due";
-
-                $that->debug("-> End_check is %s because the test   %s)",array($end_check, $expr_debug));
-                $that->debug("-> evaluates as                       %s < %s",array($time, $sem->grades_due));
-                $that->debug("-> classes_start date (%s) MINUS offset(%s) = %s", array($_sft($sem->classes_start), $sub_days/24/3600, $_sft($sem->classes_start - $sub_days)));
                 $that->debug();
 
                 $that->debug("Make decision...");
 
-                $expr_dbg = "\$sem->classes_start - \$sub_days) < \$time && \$end_check";
+                $expr_dbg_body = "(%-15s - %15s)   < %15s && %11s";
+                $expr_dbg = vsprintf($expr_dbg_body, array("classes_start","\$sub_days","\$time", "\$end_check"));
                 $that->debug("-> Based on the following expression:    %s", array($expr_dbg));
-                $that->debug("-> Which expands as:                     %s  -  %s    <   %s  &&  %s", array($sem->classes_start,$sub_days,$time,$end_check));
-                $that->debug("-> And further simplifies as:            %s  -  %s    <   %s  &&  %s", array($_sft($sem->classes_start),$_sft($sub_days),$_sft($time),$end_check_dbg));
+                $that->debug("-> Which expands as:                     {$expr_dbg_body}", array($sem->classes_start,$sub_days,$time,$end_check));
+                $that->debug("-> And further simplifies as:            {$expr_dbg_body}", array($_sft($sem->classes_start),$sub_days,$_sft($time),$end_check_dbg));
 
                 $retval = ($sem->classes_start - $sub_days) < $time && $end_check;
                 $retval = $retval ? '[WILL]' : '[WILL NOT]';
@@ -1409,17 +1411,14 @@ class enrol_ues_plugin extends enrol_plugin {
             }else{
                 die("couldn't open file for writing");
             }
-
+            //print to screen/email as well
+            $this->log($msg);
         }
     }
 
     public function log($what) {
         if (!$this->is_silent) {
             mtrace($what);
-        }
-
-        if($this->is_debug){
-            $this->debug($what);
         }
 
         $this->emaillog[] = $what;
