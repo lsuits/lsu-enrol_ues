@@ -308,6 +308,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $time = time();
 
         $processed_semesters = $this->get_semesters($time);
+        die("done getting semesters");
 
         foreach ($processed_semesters as $semester) {
             $this->process_semester($semester);
@@ -383,6 +384,8 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('Pulling Semesters for ' . $now . '...');
 
         try {
+            $that = $this;
+
             $semester_source = $this->provider()->semester_source();
             $semesters = $semester_source->semesters($now);
 
@@ -412,14 +415,40 @@ class enrol_ues_plugin extends enrol_plugin {
                 // This will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
-            $that = $this;
             $sems_in = function ($sem) use ($time, $sub_days, $that) {
-                $end_check = $time < $sem->grades_due;
-                
-                $that->debug("\$end_check is %d for test (\$time = %s) < (\$sem->grades_due = %s)", 
-                    array($end_check, strftime('%F',$time), strftime('%F',$sem->grades_due)));
-                $that->debug("\$sem->classes_start - \$sub_days: %s - %s", array(strftime('%F',$sem->classes_start), $sub_days));
+                $sem_dbg =implode(' ',array($sem->year, $sem->name, $sem->campus, $sem->session_key, 'id '.$sem->id)); 
+                $that->debug("-----------------------------------------------");
+                $that->debug("Calculate processing candidacy for %s",array($sem_dbg)); 
+                $that->debug("-----------------------------------------------");
+                $that->debug("Inspecting semester object...");
+                $that->debug("-> Classes_start  is set as %s (%s)", array($sem->classes_start, strftime('%F',$sem->classes_start)));
+                $that->debug("-> Grades_due     is set as %s (%s)", array($sem->grades_due, strftime('%F',$sem->grades_due)));
+                $that->debug("-> the Time now   is set as %s (%s)", array($time, strftime('%F',$time)));
 
+                $that->debug();
+                $that->debug("Do math...");
+
+                $end_check = $time < $sem->grades_due;
+                $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
+
+                $that->debug("->End_check is %s because  (time = %s) < (\$sem->grades_due = %s)", 
+                    array($end_check_dbg, strftime('%F',$time), strftime('%F',$sem->grades_due)));
+                $that->debug("->classes_start date (%s) MINUS offset(%s) = %s", array(strftime('%F',$sem->classes_start), $sub_days/24/3600, strftime('%F',$sem->classes_start - $sub_days)));
+                $that->debug();
+
+                $that->debug("Make decision...");
+
+                $expr_dbg = "\$sem->classes_start - \$sub_days) < \$time && \$end_check";
+                $that->debug("Based on the following expression: %s", array($expr_dbg));
+                $that->debug("Which expands as: %s - %s < %s && %s", array($sem->classes_start,$sub_days,$time,$end_check_dbg));
+
+                $retval = ($sem->classes_start - $sub_days) < $time && $end_check;
+                $retval = $retval ? '[WILL]' : '[WILL NOT]';
+                
+                $that->debug("->We %s process %s", array($retval, $sem_dbg));
+                $that->debug();
+                
+                
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
             };
 
