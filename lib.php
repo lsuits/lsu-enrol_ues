@@ -431,8 +431,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 $end_check = $time < $sem->grades_due;
 
                 $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
-                $expr_dbg_body = "%-15s < %18s";
-                $expr_dbg = vsprintf($expr_dbg_body,array("\$time","\$sem->grades_due"));
+                $expr_dbg_body = "%-10s = %-15s < %18s";
+                $expr_dbg = vsprintf($expr_dbg_body,array("\$end_check","\$time","\$sem->grades_due"));
                 $that->debug("-> Determine end_check based on       %s",array($expr_dbg));
                 $that->debug("-> evaluates as                       {$expr_dbg_body}",array($end_check, $time, $sem->grades_due));
                 $that->debug("-> and further simplifies as          {$expr_dbg_body}",array($end_check_dbg, $_sft($time), $_sft($sem->grades_due)));
@@ -603,7 +603,8 @@ class enrol_ues_plugin extends enrol_plugin {
                     $this->debug("Processing semester %s %s %s start date is empty...", array($semester->year, $semester->name, $semester->campus));
                     continue;
                 }
-                $this->debug("Processing semester %s %s %s start date: %s", array($semester->year, $semester->name, $semester->campus, strftime('%F',$semester->classes_start)));
+                $this->debug("Processing semester %-4s %-15s %-5s %-2s start date: %s", 
+                    array($semester->year, $semester->name, $semester->campus, $semester->session_key, strftime('%F',$semester->classes_start)));
 
                 // Call event before potential insert, as to notify creation
                 events_trigger('ues_semester_process', $ues);
