@@ -416,14 +416,15 @@ class enrol_ues_plugin extends enrol_plugin {
                 ues_section::update($to_drop, $where_manifested);
             }
             $sems_in = function ($sem) use ($time, $sub_days, $that) {
+                $_sft = function($in){return strftime('%F', $in);};
                 $sem_dbg =implode(' ',array($sem->year, $sem->name, $sem->campus, $sem->session_key, 'id '.$sem->id)); 
                 $that->debug("-----------------------------------------------");
                 $that->debug("Calculate processing candidacy for %s",array($sem_dbg)); 
                 $that->debug("-----------------------------------------------");
                 $that->debug("Inspecting semester object...");
-                $that->debug("-> Classes_start  is set as %s (%s)", array($sem->classes_start, strftime('%F',$sem->classes_start)));
-                $that->debug("-> Grades_due     is set as %s (%s)", array($sem->grades_due, strftime('%F',$sem->grades_due)));
-                $that->debug("-> the Time now   is set as %s (%s)", array($time, strftime('%F',$time)));
+                $that->debug("-> Classes_start  is set as %s (%s)", array($sem->classes_start, $_sft($sem->classes_start)));
+                $that->debug("-> Grades_due     is set as %s (%s)", array($sem->grades_due, $_sft($sem->grades_due)));
+                $that->debug("-> the Time now   is set as %s (%s)", array($time, $_sft($time)));
 
                 $that->debug();
                 $that->debug("Do math...");
@@ -431,21 +432,24 @@ class enrol_ues_plugin extends enrol_plugin {
                 $end_check = $time < $sem->grades_due;
                 $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
 
-                $that->debug("->End_check is %s because  (time = %s) < (\$sem->grades_due = %s)", 
-                    array($end_check_dbg, strftime('%F',$time), strftime('%F',$sem->grades_due)));
-                $that->debug("->classes_start date (%s) MINUS offset(%s) = %s", array(strftime('%F',$sem->classes_start), $sub_days/24/3600, strftime('%F',$sem->classes_start - $sub_days)));
+                $expr_dbr = "\$time  <  \$sem->grades_due";
+
+                $that->debug("-> End_check is %s because the test   %s)",array($end_check, $expr_debug));
+                $that->debug("-> evaluates as                       %s < %s",array($time, $sem->grades_due));
+                $that->debug("-> classes_start date (%s) MINUS offset(%s) = %s", array($_sft($sem->classes_start), $sub_days/24/3600, $_sft($sem->classes_start - $sub_days)));
                 $that->debug();
 
                 $that->debug("Make decision...");
 
                 $expr_dbg = "\$sem->classes_start - \$sub_days) < \$time && \$end_check";
-                $that->debug("Based on the following expression: %s", array($expr_dbg));
-                $that->debug("Which expands as: %s - %s < %s && %s", array($sem->classes_start,$sub_days,$time,$end_check_dbg));
+                $that->debug("-> Based on the following expression:    %s", array($expr_dbg));
+                $that->debug("-> Which expands as:                     %s  -  %s    <   %s  &&  %s", array($sem->classes_start,$sub_days,$time,$end_check));
+                $that->debug("-> And further simplifies as:            %s  -  %s    <   %s  &&  %s", array($_sft($sem->classes_start),$_sft($sub_days),$_sft($time),$end_check_dbg));
 
                 $retval = ($sem->classes_start - $sub_days) < $time && $end_check;
                 $retval = $retval ? '[WILL]' : '[WILL NOT]';
                 
-                $that->debug("->We %s process %s", array($retval, $sem_dbg));
+                $that->debug("-> We %s process %s", array($retval, $sem_dbg));
                 $that->debug();
                 
                 
