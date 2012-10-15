@@ -12,6 +12,7 @@ class enrol_ues_plugin extends enrol_plugin {
     var $emaillog = array();
 
     var $is_silent = false;
+    var $is_debug  = true;
 
     private $_provider;
 
@@ -140,9 +141,14 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function is_cron_required() {
+        echo "is cron required?";
         $automatic = $this->setting('cron_run');
 
         $running = (bool)$this->setting('running');
+
+        $this->debug("is_cron_required() \$automatic? %s, \$running? %s ", array((int) $automatic, (int) $running));
+        $this->debug("bypassing normal is_cron_required tests and simply returning TRUE");
+        return true;
 
         if ($automatic) {
             $this->handle_automatic_errors();
@@ -152,6 +158,8 @@ class enrol_ues_plugin extends enrol_plugin {
             $acceptable_hour = (int)$this->setting('cron_hour');
 
             $right_time = ($current_hour == $acceptable_hour);
+
+            $this->debug("is_cron_required() \$current_hour? %d, \$acceptable_hour? %d, \$right_time? %d", array($current_hour, $acceptable_hour, $right_time));
 
             // Grace period from last started job
             $starttime = (int)$this->setting('starttime');
@@ -207,6 +215,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $this->setting('starttime', time());
 
+        $this->debug("running cron()...");
         if ($this->provider()) {
             $this->log('------------------------------------------------');
             $this->log(ues::_s('pluginname'));
@@ -275,7 +284,10 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('------------------------------------------------');
 
         $this->log('Begin manifestation ...');
-        $this->handle_enrollments();
+
+        if(!$this->is_debug){ //we may be breaking things here
+            $this->handle_enrollments();
+        }
 
         if (!$this->provider()->postprocess($this)) {
             $this->errors[] = 'Error during postprocess.';
@@ -305,7 +317,7 @@ class enrol_ues_plugin extends enrol_plugin {
     public function process_semester($semester) {
         $process_courses = $this->get_courses($semester);
 
-        if (empty($process_courses)) {
+        if (empty($process_courses) || $this->is_debug) {
             return;
         }
 
@@ -336,10 +348,12 @@ class enrol_ues_plugin extends enrol_plugin {
                 ->courseid->in($courseids);
 
             $current_sections = ues_section::get_all($filters);
-
-            $this->process_enrollment_by_department(
-                $semester, $department, $current_sections
-            );
+            
+            if($this->is_debug){
+                $this->debug("Not processing departement %s for semester %s", array($department, $semester));
+            }else{
+                $this->process_enrollment_by_department($semester, $department, $current_sections);
+            }
         }
     }
 
@@ -347,9 +361,12 @@ class enrol_ues_plugin extends enrol_plugin {
         foreach ($courses as $course) {
             foreach ($course->sections as $section) {
                 $ues_section = ues_section::by_id($section->id);
-                $this->process_enrollment(
-                    $semester, $course, $ues_section
-                );
+                if($this->is_debug){
+                    $this->debug("skipping processing for course %s, section %s", array($course, $section->id));
+                }else{
+                    $this->process_enrollment(
+                        $semester, $course, $ues_section);
+                }
             }
         }
     }
@@ -358,7 +375,10 @@ class enrol_ues_plugin extends enrol_plugin {
         $set_days = (int) $this->setting('sub_days');
         $sub_days = 24 * $set_days * 60 * 60;
 
+
         $now = ues::format_time($time - $sub_days);
+
+        $this->debug("\$set_days = %s, \$sub_dayss = %s seconds, \$now = %s", array($set_days, $sub_days, $now));
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
@@ -374,7 +394,6 @@ class enrol_ues_plugin extends enrol_plugin {
             $i = function($s) { return !empty($s->semester_ignore); };
 
             list($other, $failures) = $this->partition($p_semesters, $v);
-
             // Notify improper semester
             foreach ($failures as $failed_sem) {
                 $this->errors[] = ues::_s('failed_sem', $failed_sem);
@@ -393,9 +412,13 @@ class enrol_ues_plugin extends enrol_plugin {
                 // This will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
-
-            $sems_in = function ($sem) use ($time, $sub_days) {
+            $that = $this;
+            $sems_in = function ($sem) use ($time, $sub_days, $that) {
                 $end_check = $time < $sem->grades_due;
+                
+                $that->debug("\$end_check is %d for test (\$time = %s) < (\$sem->grades_due = %s)", 
+                    array($end_check, strftime('%F',$time), strftime('%F',$sem->grades_due)));
+                $that->debug("\$sem->classes_start - \$sub_days: %s - %s", array(strftime('%F',$sem->classes_start), $sub_days));
 
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
             };
@@ -537,12 +560,15 @@ class enrol_ues_plugin extends enrol_plugin {
                     'campus' => $semester->campus,
                     'session_key' => $semester->session_key
                 );
+                
 
                 $ues = ues_semester::upgrade_and_get($semester, $params);
 
                 if (empty($ues->classes_start)) {
+                    $this->debug("Processing semester %s %s %s start date is empty...", array($semester->year, $semester->name, $semester->campus));
                     continue;
                 }
+                $this->debug("Processing semester %s %s %s start date: %s", array($semester->year, $semester->name, $semester->campus, strftime('%F',$semester->classes_start)));
 
                 // Call event before potential insert, as to notify creation
                 events_trigger('ues_semester_process', $ues);
@@ -958,7 +984,6 @@ class enrol_ues_plugin extends enrol_plugin {
             if ($enroll_count) {
                 $out .= 'Enrolled ' . $enroll_count . ' users';
             }
-
             $this->log($out);
         }
     }
@@ -1333,9 +1358,35 @@ class enrol_ues_plugin extends enrol_plugin {
         return $role;
     }
 
+    public function debug($msg, array $args=null){
+        global $CFG;
+        if($this->is_debug){
+            
+            $ts = strftime('%F %T', time());
+            
+            if (!empty($args)) {
+                $msg = vsprintf($msg, $args);
+            }
+
+            //finish building the string
+            $msg = "[".$ts."]    (Debug)    ".$msg."\n";
+            if(($handle = fopen($CFG->dataroot.'/ues-debug.log', 'a+'))!=false){
+                fwrite($handle, $msg);
+                fclose($handle);
+            }else{
+                die("couldn't open file for writing");
+            }
+
+        }
+    }
+
     public function log($what) {
         if (!$this->is_silent) {
             mtrace($what);
+        }
+
+        if($this->is_debug){
+            $this->debug($what);
         }
 
         $this->emaillog[] = $what;
