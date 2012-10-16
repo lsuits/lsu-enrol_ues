@@ -384,24 +384,47 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('Pulling Semesters for ' . $now . '...');
 
         try {
-            $that = $this;
 
+            //get an instance of our local ues provider
             $semester_source = $this->provider()->semester_source();
+
+            //ask the provider for all current semesters 
+            //'current' with respect to now
             $semesters = $semester_source->semesters($now);
 
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
+
+            //process semesters and store them in a new array
             $p_semesters = $this->process_semesters($semesters);
 
+            //define filter callback function to determine semester validity
             $v = function($s) { return !empty($s->grades_due); };
 
+            //define callback for determining semesters to be ignored
             $i = function($s) { return !empty($s->semester_ignore); };
 
+            /**
+             * of the semesters we have processed,
+             * separate them into two groups
+             * 1. other:
+             * 2. failures: fail the test defined in the callback $v
+             *
+             */
             list($other, $failures) = $this->partition($p_semesters, $v);
+            
             // Notify improper semester
             foreach ($failures as $failed_sem) {
                 $this->errors[] = ues::_s('failed_sem', $failed_sem);
             }
 
+            /**
+             * for the remaining semesters,
+             * further separate out those that 
+             * should be ignored (held in $ignored)
+             * Those that we will deal with will 
+             * be stored in $valids.
+             *
+             */
             list($ignored, $valids) = $this->partition($other, $i);
 
             // Ignored sections with semesters will be unenrolled
@@ -415,6 +438,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 // This will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
+            /**
+             * alias $this to something we can
+             * pass into the lexical scope of
+             * the $sems_in closure...
+             */
+            $that = $this;
+
+
             $sems_in = function ($sem) use ($time, $sub_days, $that) {
                 $_sft = function($in){return strftime('%F', $in);};
                 $sem_dbg =implode(' ',array($sem->year, $sem->name, $sem->campus, $sem->session_key, 'id '.$sem->id)); 
@@ -428,6 +459,13 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("");
                 $that->debug("Do math...");
 
+                /**
+                 * 
+                 * for the semester currently
+                 * under review, is the date
+                 * of post grades in the future?
+                 *
+                 */
                 $end_check = $time < $sem->grades_due;
 
                 $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
@@ -437,11 +475,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("-> evaluates as                       {$expr_dbg_body}",array($end_check, $time, $sem->grades_due));
                 $that->debug("-> and further simplifies as          {$expr_dbg_body}",array($end_check_dbg, $_sft($time), $_sft($sem->grades_due)));
                 $that->debug("");
-
                 $that->debug("");
-
                 $that->debug("Make decision...");
-
                 $expr_dbg_body = "(%-15s - %15s)   < %15s && %11s";
                 $expr_dbg = vsprintf($expr_dbg_body, array("classes_start","\$sub_days","\$time", "\$end_check"));
                 $that->debug("-> Based on the following expression:    %s", array($expr_dbg));
@@ -455,9 +490,28 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("");
                 
                 
+                /*
+                 * For the given semester to be include in the 
+                 * return array, the following expression must evaluate to true.
+                 * That is, both sides of the && MUST be true or else the expression 
+                 * is FALSE
+                 *
+                 * In the terms of this applicataion, 
+                 * classes start date MINUS the offset
+                 * MUST be less than the time NOW
+                 * AND that semester's post grades date 
+                 * MUST be in the future.
+                 *
+                 */
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
             };
 
+            /**
+             * filter the members of the $valids array
+             * using the tests defined in $sems_in
+             * return only those for which $sems_in 
+             * evaluates to true
+             */
             return array_filter($valids, $sems_in);
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
