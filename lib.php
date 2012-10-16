@@ -377,17 +377,28 @@ class enrol_ues_plugin extends enrol_plugin {
         $sub_days = 24 * $set_days * 60 * 60;
 
 
+        //shift our understanding of now back 
+        //in time by the admin-specified amount
         $now = ues::format_time($time - $sub_days);
 
-        $this->debug("\$set_days = %s, \$sub_dayss = %s seconds, \$now = %s", array($set_days, $sub_days, $now));
+        $this->debug("actual time NOW == %s", array(strftime('%F %T', time())));
+        $this->debug("get_semesters local vars:\n\$set_days = %s\n, \$sub_dayss = %s seconds,\n \$now = %s\n", array($set_days, $sub_days, $now));
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
         try {
+            //store this in another var for 
+            //passing into the sems_in closure
             $that = $this;
 
             $semester_source = $this->provider()->semester_source();
             $semesters = $semester_source->semesters($now);
+
+            /*
+            foreach($semesters as $s){
+                $this->debug("got semester %s %s %s %s", array($s->year, $s->name, $s->session_key, $s->campus));
+            }
+             */
 
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
