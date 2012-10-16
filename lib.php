@@ -425,7 +425,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("-> Classes_start  is set as %s (%s)", array($sem->classes_start, $_sft($sem->classes_start)));
                 $that->debug("-> Grades_due     is set as %s (%s)", array($sem->grades_due, $_sft($sem->grades_due)));
                 $that->debug("-> the Time now   is set as %s (%s)", array($time, $_sft($time)));
-                $that->debug();
+                $that->debug("");
                 $that->debug("Do math...");
 
                 $end_check = $time < $sem->grades_due;
@@ -436,9 +436,9 @@ class enrol_ues_plugin extends enrol_plugin {
                 $that->debug("-> Determine end_check based on       %s",array($expr_dbg));
                 $that->debug("-> evaluates as                       {$expr_dbg_body}",array($end_check, $time, $sem->grades_due));
                 $that->debug("-> and further simplifies as          {$expr_dbg_body}",array($end_check_dbg, $_sft($time), $_sft($sem->grades_due)));
-                $that->debug();
+                $that->debug("");
 
-                $that->debug();
+                $that->debug("");
 
                 $that->debug("Make decision...");
 
@@ -452,7 +452,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $retval = $retval ? '[WILL]' : '[WILL NOT]';
                 
                 $that->debug("-> We %s process %s", array($retval, $sem_dbg));
-                $that->debug();
+                $that->debug("");
                 
                 
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
