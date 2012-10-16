@@ -380,7 +380,8 @@ class enrol_ues_plugin extends enrol_plugin {
         //shift our understanding of now back 
         //in time by the admin-specified amount
         $now = ues::format_time($time - $sub_days);
-
+        
+        $_sft = function($in){return strftime('%F', $in);};
         $this->debug("actual time NOW == %s", array(strftime('%F %T', time())));
         $this->debug("get_semesters local vars:\n\$set_days = %s\n, \$sub_dayss = %s seconds,\n \$now = %s\n", array($set_days, $sub_days, $now));
 
@@ -392,13 +393,15 @@ class enrol_ues_plugin extends enrol_plugin {
             $that = $this;
 
             $semester_source = $this->provider()->semester_source();
-            $semesters = $semester_source->semesters($now);
+            $semesters = $semester_source->semesters(time());
 
-            /*
-            foreach($semesters as $s){
-                $this->debug("got semester %s %s %s %s", array($s->year, $s->name, $s->session_key, $s->campus));
+            if($this->is_debug){
+                $this->debug("printing output from \$semesters = \$semester_source->semesters(%s) as:", array($now));
+                foreach($semesters as $s){
+                    $this->debug("got semester %s %s %s %s", array($s->year, $s->name, $s->session_key, $s->campus));
+                }   
+                $this->debug("___________");
             }
-             */
 
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
@@ -426,8 +429,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 // This will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
-            $sems_in = function ($sem) use ($time, $sub_days, $that) {
-                $_sft = function($in){return strftime('%F', $in);};
+            $sems_in = function ($sem) use ($time, $sub_days, $that, $_sft) {
                 $sem_dbg =implode(' ',array($sem->year, $sem->name, $sem->campus, $sem->session_key, 'id '.$sem->id)); 
                 $that->debug("-----------------------------------------------");
                 $that->debug("Calculate processing candidacy for %s",array($sem_dbg)); 
@@ -614,7 +616,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     $this->debug("Processing semester %s %s %s start date is empty...", array($semester->year, $semester->name, $semester->campus));
                     continue;
                 }
-                $this->debug("Processing semester %-4s %-15s %-5s %-2s start date: %s", 
+                $this->debug("WTF Processing semester %-4s %-15s %-5s %-2s start date: %s", 
                     array($semester->year, $semester->name, $semester->campus, $semester->session_key, strftime('%F',$semester->classes_start)));
 
                 // Call event before potential insert, as to notify creation
