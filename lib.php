@@ -12,6 +12,20 @@ class enrol_ues_plugin extends enrol_plugin {
     var $emaillog = array();
 
     var $is_silent = false;
+
+    /** @var bool in order to make
+     * iterative debugging possible
+     * we must NOT execute some parts 
+     * of the application, or  ELSE we risk
+     * losing hours while the process completes;
+     * manual interruption is possible, of course,
+     * just not that appealing
+     */
+    var $is_bypass = true; 
+
+    /** @var bool do we want verbose
+     * logging/email messages
+     */
     var $is_debug  = true;
 
     private $_provider;
@@ -147,7 +161,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $running = (bool)$this->setting('running');
 
         $this->debug("is_cron_required() \$automatic? %s, \$running? %s ", array((int) $automatic, (int) $running));
-        $this->debug("bypassing normal is_cron_required tests and simply returning TRUE");
+        $this->debug("[bypass mode] bypassing normal is_cron_required tests and simply returning TRUE");
         return true;
 
         if ($automatic) {
@@ -285,8 +299,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $this->log('Begin manifestation ...');
 
-        if(!$this->is_debug){ //we may be breaking things here
+        if(!$this->is_bypass){ 
             $this->handle_enrollments();
+        }else{
+            $this->debug("[bypass mode] - skipping \$this->handle_enrollments()");
         }
 
         if (!$this->provider()->postprocess($this)) {
@@ -308,7 +324,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $time = time();
 
         $processed_semesters = $this->get_semesters($time);
-        die("done getting semesters");
+        die("[bypass mode] - done getting semesters; die()");
 
         foreach ($processed_semesters as $semester) {
             $this->process_semester($semester);
@@ -318,7 +334,11 @@ class enrol_ues_plugin extends enrol_plugin {
     public function process_semester($semester) {
         $process_courses = $this->get_courses($semester);
 
-        if (empty($process_courses) || $this->is_debug) {
+        if (empty($process_courses)) {
+            return;
+        }
+        if($this->is_bypass){
+            $this->debug("[bypass mode] - aborting process_semesters()");
             return;
         }
 
@@ -350,8 +370,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $current_sections = ues_section::get_all($filters);
             
-            if($this->is_debug){
-                $this->debug("Not processing departement %s for semester %s", array($department, $semester));
+            if($this->is_bypass){
+                $this->debug("[bypass mode] - Not processing departement %s for semester %s", array($department, $semester));
             }else{
                 $this->process_enrollment_by_department($semester, $department, $current_sections);
             }
@@ -362,8 +382,8 @@ class enrol_ues_plugin extends enrol_plugin {
         foreach ($courses as $course) {
             foreach ($course->sections as $section) {
                 $ues_section = ues_section::by_id($section->id);
-                if($this->is_debug){
-                    $this->debug("skipping processing for course %s, section %s", array($course, $section->id));
+                if($this->is_bypass){
+                    $this->debug("[bypass mode] skipping processing for course %s, section %s", array($course, $section->id));
                 }else{
                     $this->process_enrollment(
                         $semester, $course, $ues_section);
@@ -429,6 +449,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             // Notify improper semester
             foreach ($failures as $failed_sem) {
+                $this->debug("FALIED SEMESTER: ".$this->printSemester($failed_sem));
                 $this->errors[] = ues::_s('failed_sem', $failed_sem);
             }
 
@@ -530,6 +551,9 @@ class enrol_ues_plugin extends enrol_plugin {
                 return ($sem->classes_start - $sub_days) < $time && $end_check;
             };
 
+            foreach($valids as $v){
+                $this->debug("VALID SEMESTER: ".$this->printSemester($v));
+            }
             /**
              * filter the members of the $valids array
              * using the tests defined in $sems_in
