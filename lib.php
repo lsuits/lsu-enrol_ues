@@ -373,13 +373,24 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function get_semesters($time) {
+        //int set by admin
         $set_days = (int) $this->setting('sub_days');
+        
+        //convert to seconds since for easier
+        //date arithmetic
         $sub_days = 24 * $set_days * 60 * 60;
 
+        /**
+         * little partial function wrapper
+         * around strftime('%F', $x)
+         *
+         */
+        $_sft = function($in){return strftime('%F', $in);};
 
         $now = ues::format_time($time - $sub_days);
 
-        $this->debug("\$set_days = %s, \$sub_dayss = %s seconds, \$now = %s", array($set_days, $sub_days, $now));
+        $this->debug("\n\$set_days = %s\n\$sub_days = %s sec.\n\$now = %s\n\$time = %s\n", 
+            array($set_days, $sub_days, $now, $_sft($time)));
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
@@ -412,6 +423,10 @@ class enrol_ues_plugin extends enrol_plugin {
              */
             list($other, $failures) = $this->partition($p_semesters, $v);
             
+            foreach($other as $o){
+                $this->debug("Valid so far:\n".$this->printSemester($o));
+            }
+
             // Notify improper semester
             foreach ($failures as $failed_sem) {
                 $this->errors[] = ues::_s('failed_sem', $failed_sem);
@@ -435,9 +450,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $to_drop = array('status' => ues::PENDING);
 
+
                 // This will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
+            
             /**
              * alias $this to something we can
              * pass into the lexical scope of
@@ -446,8 +463,12 @@ class enrol_ues_plugin extends enrol_plugin {
             $that = $this;
 
 
-            $sems_in = function ($sem) use ($time, $sub_days, $that) {
-                $_sft = function($in){return strftime('%F', $in);};
+            $sems_in = function ($sem) use ($time, $sub_days, $that, $_sft) {
+
+
+                /**
+                 * mud in the clockwork
+                 */
                 $sem_dbg =implode(' ',array($sem->year, $sem->name, $sem->campus, $sem->session_key, 'id '.$sem->id)); 
                 $that->debug("-----------------------------------------------");
                 $that->debug("Calculate processing candidacy for %s",array($sem_dbg)); 
@@ -468,6 +489,9 @@ class enrol_ues_plugin extends enrol_plugin {
                  */
                 $end_check = $time < $sem->grades_due;
 
+                /**
+                 * more mud
+                 */
                 $end_check_dbg = $end_check ? '[TRUE]' : '[FALSE]';
                 $expr_dbg_body = "%-10s = %-15s < %18s";
                 $expr_dbg = vsprintf($expr_dbg_body,array("\$end_check","\$time","\$sem->grades_due"));
@@ -519,6 +543,9 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     *
+     */
     public function partition($collection, $func) {
         $pass = array();
         $fail = array();
@@ -1469,6 +1496,28 @@ class enrol_ues_plugin extends enrol_plugin {
             //print to screen/email as well
             $this->log($msg);
         }
+    }
+    
+    /**
+     * Pure debug utility function 
+     * to pretty print semester attributes
+     * @param $s semester object
+     * @return string
+     */
+    public function printSemester($s){
+        $_sft = function($in){return strftime('%F', $in);};
+        $str = "";
+        $s_dbg =implode(' ',array($s->year, $s->name, $s->campus, $s->session_key, 'id '.$s->id)); 
+        $str.="\n-----------------------------------------------\n";
+        $str.=vsprintf("%s\n",array($s_dbg)); 
+        $str.="-----------------------------------------------\n";
+        $str.="";
+        $str.=vsprintf(" Classes_start  is set as %s (%s)\n", array($s->classes_start, $_sft($s->classes_start)));
+        $str.=vsprintf(" Grades_due     is set as %s (%s)\n", array($s->grades_due, $_sft($s->grades_due)));
+        $str.=vsprintf(" the Time now   is set as %s (%s)\n", array(time(), $_sft(time())));
+        $str.="\n";
+        return $str;
+
     }
 
     public function log($what) {
