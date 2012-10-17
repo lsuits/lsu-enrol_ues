@@ -443,9 +443,6 @@ class enrol_ues_plugin extends enrol_plugin {
              */
             list($other, $failures) = $this->partition($p_semesters, $v);
             
-            foreach($other as $o){
-                $this->debug("Valid so far:\n".$this->printSemester($o));
-            }
 
             // Notify improper semester
             foreach ($failures as $failed_sem) {
