@@ -73,7 +73,7 @@ if ($ADMIN->fulltree) {
         get_string('language'), '', $CFG->lang, $languages));
 
     $auths = get_plugin_list('auth');
-    $ath_options = array();
+    $auth_options = array();
     foreach ($auths as $auth => $unused) {
         $auth_options[$auth] = get_string('pluginname', "auth_{$auth}");
     }
