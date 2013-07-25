@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface ues_error_types {
     const COURSE = 'course';
     const DEPARTMENT = 'department';

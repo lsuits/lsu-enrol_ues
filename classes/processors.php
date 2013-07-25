@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface semester_processor {
     function semesters($date_threshold);
 }

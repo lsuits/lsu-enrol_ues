@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface enrollment_factory {
     // Returns a semester_processor
     function semester_source();

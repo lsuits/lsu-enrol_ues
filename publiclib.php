@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 defined('MOODLE_INTERNAL') or die();
 
 abstract class ues {

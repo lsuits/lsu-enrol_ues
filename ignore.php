@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 require_once '../../config.php';
 require_once 'publiclib.php';
 

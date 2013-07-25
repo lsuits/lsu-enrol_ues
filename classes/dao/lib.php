@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface meta_information {
     public function save_meta($meta);
 

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @package enrol_ues
+ */
 defined('MOODLE_INTERNAL') or die();
 
 require_once dirname(__FILE__) . '/publiclib.php';
@@ -141,10 +144,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function is_cron_required() {
         $automatic = $this->setting('cron_run');
-
+mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         $running = (bool)$this->setting('running');
-
+        return true;
         if ($automatic) {
+            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is automatic"));
             $this->handle_automatic_errors();
 
             $current_hour = (int)date('H');
@@ -152,7 +156,9 @@ class enrol_ues_plugin extends enrol_plugin {
             $acceptable_hour = (int)$this->setting('cron_hour');
 
             $right_time = ($current_hour == $acceptable_hour);
-
+            if(!$right_time){
+                mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> NOT the right time"));
+            }
             // Grace period from last started job
             $starttime = (int)$this->setting('starttime');
             $grace_period = (int)$this->setting('grace_period');
@@ -164,6 +170,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $is_supposed_to_run = ($right_time and parent::is_cron_required());
 
             if ($is_late and $is_supposed_to_run) {
+                mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> late and supposed to run"));
                 global $CFG;
                 $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
                 $this->errors[] = ues::_s('already_running', $url);
@@ -171,7 +178,11 @@ class enrol_ues_plugin extends enrol_plugin {
                 $this->email_reports();
                 return false;
             }
-
+            if($right_time and parent::is_cron_required() and !$running){
+                mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> returning true"));
+            }else{
+                mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> returning false, no cron"));
+            }
             return (
                 $right_time and
                 parent::is_cron_required() and
@@ -206,7 +217,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->setting('running', true);
 
         $this->setting('starttime', time());
-
+        mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> begin UES cron"));
         if ($this->provider()) {
             $this->log('------------------------------------------------');
             $this->log(ues::_s('pluginname'));
@@ -269,7 +280,6 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         $provider_name = $this->provider()->get_name();
-
         $this->log('Pulling information from ' . $provider_name);
         $this->process_all();
         $this->log('------------------------------------------------');
@@ -284,19 +294,20 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function handle_enrollments() {
         $pending = ues_section::get_all(array('status' => ues::PENDING));
-
+        
         $this->handle_pending_sections($pending);
 
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
 
         $this->handle_processed_sections($processed);
+
     }
 
     public function process_all() {
         $time = time();
-
+        
         $processed_semesters = $this->get_semesters($time);
-
+        
         foreach ($processed_semesters as $semester) {
             $this->process_semester($semester);
         }
@@ -364,8 +375,9 @@ class enrol_ues_plugin extends enrol_plugin {
 
         try {
             $semester_source = $this->provider()->semester_source();
+            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>>provider found %d semesters", count($semester_source)));
             $semesters = $semester_source->semesters($now);
-
+            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> got here <<<<---------------"));
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
 
@@ -402,7 +414,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
             return array_filter($valids, $sems_in);
         } catch (Exception $e) {
+            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>>got %d errors", count($this->errors)+1));
+            
             $this->errors[] = $e->getMessage();
+            var_dump($this->errors);
             return array();
         }
     }
@@ -443,35 +458,45 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function process_enrollment_by_department($semester, $department, $current_sections) {
         try {
+            mtrace(sprintf("We are going to try to process enrollment for department %s", $department));
             $teacher_source = $this->provider()->teacher_department_source();
             $student_source = $this->provider()->student_department_source();
 
             $teachers = $teacher_source->teachers($semester, $department);
             $students = $student_source->students($semester, $department);
-
+            mtrace(sprintf("got %d teachers, %d students for department %s, semester %s",
+                    count($teachers), count($students), $department, $semester->name));
             $sectionids = ues_section::ids_by_course_department($semester, $department);
-
+            mtrace(sprintf("got %d sections for department %s\n%s", count($sectionids), $department, implode(',', $sectionids)));
             $filter = ues::where('sectionid')->in($sectionids);
             $current_teachers = ues_teacher::get_all($filter);
             $current_students = ues_student::get_all($filter);
-
+            
+            mtrace(sprintf("got %d current teachers and %d current students for %s",
+                    count($current_teachers), count($current_students),$department));
+            
             $ids_param = ues::where('id')->in($sectionids);
             $all_sections = ues_section::get_all($ids_param);
-
+            
+            mtrace(sprintf("got %d all_sections", count($all_sections)));
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
+            mtrace(sprintf("done processing teachers by dept(%s, %s, %s, %s)", $semester->name, $department, count($teachers), count($current_teachers)));
             $this->process_students_by_department($semester, $department, $students, $current_students);
-
+            mtrace(sprintf("done processing students by dept(%s, %s, %s, %s)", $semester->name, $department, count($students), count($current_students)));
+            
             unset($current_teachers);
             unset($current_students);
-
+            
             foreach ($current_sections as $section) {
                 $course = $section->course();
                 $this->post_section_process($semester, $course, $section);
+                mtrace(sprintf("done post-processing for %s - %s, %s",$semester->name,$course->fullname,$section->sec_number));
                 unset($all_sections[$section->id]);
             }
 
             // Drop remaining
             if (!empty($all_sections)) {
+                mtrace("all_sections is not empty; dropping...");
                 ues_section::update(
                     array('status' => ues::PENDING),
                     ues::where('id')->in(array_keys($all_sections))
@@ -479,6 +504,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
         } catch (Exception $e) {
+            mtrace(sprintf("We have failed to process enrollment by department"));
             $info = "$semester $department";
             $rea = $e->getMessage();
             $this->errors[] = sprintf('Failed to process %s: %s', $info, $rea);
@@ -492,19 +518,22 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function process_students_by_department($semester, $department, $students, $current_students) {
+        mtrace("process_students_by_department()...");
         $this->fill_roles_by_department('student', $semester, $department, $students, $current_students);
     }
 
     private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
+        mtrace(sprintf("begin fill_roles_by_department() ofr %d pulled_users...", count($pulled_users)));
         foreach ($pulled_users as $user) {
             $course_params = array(
                 'department' => $department,
                 'cou_number' => $user->cou_number
             );
-
+//            mtrace(sprintf("Fetching course %s %s", $department, $user->cou_number));
             $course = ues_course::get($course_params);
 
             if (empty($course)) {
+//                mtrace("course is not found, continuing...");
                 continue;
             }
 
@@ -513,17 +542,25 @@ class enrol_ues_plugin extends enrol_plugin {
                 'courseid' => $course->id,
                 'sec_number' => $user->sec_number
             );
-
+//            mtrace(sprintf("Fetching section %s %s", $course->id, $user->sec_number));
             $section = ues_section::get($section_params);
 
             if (empty($section)) {
+//                mtrace("section is not found, continuing...");
                 continue;
             }
-
-            $this->{'process_'.$type.'s'}($section, array($user), $current_users);
+            try{
+//                mtrace(sprintf("begin process_%ss(%s, array(%s) , array(%s))..'", $type,$section->sec_number,count($user),count($current_users)));
+                $this->{'process_'.$type.'s'}($section, array($user), $current_users);
+            }
+            catch (coding_exception $e){
+                mtrace(sprintf("Caught exeption in module %s: %s", $e->module, $e->getMessage()));
+            }
+//            mtrace(sprintf("...done %s", 'process_'.$type.'s()'));
         }
 
         $this->release($type, $current_users);
+        mtrace("...end fill_roles_by_department()");
     }
 
     public function process_semesters($semesters) {
@@ -641,9 +678,11 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function release($type, $users) {
+        mtrace(sprintf("begin release; num users = %d", count($users)));
         foreach ($users as $user) {
             // No reason to release a second time
             if ($user->status == ues::UNENROLLED) {
+                mtrace(sprintf("user %s status is UNENROLLED, exit release()",$user->id));
                 continue;
             }
 
@@ -673,6 +712,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     );
                 }
             }
+            mtrace(sprintf("releasing user %s",$user->id));
         }
     }
 
@@ -913,6 +953,16 @@ class enrol_ues_plugin extends enrol_plugin {
         return true;
     }
 
+    /**
+     * Manifest enrollment for a given course section
+     * Fetches a group using @see manifest_group(),
+     * fetches all teachers, students that belong to the group/section
+     * and enrolls/unenrolls via @see enroll_users() or @see unenroll_users()
+     * 
+     * @param type $moodle_course object from {course}
+     * @param type $course object from {enrol_ues_courses}
+     * @param type $section object from {enrol_ues_sections}
+     */
     private function manifest_course_enrollment($moodle_course, $course, $section) {
         $group = $this->manifest_group($moodle_course, $course, $section);
 
@@ -964,6 +1014,7 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function enroll_users($group, $users) {
+        mtrace(sprintf("enroll_users() called by %s", get_called_class()));
         $instance = $this->get_instance($group->courseid);
 
         // Pull this setting once
@@ -1082,6 +1133,14 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * Fetches existing or creates new group based on given params
+     * @global type $DB
+     * @param type $moodle_course object from {course}
+     * @param type $course object from {enrol_ues_courses}
+     * @param type $section object from {enrol_ues_sections}
+     * @return type object from {groups}
+     */
     private function manifest_group($moodle_course, $course, $section) {
         global $DB;
 
@@ -1169,8 +1228,9 @@ class enrol_ues_plugin extends enrol_plugin {
             events_trigger('ues_course_create', $moodle_course);
 
             try {
+                mtrace(spritnf("trying to create course %s", $moodle_course->shortname));
                 $moodle_course = create_course($moodle_course);
-
+                
                 $this->add_instance($moodle_course);
             } catch (Exception $e) {
                 $this->errors[] = ues::_s('error_shortname', $moodle_course);
@@ -1280,7 +1340,13 @@ class enrol_ues_plugin extends enrol_plugin {
         $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
 
         foreach ($users as $user) {
-            $ues_user = $this->create_user($user);
+//            mtrace(sprintf("filling %s role for %d users", $type,count($users)));
+            
+//            try{
+                $ues_user = $this->create_user($user);
+//            }catch(Exception $e){
+//                mtrace(sprintf("Exception while trying to create user: %s", $e->getMessage()));
+//            }
 
             $params = array(
                 'sectionid' => $section->id,
@@ -1291,7 +1357,11 @@ class enrol_ues_plugin extends enrol_plugin {
                 $params += $extra_params($ues_user);
             }
 
-            $ues_type = $class::upgrade($ues_user);
+//            try{
+                $ues_type = $class::upgrade($ues_user);
+//            }catch(Exception $e){
+//                mtrace(sprintf("Exception whil trying to upgrade ues_%s %s",$type, $e->getMessage()));
+//            }
 
             unset($ues_type->id);
 
@@ -1322,8 +1392,15 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
     }
-
+    
+    /**
+     * determine a user's role based on the presence and setting 
+     * of a a field primary_flag
+     * @param type $user
+     * @return string editingteacher | teacher | student
+     */
     private function determine_role($user) {
+        mtrace("determine_role()");
         if (isset($user->primary_flag)) {
             $role = $user->primary_flag ? 'editingteacher' : 'teacher';
         } else {

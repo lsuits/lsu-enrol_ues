@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 require_once dirname(__FILE__) . '/lib.php';
 
 class ues_semester extends ues_dao {

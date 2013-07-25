@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface ues_dao_dsl_words {
     public function like($value);
     public function starts_with($value);

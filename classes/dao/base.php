@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 abstract class ues_base {
     /** Protected static helper function to maintain calling class static
      * overrides
