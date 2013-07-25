@@ -126,7 +126,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('enrol_ues_enrol_settings',
         $_s('enrol_settings'), ''));
 
-    $roles = $DB->get_records_menu('role', null, '', 'id, name');
+    $roles = role_get_names(null, null, true);
 
     foreach (array('editingteacher', 'teacher', 'student') as $shortname) {
         $typeid = $DB->get_field('role', 'id', array('shortname' => $shortname));
