@@ -319,7 +319,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         if (empty($process_courses)) {
             return;
         }
-
+        mtrace(sprintf("Got %d courses from get_courses(); for example %s", count($process_courses), var_dump($process_courses[0])));
         $set_by_department = (bool) $this->setting('process_by_department');
 
         $supports_department = $this->provider()->supports_department_lookups();
@@ -351,6 +351,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
             $this->process_enrollment_by_department(
                 $semester, $department, $current_sections
             );
+            mtrace(sprintf("finished processing enrollment for department %s", $department));
         }
     }
 
@@ -441,7 +442,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         $this->log('Pulling Courses / Sections for ' . $semester);
         try {
             $courses = $this->provider()->course_source()->courses($semester);
-
+            
             $this->log('Processing ' . count($courses) . " Courses...\n");
             $process_courses = $this->process_courses($semester, $courses);
 
@@ -504,7 +505,10 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
             }
 
         } catch (Exception $e) {
-            mtrace(sprintf("We have failed to process enrollment by department"));
+            mtrace(sprintf("We have failed to process enrollment by department for $department"));
+            var_dump($e);
+            die();
+            
             $info = "$semester $department";
             $rea = $e->getMessage();
             $this->errors[] = sprintf('Failed to process %s: %s', $info, $rea);
@@ -523,18 +527,21 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
     }
 
     private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
-        mtrace(sprintf("begin fill_roles_by_department() ofr %d pulled_users...", count($pulled_users)));
+        mtrace(sprintf("begin fill_roles_by_department() %s %s for %d pulled_users...", $semester->year, $semester->name,count($pulled_users)));
         foreach ($pulled_users as $user) {
             $course_params = array(
                 'department' => $department,
                 'cou_number' => $user->cou_number
             );
-//            mtrace(sprintf("Fetching course %s %s", $department, $user->cou_number));
+            
             $course = ues_course::get($course_params);
-
+            
+            
             if (empty($course)) {
-//                mtrace("course is not found, continuing...");
+                mtrace(sprintf("course %s %s is not found, continuing...", $department, $user->cou_number));
                 continue;
+            }else{
+//                mtrace(sprintf("Fetched course %s", $course->fullname));
             }
 
             $section_params = array(
@@ -542,20 +549,22 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
                 'courseid' => $course->id,
                 'sec_number' => $user->sec_number
             );
-//            mtrace(sprintf("Fetching section %s %s", $course->id, $user->sec_number));
+            
             $section = ues_section::get($section_params);
 
             if (empty($section)) {
-//                mtrace("section is not found, continuing...");
+                mtrace("section is not found, continuing...");
                 continue;
+            }else{
+                mtrace(sprintf("Fethced section idnumber %s", $section->idnumber));
             }
-            try{
+//            try{
 //                mtrace(sprintf("begin process_%ss(%s, array(%s) , array(%s))..'", $type,$section->sec_number,count($user),count($current_users)));
                 $this->{'process_'.$type.'s'}($section, array($user), $current_users);
-            }
-            catch (coding_exception $e){
-                mtrace(sprintf("Caught exeption in module %s: %s", $e->module, $e->getMessage()));
-            }
+//            }
+//            catch (coding_exception $e){
+//                mtrace(sprintf("Caught exeption in module %s: %s", $e->module, $e->getMessage()));
+//            }
 //            mtrace(sprintf("...done %s", 'process_'.$type.'s()'));
         }
 
@@ -598,6 +607,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         return $processed;
     }
 
+    //these are hot from the web service, still as SimpleXML elements
     public function process_courses($semester, $courses) {
         $processed = array();
 
@@ -803,10 +813,10 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         if ($sections) {
             $this->log('Found ' . count($sections) . ' Sections that will not be manifested.');
         }
-
+        
         foreach ($sections as $section) {
             if ($section->is_manifested()) {
-
+                
                 $params = array('idnumber' => $section->idnumber);
 
                 $course = $section->moodle();
@@ -1159,7 +1169,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
 
     private function manifest_course($semester, $course, $section) {
         global $DB;
-
+        mtrace("manifesting course...");
         $primary_teacher = $section->primary();
 
         if (!$primary_teacher) {
@@ -1255,6 +1265,18 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         return $moodle_course;
     }
 
+    /**
+     * Triggers an event, 'user_updated' which is consumed by block_cps
+     * and other. The badgeslib.php event handler uses a run-time type 
+     * hint which caused problems for ues enrollment process_all()
+     * causes problems 
+     * 
+     * @global type $CFG
+     * @param type $u
+     * 
+     * @return type
+     * @throws Exception
+     */
     private function create_user($u) {
         $present = !empty($u->idnumber);
 
