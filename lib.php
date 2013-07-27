@@ -1332,7 +1332,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
                 throw new Exception(sprintf($new_err, $rea, $curr, $prev));
             }
 
-            events_trigger('user_updated', $user);
+            events_trigger('user_updated', (object)$user);
         }
 
         return $user;
