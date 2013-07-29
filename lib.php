@@ -23,7 +23,7 @@ class enrol_ues_plugin extends enrol_plugin {
     function __construct() {
         global $CFG;
 
-        $lib = ues::base('classes/dao');
+        $lib = ues::base('classes/dao');//@TODO: remove this; not used; 
 
         ues::require_daos();
         require_once $CFG->dirroot . '/group/lib.php';
@@ -298,11 +298,15 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         $this->handle_pending_sections($pending);
 
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
-
+        
         $this->handle_processed_sections($processed);
 
     }
 
+    /**
+     * process all valid semesters
+     * get semesters considered valid at the current time;
+     */
     public function process_all() {
         $time = time();
         
@@ -313,6 +317,9 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         }
     }
 
+    /**
+     * @param stdClass[] $semester
+     */
     public function process_semester($semester) {
         $process_courses = $this->get_courses($semester);
 
@@ -345,7 +352,8 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
             $filters = ues::where()
                 ->semesterid->equal($semester->id)
                 ->courseid->in($courseids);
-
+            
+            //'current' means they already exist in the DB
             $current_sections = ues_section::get_all($filters);
 
             $this->process_enrollment_by_department(
@@ -366,6 +374,12 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         }
     }
 
+    /**
+     * 
+     * @param int time
+     * @return stdClass[] these objects will be later upgraded to ues_semesters
+     * 
+     */
     public function get_semesters($time) {
         $set_days = (int) $this->setting('sub_days');
         $sub_days = 24 * $set_days * 60 * 60;
@@ -376,9 +390,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
 
         try {
             $semester_source = $this->provider()->semester_source();
-            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>>provider found %d semesters", count($semester_source)));
             $semesters = $semester_source->semesters($now);
-            mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> got here <<<<---------------"));
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
 

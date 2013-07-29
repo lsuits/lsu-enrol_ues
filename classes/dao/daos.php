@@ -184,6 +184,10 @@ class ues_section extends ues_dao {
 
     var $students;
 
+    /**
+     * get section with status of either ENROLLED or PROCESSED
+     * 
+     */
     protected function qualified() {
         return ues::where()
             ->sectionid->equal($this->id)
