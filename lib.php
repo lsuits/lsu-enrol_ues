@@ -509,7 +509,7 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
 
             // Drop remaining
             if (!empty($all_sections)) {
-                mtrace("all_sections is not empty; dropping...");
+                mtrace(sprintf("all_sections is not empty; dropping %d sections",count($all_sections)));
                 ues_section::update(
                     array('status' => ues::PENDING),
                     ues::where('id')->in(array_keys($all_sections))
@@ -565,19 +565,22 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
             $section = ues_section::get($section_params);
 
             if (empty($section)) {
-                mtrace("section is not found, continuing...");
+                mtrace(sprintf("section is not found:\n semester %s\ncourseid %s\nsec_num %s\n, continuing...", 
+                        $section_params['semesterid'],
+                        $section_params['courseid'],
+                        $section_params['sec_number']));
                 continue;
             }else{
-                mtrace(sprintf("Fethced section idnumber %s", $section->idnumber));
+                
             }
-//            try{
-//                mtrace(sprintf("begin process_%ss(%s, array(%s) , array(%s))..'", $type,$section->sec_number,count($user),count($current_users)));
+            try{
+                mtrace(sprintf("begin process_%ss(%s, array(%s) , array(%s))..'", $type,$section->sec_number,count($user),count($current_users)));
                 $this->{'process_'.$type.'s'}($section, array($user), $current_users);
-//            }
-//            catch (coding_exception $e){
-//                mtrace(sprintf("Caught exeption in module %s: %s", $e->module, $e->getMessage()));
-//            }
-//            mtrace(sprintf("...done %s", 'process_'.$type.'s()'));
+            }
+            catch (coding_exception $e){
+                mtrace(sprintf("Caught exeption in module %s: %s", $e->module, $e->getMessage()));
+            }
+            mtrace(sprintf("...done %s", 'process_'.$type.'s()'));
         }
 
         $this->release($type, $current_users);
@@ -1376,11 +1379,11 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
         foreach ($users as $user) {
 //            mtrace(sprintf("filling %s role for %d users", $type,count($users)));
             
-//            try{
+            try{
                 $ues_user = $this->create_user($user);
-//            }catch(Exception $e){
-//                mtrace(sprintf("Exception while trying to create user: %s", $e->getMessage()));
-//            }
+            }catch(Exception $e){
+                mtrace(sprintf("Exception while trying to create user: %s", $e->getMessage()));
+            }
 
             $params = array(
                 'sectionid' => $section->id,
@@ -1391,11 +1394,11 @@ mtrace(sprintf("---------------->>>>>>>>>>>>>>>>>>> is cron required?"));
                 $params += $extra_params($ues_user);
             }
 
-//            try{
+            try{
                 $ues_type = $class::upgrade($ues_user);
-//            }catch(Exception $e){
-//                mtrace(sprintf("Exception whil trying to upgrade ues_%s %s",$type, $e->getMessage()));
-//            }
+            }catch(Exception $e){
+                mtrace(sprintf("Exception whil trying to upgrade ues_%s %s",$type, $e->getMessage()));
+            }
 
             unset($ues_type->id);
 
