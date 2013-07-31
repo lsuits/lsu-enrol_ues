@@ -131,10 +131,7 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($this->setting('course_form_replace')) {
             $url = new moodle_url('/enrol/ues/edit.php', array('id' => $instance->courseid));
 
-            $list = $nodes->parent->parent->get_children_key_list();
-            $index = count($list) < 4 ? 1 : 2;
-
-            $nodes->parent->parent->get($index)->action = $url;
+            $nodes->parent->parent->get('editsettings')->action = $url;
         }
 
         // Allow outside interjection
@@ -507,7 +504,14 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $info = "$semester $department";
             $rea = $e->getMessage();
-            $this->errors[] = sprintf('Failed to process %s: %s', $info, $rea);
+            $message = sprintf(
+                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n", 
+                    $rea, 
+                    $e->getFile(), 
+                    $e->getLine(),
+                    $e->getTraceAsString()
+                    );
+            $this->errors[] = sprintf('Failed to process %s:\n%s', $info, $message);
 
             ues_error::department($semester, $department)->save();
         }
