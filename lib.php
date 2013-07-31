@@ -414,7 +414,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $to_drop = array('status' => ues::PENDING);
 
-                // This will be caught in regular process
+                // This (what? Pending status?) will be caught in regular process
                 ues_section::update($to_drop, $where_manifested);
             }
 
@@ -483,14 +483,10 @@ class enrol_ues_plugin extends enrol_plugin {
             $current_teachers = ues_teacher::get_all($filter);
             $current_students = ues_student::get_all($filter);
             
-
-            
             $ids_param = ues::where('id')->in($sectionids);
             $all_sections = ues_section::get_all($ids_param);
             
-
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
-
             $this->process_students_by_department($semester, $department, $students, $current_students);
 
             
@@ -499,6 +495,7 @@ class enrol_ues_plugin extends enrol_plugin {
             
             foreach ($current_sections as $section) {
                 $course = $section->course();
+                //set status to ues::PROCESSED
                 $this->post_section_process($semester, $course, $section);
 
                 unset($all_sections[$section->id]);
@@ -599,7 +596,12 @@ class enrol_ues_plugin extends enrol_plugin {
         return $processed;
     }
 
-    //these are hot from the web service, still as SimpleXML elements
+    /**
+     * 
+     * @param ues_semester $semester
+     * @param stdClass[] $courses
+     * @return ues_course[]
+     */
     public function process_courses($semester, $courses) {
         $processed = array();
 
@@ -727,6 +729,8 @@ class enrol_ues_plugin extends enrol_plugin {
         $processed_teachers = ues_teacher::count($by_processed);
 
         // A section _can_ be processed only if they have a teacher
+        // Further, this has to happen for a section to be queued
+        // for enrollment
         if (!empty($processed_teachers)) {
             // Full section
             $section->semester = $semester;
