@@ -103,14 +103,10 @@ if ($ADMIN->fulltree) {
         $_s('course_form_replace'), $_s('course_form_replace_desc'), 0));
 
     $fields = array(
-        'format' => get_string('format'),
-        'numsections' => get_string('numberweeks'),
-        'hiddensections' => get_string('hiddensections'),
         'newsitems' => get_string('newsitemsnumber'),
         'showgrades' => get_string('showgrades'),
         'showreports' => get_string('showreports'),
         'maxbytes' => get_string('maximumupload'),
-        'legacyfiles' => get_string('courselegacyfiles'),
         'groupmode' => get_string('groupmode'),
         'groupmodeforce' => get_string('groupmodeforce'),
         'lang' => get_string('forcelanguage')
