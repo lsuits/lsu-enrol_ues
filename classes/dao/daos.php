@@ -320,6 +320,8 @@ class ues_section extends ues_dao {
     public static function ids_by_course_department($semester, $department) {
         global $DB;
 
+        //@TODO perhaps refactor this query to fetch only the ID field
+        //since that's all we care to work with or return
         $sql = 'SELECT sec.*
                 FROM {enrol_ues_sections} sec,
                      {enrol_ues_courses} cou
