@@ -318,7 +318,7 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * @param stdClass[] $semester
+     * @param ues_semester[] $semester
      */
     public function process_semester($semester) {
         $process_courses = $this->get_courses($semester);
@@ -376,7 +376,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * 
      * @param int time
-     * @return stdClass[] these objects will be later upgraded to ues_semesters
+     * @return ues_semester[] these objects will be later upgraded to ues_semesters
      * 
      */
     public function get_semesters($time) {
@@ -561,6 +561,11 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->release($type, $current_users);
     }
 
+    /**
+     * 
+     * @param stdClass[] $semesters
+     * @return ues-semester[]
+     */
     public function process_semesters($semesters) {
         $processed = array();
 
@@ -597,10 +602,10 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
+     * Create/update records for ues courses and sections
      * @param ues_semester $semester
      * @param stdClass[] $courses
-     * @return ues_course[]
+     * @return ues_section[]
      */
     public function process_courses($semester, $courses) {
         $processed = array();
