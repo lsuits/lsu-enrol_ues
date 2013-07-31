@@ -1,7 +1,5 @@
 <?php
-/**
- * @package enrol_ues
- */
+
 $string['pluginname'] = 'UES Enrollment';
 $string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is
 a pluggable enrollment system that adheres to common university criterion
