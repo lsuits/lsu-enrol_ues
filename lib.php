@@ -156,9 +156,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $acceptable_hour = (int)$this->setting('cron_hour');
 
             $right_time = ($current_hour == $acceptable_hour);
-            if(!$right_time){
 
-            }
             // Grace period from last started job
             $starttime = (int)$this->setting('starttime');
             $grace_period = (int)$this->setting('grace_period');
@@ -178,11 +176,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $this->email_reports();
                 return false;
             }
-            if($right_time and parent::is_cron_required() and !$running){
 
-            }else{
-
-            }
             return (
                 $right_time and
                 parent::is_cron_required() and
@@ -1167,7 +1161,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private function manifest_course($semester, $course, $section) {
         global $DB;
-        mtrace("manifesting course...");
         $primary_teacher = $section->primary();
 
         if (!$primary_teacher) {
