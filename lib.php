@@ -8,10 +8,10 @@ defined('MOODLE_INTERNAL') or die();
 require_once dirname(__FILE__) . '/publiclib.php';
 
 class enrol_ues_plugin extends enrol_plugin {
-    /** Typical errorlog for cron run */
+    /* Typical errorlog for cron run */
     var $errors = array();
 
-    /** Typical email log for cron runs */
+    /* Typical email log for cron runs */
     var $emaillog = array();
 
     var $is_silent = false;
@@ -107,6 +107,14 @@ class enrol_ues_plugin extends enrol_plugin {
         return $event->errors;
     }
 
+    /**
+     * 
+     * @param type $instance
+     * @param MoodleQuickForm $form
+     * @param type $data
+     * @param type $context
+     * @return type
+     */
     public function course_edit_form($instance, MoodleQuickForm $form, $data, $context) {
         if (is_null($instance)) {
             return;
@@ -129,7 +137,10 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         if ($this->setting('course_form_replace')) {
-            $url = new moodle_url('/enrol/ues/edit.php', array('id' => $instance->courseid));
+            $url = new moodle_url(
+                '/enrol/ues/edit.php', 
+                array('id' => $instance->courseid)
+            );
 
             $nodes->parent->parent->get('editsettings')->action = $url;
         }
@@ -143,7 +154,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $automatic = $this->setting('cron_run');
 
         $running = (bool)$this->setting('running');
-        return true;
+
         if ($automatic) {
 
             $this->handle_automatic_errors();
