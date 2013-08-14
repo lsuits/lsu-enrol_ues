@@ -29,6 +29,7 @@ class ues_course_edit_form extends course_edit_form {
 
         if ($disable_grouping) {
             $m->hardFreeze('defaultgroupingid');
+            $m->removeElement('groups');
         }
 
         $roles = $DB->get_records('role');

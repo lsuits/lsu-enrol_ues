@@ -7,7 +7,7 @@ require_once 'edit_form.php';
 
 $courseid = required_param('id', PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+$course = course_get_format($courseid)->get_course();
 $category = $DB->get_record(
     'course_categories', array('id' => $course->category), '*', MUST_EXIST
 );
