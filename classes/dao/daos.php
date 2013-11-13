@@ -274,7 +274,6 @@ class ues_section extends ues_dao {
     }
 
     public function is_manifested() {
-        global $DB;
 
         // Clearly it hasn't
         if (empty($this->idnumber)) {
@@ -386,6 +385,12 @@ abstract class user_handler extends ues_dao {
         return $this->user;
     }
 
+    /**
+     * 
+     * @param int|ues_section $section
+     * @param string $to
+     * @param string $from
+     */
     public static function reset_status($section, $to = 'pending', $from = 'enrolled') {
         if (is_object($section)) {
             $section = $section->id;

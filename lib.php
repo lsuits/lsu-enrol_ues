@@ -294,6 +294,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+
     public function handle_enrollments() {
         $pending = ues_section::get_all(array('status' => ues::PENDING));
         
@@ -871,6 +872,10 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('');
     }
 
+    /**
+     * 
+     * @param ues_section[] $sections
+     */
     public function handle_processed_sections($sections) {
         if ($sections) {
             $this->log('Found ' . count($sections) . ' Sections ready to be manifested.');
@@ -937,6 +942,13 @@ class enrol_ues_plugin extends enrol_plugin {
         return $category;
     }
 
+    /**
+     * 
+     * @param ues_semester $semester
+     * @param ues_course $course
+     * @param ues_section $section
+     * @return boolean
+     */
     private function manifestation($semester, $course, $section) {
         // Check for instructor changes
         $teacher_params = array(
