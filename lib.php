@@ -613,8 +613,8 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Create/update records for ues courses and sections
      * @param ues_semester $semester
-     * @param stdClass[] $courses
-     * @return ues_section[]
+     * @param object[] $courses
+     * @return (ues_section)[]
      */
     public function process_courses($semester, $courses) {
         $processed = array();
@@ -1372,7 +1372,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $params = array(
                 'sectionid' => $section->id,
-                'userid' => $ues_user->id
+                'userid'    => $ues_user->id
             );
 
             if ($extra_params) {
