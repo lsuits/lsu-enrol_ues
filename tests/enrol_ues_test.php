@@ -1,5 +1,6 @@
 <?php
 require_once dirname(dirname(__FILE__)).'/lib.php';
+require_once 'generator.php';
 class enrol_ues_testcase extends advanced_testcase{
 
     
@@ -50,6 +51,5 @@ class enrol_ues_testcase extends advanced_testcase{
         }
         return $process_courses;
     }
-    
 }
 ?>
