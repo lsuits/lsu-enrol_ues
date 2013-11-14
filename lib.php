@@ -311,8 +311,9 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * process all valid semesters
-     * get semesters considered valid at the current time;
+     * Get (fetch, instantiate, save) semesters 
+     * considered valid at the current time, and
+     * oricess enrollment for each.
      */
     public function process_all() {
         $time = time();
@@ -334,11 +335,11 @@ class enrol_ues_plugin extends enrol_plugin {
             return;
         }
 
-        $set_by_department = (bool) $this->setting('process_by_department');
+        $set_by_department   = (bool) $this->setting('process_by_department');
 
         $supports_department = $this->provider()->supports_department_lookups();
 
-        $supports_section = $this->provider()->supports_section_lookups();
+        $supports_section    = $this->provider()->supports_section_lookups();
 
         if ($set_by_department and $supports_department) {
             $this->process_semester_by_department($semester, $process_courses);
@@ -352,6 +353,11 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * 
+     * @param ues_semester $semester
+     * @param ues_course[] $courses
+     */
     private function process_semester_by_department($semester, $courses) {
         $departments = ues_course::flatten_departments($courses);
 
@@ -381,7 +387,8 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
+     * From enrollment provider, get, instantiate, 
+     * save (to {enrol_ues_semesters}) and return all valid semesters.
      * @param int time
      * @return ues_semester[] these objects will be later upgraded to ues_semesters
      * 
@@ -455,6 +462,14 @@ class enrol_ues_plugin extends enrol_plugin {
         return array($pass, $fail);
     }
 
+    /**
+     * Fetch courses from the enrollment provider, and pass them to 
+     * process_courses() for instantiations as ues_course objects and for 
+     * persisting to {enrol_ues(_courses|_sections)}.
+     * 
+     * @param ues_semester $semester
+     * @return ues_course[]
+     */
     public function get_courses($semester) {
         $this->log('Pulling Courses / Sections for ' . $semester);
         try {
@@ -465,7 +480,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
             return $process_courses;
         } catch (Exception $e) {
-            $this->errors[] = 'Unable to process courses for ' . $semester;
+            $this->errors[] = sprintf(
+                    'Unable to process courses for %s; Message was: %s', 
+                    $semester, 
+                    $e->getMessage()
+                    );
 
             // Queue up errors
             ues_error::courses($semester)->save();
@@ -618,10 +637,15 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * Create/update records for ues courses and sections
+     * For each of the courses provided, instantiate as a ues_course
+     * object; persist to the {enrol_ues_courses} table; then iterate
+     * through each of its sections, instantiating and persisting each.
+     * Then, assign the sections to the <code>course->sections</code> attirbute, 
+     * and add the course to the return array.
+     * 
      * @param ues_semester $semester
      * @param object[] $courses
-     * @return (ues_section)[]
+     * @return ues_course[]
      */
     public function process_courses($semester, $courses) {
         $processed = array();
@@ -642,17 +666,22 @@ class enrol_ues_plugin extends enrol_plugin {
                 $processed_sections = array();
                 foreach ($ues_course->sections as $section) {
                     $params = array(
-                        'courseid' => $ues_course->id,
+                        'courseid'   => $ues_course->id,
                         'semesterid' => $semester->id,
                         'sec_number' => $section->sec_number
                     );
 
                     $ues_section = ues_section::upgrade_and_get($section, $params);
 
+                    /*
+                     * If the section does not already exist 
+                     * in {enrol_ues_sections}, insert it, 
+                     * marking its status as PENDING.
+                     */
                     if (empty($ues_section->id)) {
-                        $ues_section->courseid = $ues_course->id;
+                        $ues_section->courseid   = $ues_course->id;
                         $ues_section->semesterid = $semester->id;
-                        $ues_section->status = ues::PENDING;
+                        $ues_section->status     = ues::PENDING;
 
                         $ues_section->save();
                     }
@@ -660,7 +689,11 @@ class enrol_ues_plugin extends enrol_plugin {
                     $processed_sections[] = $ues_section;
                 }
 
-                // Mutating sections tied to course
+                /*
+                 * Replace the sections attribute of the course with 
+                 * the fully instantiated, and now persisted, 
+                 * ues_section objects.
+                 */
                 $ues_course->sections = $processed_sections;
 
                 $processed[] = $ues_course;
