@@ -313,7 +313,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Get (fetch, instantiate, save) semesters 
      * considered valid at the current time, and
-     * oricess enrollment for each.
+     * process enrollment for each.
      */
     public function process_all() {
         $time = time();
