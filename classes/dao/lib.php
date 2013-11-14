@@ -178,6 +178,12 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
     }
 
+    /**
+     * 
+     * @param type $object
+     * @param type $params
+     * @return ues_dao
+     */
     public static function upgrade_and_get($object, $params) {
         return self::with_class(function ($class) use ($object, $params) {
             $ues = $class::upgrade($object);

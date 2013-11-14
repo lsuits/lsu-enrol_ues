@@ -185,6 +185,11 @@ abstract class ues_base {
         }
     }
 
+    /**
+     * 
+     * @param object $db_object
+     * @return ues_base
+     */
     public static function upgrade($db_object) {
         return self::with_class(function ($class) use ($db_object) {
 

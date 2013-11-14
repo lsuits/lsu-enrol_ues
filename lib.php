@@ -275,6 +275,10 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * top-level fn called by cron
+     * executes pre-process, process and post-process phases
+     */
     public function full_process() {
 
         if (!$this->provider()->preprocess($this)) {
@@ -574,7 +578,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * 
      * @param stdClass[] $semesters
-     * @return ues-semester[]
+     * @return ues_semester[]
      */
     public function process_semesters($semesters) {
         $processed = array();
@@ -582,12 +586,13 @@ class enrol_ues_plugin extends enrol_plugin {
         foreach ($semesters as $semester) {
             try {
                 $params = array(
-                    'year' => $semester->year,
-                    'name' => $semester->name,
-                    'campus' => $semester->campus,
+                    'year'        => $semester->year,
+                    'name'        => $semester->name,
+                    'campus'      => $semester->campus,
                     'session_key' => $semester->session_key
                 );
 
+                //convert obj to full-fledged ues_semester
                 $ues = ues_semester::upgrade_and_get($semester, $params);
 
                 if (empty($ues->classes_start)) {
@@ -597,9 +602,10 @@ class enrol_ues_plugin extends enrol_plugin {
                 // Call event before potential insert, as to notify creation
                 events_trigger('ues_semester_process', $ues);
 
+                //persist to {ues_semesters}
                 $ues->save();
 
-                // Fill in additionally set data
+                // Fill in metadata from {enrol_ues_semestermeta}
                 $ues->fill_meta();
 
                 $processed[] = $ues;
@@ -816,6 +822,11 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * 
+     * @global object $DB
+     * @param ues_section[] $sections
+     */
     public function handle_pending_sections($sections) {
         global $DB;
 
@@ -824,7 +835,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
         
         foreach ($sections as $section) {
-            if ($section->is_manifested()) {
+            if ($section->is_manifested()) { 
                 
                 $params = array('idnumber' => $section->idnumber);
 
