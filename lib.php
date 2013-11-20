@@ -855,11 +855,16 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
+     * Process students
+     * 
+     * This function passes params on to @see enrol_ues_plugin::fill_role().
+     * Note that the return value is void because 
+     * @see enrol_ues_plugin::fill_role() does not return a value.
      * 
      * @param ues_section $section
      * @param object[] $users
      * @param (ues_student | ues_teacher)[] $current_users
-     * @return void @see enrol_ues_plugin::fill_role() - no return ?
+     * @return void 
      */
     public function process_students($section, $users, &$current_users) {
         return $this->fill_role('student', $section, $users, $current_users);
@@ -1459,7 +1464,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_section $section
      * @param object[] $users
      * @param ues_student[] $current_users
-     * @param callable $extra_params function returning 
+     * @param callback $extra_params function returning 
      * an associative array of additional params, given a user as input
      */
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
