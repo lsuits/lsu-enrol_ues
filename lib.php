@@ -579,6 +579,16 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->fill_roles_by_department('student', $semester, $department, $students, $current_students);
     }
 
+    /**
+     * 
+     * @param string $type @see process_teachers_by_department 
+     * and @see process_students_by_department for possible values 'student'
+     * or 'teacher'
+     * @param ues_section $semester
+     * @param string $department
+     * @param object[] $pulled_users
+     * @param ues_teacher[] | ues_student[] $current_users
+     */
     private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
         foreach ($pulled_users as $user) {
             $course_params = array(
@@ -596,7 +606,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $section_params = array(
                 'semesterid' => $semester->id,
-                'courseid' => $course->id,
+                'courseid'   => $course->id,
                 'sec_number' => $user->sec_number
             );
             
@@ -844,6 +854,13 @@ class enrol_ues_plugin extends enrol_plugin {
         });
     }
 
+    /**
+     * 
+     * @param ues_section $section
+     * @param object[] $users
+     * @param (ues_student | ues_teacher)[] $current_users
+     * @return void @see enrol_ues_plugin::fill_role() - no return ?
+     */
     public function process_students($section, $users, &$current_users) {
         return $this->fill_role('student', $section, $users, $current_users);
     }
@@ -1436,6 +1453,15 @@ class enrol_ues_plugin extends enrol_plugin {
         return false;
     }
 
+    /**
+     * 
+     * @param string $type eg 'student' or 'teacher'
+     * @param ues_section $section
+     * @param object[] $users
+     * @param ues_student[] $current_users
+     * @param callable $extra_params function returning 
+     * an associative array of additional params, given a user as input
+     */
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
         $class = 'ues_' . $type;
 
