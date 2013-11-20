@@ -855,7 +855,7 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * Process students
+     * Process students.
      * 
      * This function passes params on to @see enrol_ues_plugin::fill_role().
      * Note that the return value is void because 
