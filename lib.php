@@ -20,17 +20,17 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private $_loaded = false;
 
-    function __construct() {
+    public function __construct() {
         global $CFG;
 
-        $lib = ues::base('classes/dao');//@TODO: remove this; not used; 
+        $lib = ues::base('classes/dao');//@TODO: remove this; not used;
 
         ues::require_daos();
         require_once $CFG->dirroot . '/group/lib.php';
         require_once $CFG->dirroot . '/course/lib.php';
     }
 
-    function init() {
+    public function init() {
         $this->_loaded = true;
 
         try {
@@ -55,7 +55,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    function provider() {
+    public function provider() {
         if (empty($this->_provider) and !$this->_loaded) {
             $this->init();
         }
@@ -138,7 +138,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         if ($this->setting('course_form_replace')) {
             $url = new moodle_url(
-                '/enrol/ues/edit.php', 
+                '/enrol/ues/edit.php',
                 array('id' => $instance->courseid)
             );
 
@@ -301,11 +301,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
     public function handle_enrollments() {
         $pending = ues_section::get_all(array('status' => ues::PENDING));
-        
+
         $this->handle_pending_sections($pending);
 
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
-        
+
         $this->handle_processed_sections($processed);
 
     }
@@ -317,7 +317,7 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     public function process_all() {
         $time = time();
-        
+
         $processed_semesters = $this->get_semesters($time);
         
         foreach ($processed_semesters as $semester) {
@@ -364,7 +364,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $filters = ues::where()
                 ->semesterid->equal($semester->id)
                 ->courseid->in($courseids);
-            
+
             //'current' means they already exist in the DB
             $current_sections = ues_section::get_all($filters);
 
@@ -406,9 +406,13 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
 
-            $v = function($s) { return !empty($s->grades_due); };
+            $v = function($s) { 
+                return !empty($s->grades_due); 
+            };
 
-            $i = function($s) { return !empty($s->semester_ignore); };
+            $i = function($s) { 
+                return !empty($s->semester_ignore); 
+            };
 
             list($other, $failures) = $this->partition($p_semesters, $v);
 
@@ -513,17 +517,17 @@ class enrol_ues_plugin extends enrol_plugin {
             $filter = ues::where('sectionid')->in($sectionids);
             $current_teachers = ues_teacher::get_all($filter);
             $current_students = ues_student::get_all($filter);
-            
+
             $ids_param    = ues::where('id')->in($sectionids);
             $all_sections = ues_section::get_all($ids_param);
-            
+
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
             $this->process_students_by_department($semester, $department, $students, $current_students);
 
-            
+
             unset($current_teachers);
             unset($current_students);
-            
+
             foreach ($current_sections as $section) {
                 $course = $section->course();
                 // Set status to ues::PROCESSED.
@@ -1441,18 +1445,28 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function user_changed($prev, $current) {
-        if (fullname($prev) != fullname($current)) return true;
+        if (fullname($prev) != fullname($current)){
+            return true;
+        }
 
-        if ($prev->idnumber != $current->idnumber) return true;
+        if ($prev->idnumber != $current->idnumber){
+            return true;
+        }
 
-        if ($prev->username != $current->username) return true;
+        if ($prev->username != $current->username){
+            return true;
+        }
 
         $current_meta = $current->meta_fields(get_object_vars($current));
 
         foreach ($current_meta as $field) {
-            if (!isset($prev->{$field})) return true;
+            if (!isset($prev->{$field})){
+                return true;
+            }
 
-            if ($prev->{$field} != $current->{$field}) return true;
+            if ($prev->{$field} != $current->{$field}){
+                return true;
+            }
         }
 
         return false;
@@ -1532,7 +1546,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         return $role;
     }
-
+    
     public function log($what) {
         if (!$this->is_silent) {
             mtrace($what);
