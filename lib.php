@@ -319,7 +319,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $time = time();
 
         $processed_semesters = $this->get_semesters($time);
-        
+
         foreach ($processed_semesters as $semester) {
             $this->process_semester($semester);
         }
@@ -406,12 +406,12 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
             $p_semesters = $this->process_semesters($semesters);
 
-            $v = function($s) { 
-                return !empty($s->grades_due); 
+            $v = function($s) {
+                return !empty($s->grades_due);
             };
 
-            $i = function($s) { 
-                return !empty($s->semester_ignore); 
+            $i = function($s) {
+                return !empty($s->semester_ignore);
             };
 
             list($other, $failures) = $this->partition($p_semesters, $v);
@@ -476,15 +476,15 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->log('Pulling Courses / Sections for ' . $semester);
         try {
             $courses = $this->provider()->course_source()->courses($semester);
-            
+
             $this->log('Processing ' . count($courses) . " Courses...\n");
             $process_courses = $this->process_courses($semester, $courses);
 
             return $process_courses;
         } catch (Exception $e) {
             $this->errors[] = sprintf(
-                    'Unable to process courses for %s; Message was: %s', 
-                    $semester, 
+                    'Unable to process courses for %s; Message was: %s',
+                    $semester,
                     $e->getMessage()
                     );
 
@@ -596,7 +596,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 'department' => $department,
                 'cou_number' => $user->cou_number
             );
-            
+
             $course = ues_course::get($course_params);
 
             if (empty($course)) {
@@ -608,7 +608,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 'courseid'   => $course->id,
                 'sec_number' => $user->sec_number
             );
-            
+
             $section = ues_section::get($section_params);
 
             if (empty($section)) {
@@ -701,8 +701,8 @@ class enrol_ues_plugin extends enrol_plugin {
                     $ues_section = ues_section::upgrade_and_get($section, $params);
 
                     /*
-                     * If the section does not already exist 
-                     * in {enrol_ues_sections}, insert it, 
+                     * If the section does not already exist
+                     * in {enrol_ues_sections}, insert it,
                      * marking its status as PENDING.
                      */
                     if (empty($ues_section->id)) {
@@ -717,8 +717,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 /*
-                 * Replace the sections attribute of the course with 
-                 * the fully instantiated, and now persisted, 
+                 * Replace the sections attribute of the course with
+                 * the fully instantiated, and now persisted,
                  * ues_section objects.
                  */
                 $ues_course->sections = $processed_sections;
@@ -905,10 +905,10 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($sections) {
             $this->log('Found ' . count($sections) . ' Sections that will not be manifested.');
         }
-        
+
         foreach ($sections as $section) {
-            if ($section->is_manifested()) { 
-                
+            if ($section->is_manifested()) {
+
                 $params = array('idnumber' => $section->idnumber);
 
                 $course = $section->moodle();
@@ -1340,7 +1340,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             try {
                 $moodle_course = create_course($moodle_course);
-                
+
                 $this->add_instance($moodle_course);
             } catch (Exception $e) {
                 $this->errors[] = ues::_s('error_shortname', $moodle_course);
@@ -1524,7 +1524,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
     }
-    
+
     /**
      * determine a user's role based on the presence and setting 
      * of a a field primary_flag
@@ -1552,9 +1552,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
 function enrol_ues_supports($feature) {
     switch ($feature) {
-        case ENROL_RESTORE_TYPE: 
+        case ENROL_RESTORE_TYPE:
             return ENROL_RESTORE_EXACT;
 
-        default: return null;
+        default:
+            return null;
     }
 }
