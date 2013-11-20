@@ -78,6 +78,23 @@ class ues_course extends ues_dao {
         return array_keys($DB->get_records_sql($sql));
     }
 
+    /**
+     * From an array of ues_course objects with department attributes set,
+     * create a new associative array with departments as keys and an array of 
+     * the courseids as values
+     * <code>
+     * $departments = array(
+     *      $department1 =>
+     *              array(1,4,7,54,2),
+     *      $department2 =>
+     *              array(...),
+     *      ...
+     * )
+     * </code>
+     * @param ues_course[] $courses a simple array of ues_course objects
+     * whose 'department' attribute has been previously set.
+     * @return array associative array of string => int[] as described above.
+     */
     public static function flatten_departments($courses) {
         $departments = array();
 
@@ -316,6 +333,13 @@ class ues_section extends ues_dao {
         return $sections;
     }
 
+    /**
+     * @TODO this fn may be inappropriately named: course doesn't play a role
+     * @global Moodle DB $DB
+     * @param ues_semester $semester
+     * @param string $department
+     * @return int[] section ids for the given semester and department
+     */
     public static function ids_by_course_department($semester, $department) {
         global $DB;
 

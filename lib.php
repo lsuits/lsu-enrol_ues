@@ -354,9 +354,8 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
      * @param ues_semester $semester
-     * @param ues_course[] $courses
+     * @param ues_course[] $courses NB: must have department attribute set
      */
     private function process_semester_by_department($semester, $courses) {
         $departments = ues_course::flatten_departments($courses);
@@ -493,6 +492,12 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * 
+     * @param ues_section $semester
+     * @param string $department
+     * @param ues_section[] $current_sections
+     */
     public function process_enrollment_by_department($semester, $department, $current_sections) {
         try {
 
@@ -509,7 +514,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $current_teachers = ues_teacher::get_all($filter);
             $current_students = ues_student::get_all($filter);
             
-            $ids_param = ues::where('id')->in($sectionids);
+            $ids_param    = ues::where('id')->in($sectionids);
             $all_sections = ues_section::get_all($ids_param);
             
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
@@ -521,13 +526,13 @@ class enrol_ues_plugin extends enrol_plugin {
             
             foreach ($current_sections as $section) {
                 $course = $section->course();
-                //set status to ues::PROCESSED
+                // Set status to ues::PROCESSED.
                 $this->post_section_process($semester, $course, $section);
 
                 unset($all_sections[$section->id]);
             }
 
-            // Drop remaining
+            // Drop remaining sections.
             if (!empty($all_sections)) {
                 ues_section::update(
                     array('status' => ues::PENDING),
@@ -538,11 +543,11 @@ class enrol_ues_plugin extends enrol_plugin {
         } catch (Exception $e) {
 
             $info = "$semester $department";
-            $rea = $e->getMessage();
+
             $message = sprintf(
-                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n", 
-                    $rea, 
-                    $e->getFile(), 
+                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n",
+                    $e->getMessage(),
+                    $e->getFile(),
                     $e->getLine(),
                     $e->getTraceAsString()
                     );
@@ -552,10 +557,24 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * 
+     * @param ues_semester $semester
+     * @param string $department
+     * @param object[] $teachers
+     * @param ues_teacher[] $current_teachers
+     */
     public function process_teachers_by_department($semester, $department, $teachers, $current_teachers) {
         $this->fill_roles_by_department('teacher', $semester, $department, $teachers, $current_teachers);
     }
 
+    /**
+     * 
+     * @param ues_semester $semester
+     * @param string $department
+     * @param object[] $students
+     * @param ues_student[] $current_students
+     */
     public function process_students_by_department($semester, $department, $students, $current_students) {
         $this->fill_roles_by_department('student', $semester, $department, $students, $current_students);
     }
