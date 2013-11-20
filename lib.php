@@ -1558,7 +1558,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
 function enrol_ues_supports($feature) {
     switch ($feature) {
-        case ENROL_RESTORE_TYPE: return ENROL_RESTORE_EXACT;
+        case ENROL_RESTORE_TYPE: 
+            return ENROL_RESTORE_EXACT;
 
         default: return null;
     }
