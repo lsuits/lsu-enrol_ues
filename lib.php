@@ -857,10 +857,10 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Process students.
      * 
-     * This function passes params on to @see enrol_ues_plugin::fill_role().
-     * Note that the return value is void because 
-     * @see enrol_ues_plugin::fill_role() does not return a value.
+     * This function passes params on to enrol_ues_plugin::fill_role() 
+     * which does not return any value.
      * 
+     * @see enrol_ues_plugin::fill_role()
      * @param ues_section $section
      * @param object[] $users
      * @param (ues_student | ues_teacher)[] $current_users
