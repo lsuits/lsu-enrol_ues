@@ -444,7 +444,6 @@ class enrol_ues_plugin extends enrol_plugin {
             return array_filter($valids, $sems_in);
         } catch (Exception $e) {
 
-            
             $this->errors[] = $e->getMessage();
             return array();
         }
@@ -511,7 +510,6 @@ class enrol_ues_plugin extends enrol_plugin {
             $teachers = $teacher_source->teachers($semester, $department);
             $students = $student_source->students($semester, $department);
 
-
             $sectionids = ues_section::ids_by_course_department($semester, $department);
 
             $filter = ues::where('sectionid')->in($sectionids);
@@ -523,7 +521,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
             $this->process_students_by_department($semester, $department, $students, $current_students);
-
 
             unset($current_teachers);
             unset($current_students);
@@ -601,12 +598,10 @@ class enrol_ues_plugin extends enrol_plugin {
             );
             
             $course = ues_course::get($course_params);
-            
-            
+
             if (empty($course)) {
                 continue;
             }
-            
 
             $section_params = array(
                 'semesterid' => $semester->id,
@@ -620,7 +615,6 @@ class enrol_ues_plugin extends enrol_plugin {
                 continue;
             }
             $this->{'process_'.$type.'s'}($section, array($user), $current_users);
-            
 
         }
 
