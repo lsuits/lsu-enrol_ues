@@ -29,8 +29,20 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     var $is_silent = false;
 
+    /**
+     * an instance of the ues enrollment provider.
+     *
+     * Provider is configured in admin settings.
+     *
+     * @var enrollment_provider $_provider
+     */
     private $_provider;
 
+    /**
+     * Provider initialization status.
+     *
+     * @var bool
+     */
     private $_loaded = false;
 
     public function __construct() {
