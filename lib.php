@@ -45,6 +45,11 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     private $_loaded = false;
 
+    /**
+     * Require internal and External libs.
+     *
+     * @global object $CFG
+     */
     public function __construct() {
         global $CFG;
 
@@ -55,6 +60,14 @@ class enrol_ues_plugin extends enrol_plugin {
         require_once $CFG->dirroot . '/course/lib.php';
     }
 
+    /**
+     * Try to initialize the provider.
+     *
+     * Tries to create and initialize the provider.
+     * Tests whether provider supports departmental or section lookups.
+     * @throws Exception if provider cannot be created of if provider supports
+     * neither section nor department lookups.
+     */
     public function init() {
         $this->_loaded = true;
 
@@ -80,6 +93,14 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * Getter for self::$_provider.
+     *
+     * If self::$provider is not set already, this method
+     * will attempt to initialize it by calling self::init()
+     * before returning the value of self::$_provider
+     * @return enrollment_provider
+     */
     public function provider() {
         if (empty($this->_provider) and !$this->_loaded) {
             $this->init();
