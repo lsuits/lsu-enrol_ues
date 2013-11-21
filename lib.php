@@ -345,7 +345,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->process_semester_by_department($semester, $process_courses);
         } else if (!$set_by_department and $supports_section) {
             $this->process_semester_by_section($semester, $process_courses);
-        } else {
+        } else{
             $message = ues::_s('could_not_enroll', $semester);
 
             $this->log($message);
