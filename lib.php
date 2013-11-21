@@ -8,12 +8,25 @@ defined('MOODLE_INTERNAL') or die();
 require_once dirname(__FILE__) . '/publiclib.php';
 
 class enrol_ues_plugin extends enrol_plugin {
-    /* Typical errorlog for cron run */
+
+    /**
+     * Typical errorlog for cron run
+     * @TODO remove 'var' keyword; make private.
+     * @var array
+     */
     var $errors = array();
 
-    /* Typical email log for cron runs */
+    /**
+     * Typical email log for cron runs
+     * @TODO remove 'var' keyword; make private
+     * @var array
+     */
     var $emaillog = array();
 
+    /**
+     * @TODO remove the 'var' keyword, replace with 'private'
+     * @var bool admin config setting
+     */
     var $is_silent = false;
 
     private $_provider;
