@@ -410,7 +410,16 @@ abstract class user_handler extends ues_dao {
     }
 
     /**
+     * Reset users' status for section.
      * 
+     * This method updates the status for all users
+     * associated with a section to the status specified in the $to
+     * param. The class being updated is determined by get_called_class(),
+     * and in practice, the only classes to which it applies are the ues_teacher
+     * and ues_student classes.
+     *
+     * @todo this method should be re-written to take advantage of
+     * late static binding.
      * @param int|ues_section $section
      * @param string $to
      * @param string $from
