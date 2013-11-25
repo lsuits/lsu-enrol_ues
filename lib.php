@@ -941,7 +941,19 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
+     * Unenroll courses/sections.
+     *
+     * Given an input array of ues_sections, remove them and their enrollments
+     * from active status.
+     * If the section is not manifested, set its status to ues::SKIPPED.
+     * If it has been manifested, get a reference to the Moodle course.
+     * Get the students and teachers enrolled in the course and unenroll them.
+     * Finally, set the idnumber to the empty string ''.
+     *
+     * In case this is the last section for a given course, we will NOT
+     * unenroll the primary instructor(s), and we will set the mdl_course record
+     * visibility to 0 (not visible). In addition, we will @see events_trigger TRIGGER EVENT 'ues_course_severed'.
+     *
      * @global object $DB
      * @param ues_section[] $sections
      */
