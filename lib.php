@@ -1014,7 +1014,13 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
+     * Handle courses to be manifested.
+     *
+     * For each incoming section, manifest the course and update its status to
+     * ues::Manifested.
+     *
+     * Skip any incoming section whose status is ues::PENDING.
+     *
      * @param ues_section[] $sections
      */
     public function handle_processed_sections($sections) {
@@ -1084,7 +1090,29 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * 
+     * Create all moodle objects for a given course.
+     *
+     * This method oeprates on a single section at a time.
+     *
+     * It's first action is to determine if a primary instructor change
+     * has happened. This case is indicated by the existence, in {ues_teachers}
+     * of two records for this section with primary_flag = 1. If one of those
+     * records has status ues::PROCESSED (meaning: the new primary inst)
+     * and the other has status ues::PENDING (meaning the old instructor,
+     * marked for disenrollment), then we know a primary instructor swap is taking
+     * place for the section, therefore, we trigger the
+     * @link https://github.com/lsuits/ues/wiki/Events ues_primary_change event.
+     *
+     * Once the event fires, subscribers, such as CPS, have the opportunity to take
+     * action on the players in the instructor swap.
+     *
+     * With respect to the notion of manifestation, the real work of this method
+     * begins after handing instructor swaps, anmely, manifesting the course and
+     * enrollments.
+     *
+     * @see ues_enrol_plugin::manifest_course
+     * @see ues_enrol_plugin::manifest_course_enrollment
+     * @event ues_primary_change
      * @param ues_semester $semester
      * @param ues_course $course
      * @param ues_section $section
@@ -1126,9 +1154,9 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Manifest enrollment for a given course section
-     * Fetches a group using @see manifest_group(),
+     * Fetches a group using @see enrol_ues_plugin::manifest_group(),
      * fetches all teachers, students that belong to the group/section
-     * and enrolls/unenrolls via @see enroll_users() or @see unenroll_users()
+     * and enrolls/unenrolls via @see enrol_ues_plugin::enroll_users() or @see unenroll_users()
      * 
      * @param type $moodle_course object from {course}
      * @param type $course object from {enrol_ues_courses}
