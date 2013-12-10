@@ -346,10 +346,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
 
     public function handle_enrollments() {
+        // will be unenrolled
         $pending = ues_section::get_all(array('status' => ues::PENDING));
 
         $this->handle_pending_sections($pending);
 
+        // will be enrolled
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
 
         $this->handle_processed_sections($processed);
@@ -1107,8 +1109,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * action on the players in the instructor swap.
      *
      * With respect to the notion of manifestation, the real work of this method
-     * begins after handing instructor swaps, anmely, manifesting the course and
-     * enrollments.
+     * begins after handing instructor swaps, namely, manifesting the course and
+     * its enrollments.
      *
      * @see ues_enrol_plugin::manifest_course
      * @see ues_enrol_plugin::manifest_course_enrollment
@@ -1334,10 +1336,10 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Fetches existing or creates new group based on given params
      * @global type $DB
-     * @param type $moodle_course object from {course}
-     * @param type $course object from {enrol_ues_courses}
-     * @param type $section object from {enrol_ues_sections}
-     * @return type object from {groups}
+     * @param stdClass $moodle_course object from {course}
+     * @param ues_course $course object from {enrol_ues_courses}
+     * @param ues_section $section object from {enrol_ues_sections}
+     * @return stdClass object from {groups}
      */
     private function manifest_group($moodle_course, $course, $section) {
         global $DB;
