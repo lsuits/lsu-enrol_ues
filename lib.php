@@ -1522,7 +1522,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             mtrace('update user');
             $event_user = (object) $user;
-            assert(get_class($event_user) == 'stdClass');
+//            assert(get_class($event_user) == 'stdClass');
             events_trigger('user_updated', $event_user);
 
         }
