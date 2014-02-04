@@ -1531,8 +1531,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 throw new Exception(sprintf($new_err, $rea, $curr, $prev));
             }
 
-            events_trigger('user_updated', (object)$user);
+            mtrace('update user');
+            $event_user = (object) $user;
+//            assert(get_class($event_user) == 'stdClass');
+            events_trigger('user_updated', $event_user);
+
         }
+
+        assert(get_class($user) == 'ues_user');
 
         return $user;
     }
