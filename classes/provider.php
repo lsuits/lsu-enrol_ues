@@ -112,6 +112,7 @@ abstract class enrollment_provider implements enrollment_factory {
 
     public static function translate_error($code) {
         $class = get_called_class();
+        var_dump($code);
         return get_string($code, $class::plugin_key());
     }
 

@@ -1,7 +1,5 @@
 <?php
-/**
- * @package enrol_ues
- */
+
 require_once dirname(__FILE__) . '/lib.php';
 
 class ues_semester extends ues_dao {
@@ -78,23 +76,6 @@ class ues_course extends ues_dao {
         return array_keys($DB->get_records_sql($sql));
     }
 
-    /**
-     * From an array of ues_course objects with department attributes set,
-     * create a new associative array with departments as keys and an array of 
-     * the courseids as values
-     * <code>
-     * $departments = array(
-     *      $department1 =>
-     *              array(1,4,7,54,2),
-     *      $department2 =>
-     *              array(...),
-     *      ...
-     * )
-     * </code>
-     * @param ues_course[] $courses a simple array of ues_course objects
-     * whose 'department' attribute has been previously set.
-     * @return array associative array of string => int[] as described above.
-     */
     public static function flatten_departments($courses) {
         $departments = array();
 
@@ -200,11 +181,7 @@ class ues_section extends ues_dao {
     var $teachers;
 
     var $students;
-
-    /**
-     * get section with status of either ENROLLED or PROCESSED
-     * 
-     */
+    //important
     protected function qualified() {
         return ues::where()
             ->sectionid->equal($this->id)
@@ -291,6 +268,7 @@ class ues_section extends ues_dao {
     }
 
     public function is_manifested() {
+        global $DB;
 
         // Clearly it hasn't
         if (empty($this->idnumber)) {
@@ -333,18 +311,9 @@ class ues_section extends ues_dao {
         return $sections;
     }
 
-    /**
-     * @TODO this fn may be inappropriately named: course doesn't play a role
-     * @global Moodle DB $DB
-     * @param ues_semester $semester
-     * @param string $department
-     * @return int[] section ids for the given semester and department
-     */
     public static function ids_by_course_department($semester, $department) {
         global $DB;
 
-        //@TODO perhaps refactor this query to fetch only the ID field
-        //since that's all we care to work with or return
         $sql = 'SELECT sec.*
                 FROM {enrol_ues_sections} sec,
                      {enrol_ues_courses} cou
@@ -409,21 +378,6 @@ abstract class user_handler extends ues_dao {
         return $this->user;
     }
 
-    /**
-     * Reset users' status for section.
-     * 
-     * This method updates the status for all users
-     * associated with a section to the status specified in the $to
-     * param. The class being updated is determined by get_called_class(),
-     * and in practice, the only classes to which it applies are the ues_teacher
-     * and ues_student classes.
-     *
-     * @todo this method should be re-written to take advantage of
-     * late static binding.
-     * @param int|ues_section $section
-     * @param string $to
-     * @param string $from
-     */
     public static function reset_status($section, $to = 'pending', $from = 'enrolled') {
         if (is_object($section)) {
             $section = $section->id;
