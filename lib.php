@@ -88,7 +88,6 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         } catch (Exception $e) {
             $a = ues::translate_error($e);
-
             $this->errors[] = ues::_s('provider_cron_problem', $a);
         }
     }
@@ -284,6 +283,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->log('------------------------------------------------');
         }
 
+        mtrace(var_dump($this->email_reports()));
         $this->email_reports();
 
         $this->setting('running', false);
@@ -1134,6 +1134,17 @@ class enrol_ues_plugin extends enrol_plugin {
         $old_primary = ues_teacher::get($teacher_params + array(
             'status' => ues::PENDING
         ));
+        
+        //if there's no old primary, check to see if there's an old non-primary
+        if(!$old_primary){
+            mtrace("detected old non-primary, handling as simple primary switch");
+            $old_primary = ues_teacher::get(array(
+                'sectionid'    => $section->id,
+                'status'       => ues::PENDING,
+                'primary_flag' => 0
+            ));
+        }
+        
 
         // Campuses may want to handle primary instructor changes differently
         if ($new_primary and $old_primary) {
@@ -1363,7 +1374,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         if (!$primary_teacher) {
 
-            $primary_teacher = current($section->teachers());
+            $primary_teacher = current($section->teachers()); //arbitrary ? send email notice
         }
 
         $assumed_idnumber = $semester->year . $semester->name .
@@ -1462,7 +1473,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @global type $CFG
      * @param type $u
      * 
-     * @return type
+     * @return ues_user $user
      * @throws Exception
      */
     private function create_user($u) {
@@ -1486,7 +1497,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->id = $prev->id;
         } else {
             global $CFG;
-
+            //@todo take a close look here - watch primary flag
             $user->email = $user->username . $this->setting('user_email');
             $user->confirmed = $this->setting('user_confirm');
             $user->city = $this->setting('user_city');
@@ -1577,10 +1588,12 @@ class enrol_ues_plugin extends enrol_plugin {
                 'userid'    => $ues_user->id
             );
 
+            
+            // teacher-specific; returns users primary flag
             if ($extra_params) {
                 $params += $extra_params($ues_user);
             }
-
+            
             $ues_type = $class::upgrade($ues_user);
 
             unset($ues_type->id);
