@@ -283,7 +283,6 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->log('------------------------------------------------');
         }
 
-        mtrace(var_dump($this->email_reports()));
         $this->email_reports();
 
         $this->setting('running', false);
@@ -968,7 +967,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         foreach ($sections as $section) {
             if ($section->is_manifested()) {
-
+                
                 $params = array('idnumber' => $section->idnumber);
 
                 $course = $section->moodle();
@@ -992,7 +991,6 @@ class enrol_ues_plugin extends enrol_plugin {
                     }
 
                     $users = $class::get_all($params);
-
                     $this->unenroll_users($group, $users);
                 }
 
@@ -1137,7 +1135,6 @@ class enrol_ues_plugin extends enrol_plugin {
         
         //if there's no old primary, check to see if there's an old non-primary
         if(!$old_primary){
-            mtrace("detected old non-primary, handling as simple primary switch");
             $old_primary = ues_teacher::get(array(
                 'sectionid'    => $section->id,
                 'status'       => ues::PENDING,
@@ -1148,6 +1145,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Campuses may want to handle primary instructor changes differently
         if ($new_primary and $old_primary) {
+
+            global $DB;
+            $new = $DB->get_record('user',array('id'=>$new_primary->userid));
+            $old = $DB->get_record('user',array('id'=>$old_primary->userid));
+            $this->log(sprintf("instructor change from %s to %s\n", $old->username, $new->username));
+
             $data = new stdClass;
             $data->section = $section;
             $data->old_primary = $old_primary;
@@ -1171,9 +1174,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * fetches all teachers, students that belong to the group/section
      * and enrolls/unenrolls via @see enrol_ues_plugin::enroll_users() or @see unenroll_users()
      * 
-     * @param type $moodle_course object from {course}
-     * @param type $course object from {enrol_ues_courses}
-     * @param type $section object from {enrol_ues_sections}
+     * @param object $moodle_course object from {course}
+     * @param ues_course $course object from {enrol_ues_courses}
+     * @param ues_section $section object from {enrol_ues_sections}
      */
     private function manifest_course_enrollment($moodle_course, $course, $section) {
         $group = $this->manifest_group($moodle_course, $course, $section);
@@ -1199,6 +1202,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     // teachers and students are set to be enrolled
                     // We should log it as a potential error and continue.
                     try {
+                        
                         $to_action = $class::get_all($action_params);
                         $this->{$action . '_users'}($group, $to_action);
                     } catch (Exception $e) {
@@ -1267,6 +1271,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private function unenroll_users($group, $users) {
         global $DB;
+        
 
         $instance = $this->get_instance($group->courseid);
 
@@ -1320,6 +1325,7 @@ class enrol_ues_plugin extends enrol_plugin {
             // section so keep groups alive
             if (!$is_enrolled) {
                 $this->unenrol_user($instance, $user->userid, $roleid);
+                
             } else if ($same_section) {
                 groups_add_member($group->id, $user->userid);
             }
@@ -1332,14 +1338,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 events_trigger('ues_' . $shortname . '_unenroll', $event_params);
             }
+
         }
 
         $count_params = array('groupid' => $group->id);
         if (!$DB->count_records('groups_members', $count_params)) {
-
             // Going ahead and delete as delete
             groups_delete_group($group);
-
             events_trigger('ues_group_emptied', $group);
         }
     }
@@ -1531,14 +1536,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 throw new Exception(sprintf($new_err, $rea, $curr, $prev));
             }
 
-            mtrace('update user');
-            $event_user = (object) $user;
-//            assert(get_class($event_user) == 'stdClass');
-            events_trigger('user_updated', $event_user);
-
+            events_trigger('user_updated', (object)$user);
         }
-
-        assert(get_class($user) == 'ues_user');
 
         return $user;
     }
@@ -1644,7 +1643,6 @@ class enrol_ues_plugin extends enrol_plugin {
         } else {
             $role = 'student';
         }
-
         return $role;
     }
     
