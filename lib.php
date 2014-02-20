@@ -1140,6 +1140,11 @@ class enrol_ues_plugin extends enrol_plugin {
                 'status'       => ues::PENDING,
                 'primary_flag' => 0
             ));
+
+            // if this is the same user getting a promotion, no need to unenroll the course...
+            if($old_primary){
+                $old_primary = $old_primary->userid == $new_primary->userid ? false : $old_primary;
+            }
         }
         
 
