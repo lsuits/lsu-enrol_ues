@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 abstract class ues_external extends ues_base {
     public static function by_id($id) {
         return self::get(array('id' => $id));

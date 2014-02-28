@@ -1,4 +1,7 @@
 <?php
+/**
+ * @package enrol_ues
+ */
 
 abstract class ues_base {
     /** Protected static helper function to maintain calling class static
@@ -8,6 +11,11 @@ abstract class ues_base {
         return $fun(get_called_class());
     }
 
+    /**
+     * @TODO investigate whether reliance on this can be eliminated through the
+     * use of late static binding static::<fn> calls
+     * @url http://php.net/manual/en/language.oop5.late-static-bindings.php
+     */
     protected static function call($fun, $params = array()) {
         return self::with_class(function ($class) use ($fun, $params) {
             return call_user_func(array($class, $fun), $params);
@@ -178,6 +186,11 @@ abstract class ues_base {
         }
     }
 
+    /**
+     * 
+     * @param object $db_object
+     * @return ues_base
+     */
     public static function upgrade($db_object) {
         return self::with_class(function ($class) use ($db_object) {
 

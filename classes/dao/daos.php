@@ -181,7 +181,7 @@ class ues_section extends ues_dao {
     var $teachers;
 
     var $students;
-
+    //important
     protected function qualified() {
         return ues::where()
             ->sectionid->equal($this->id)

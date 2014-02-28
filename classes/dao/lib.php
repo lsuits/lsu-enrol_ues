@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 interface meta_information {
     public function save_meta($meta);
 
@@ -102,6 +104,10 @@ abstract class ues_dao extends ues_base implements meta_information {
         );
     }
 
+    /**
+     * Get all records of the descendant type filtered by the params passed
+     * with or without meta, specific fields, etc
+     */
     public static function get_all($params = array(), $meta = false, $sort = '', $fields = '*', $offset = 0, $limit = 0) {
         global $DB;
 
@@ -140,6 +146,10 @@ abstract class ues_dao extends ues_base implements meta_information {
         return $ret;
     }
 
+    /**
+     * @param array | ues_dao_filter_builder $params
+     * 
+     */
     public static function count($params = array()) {
         global $DB;
 
@@ -168,6 +178,12 @@ abstract class ues_dao extends ues_base implements meta_information {
         }
     }
 
+    /**
+     * 
+     * @param type $object
+     * @param type $params
+     * @return ues_dao
+     */
     public static function upgrade_and_get($object, $params) {
         return self::with_class(function ($class) use ($object, $params) {
             $ues = $class::upgrade($object);

@@ -1,2 +1,5 @@
-test.php
-paws
+*.dist
+tests/conf/providerConfigLSU.php
+tests/conf/providerConfigLSU.php
+tests/conf/providerConfigOnline.php
+tests/conf/uesConfig.php

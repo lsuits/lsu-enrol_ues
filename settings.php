@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 defined('MOODLE_INTERNAL') or die();
 
 if ($ADMIN->fulltree) {
@@ -126,7 +128,6 @@ if ($ADMIN->fulltree) {
 
     foreach (array('editingteacher', 'teacher', 'student') as $shortname) {
         $typeid = $DB->get_field('role', 'id', array('shortname' => $shortname));
-
         $settings->add(new admin_setting_configselect('enrol_ues/'.$shortname.'_role',
             $_s($shortname.'_role'), $_s($shortname.'_role_desc'), $typeid ,$roles));
     }

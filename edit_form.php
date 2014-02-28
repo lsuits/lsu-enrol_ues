@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 require_once $CFG->dirroot . '/course/edit_form.php';
 
 class ues_course_edit_form extends course_edit_form {

@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package enrol_ues
+ */
 defined('MOODLE_INTERNAL') or die();
 
 abstract class ues {
@@ -57,7 +59,15 @@ abstract class ues {
         self::enroll_users($sections, $silent);
     }
 
-    // Note: this will erase the idnumber of the sections
+    
+    /**
+     * Unenroll users from the given sections.
+     * Note: this will erase the idnumber of the sections
+     * 
+     * @param ues_sections[] $sections
+     * @param boolean $silent
+     * @return type
+     */
     public static function unenroll_users(array $sections, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
