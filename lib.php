@@ -176,19 +176,23 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function add_course_navigation($nodes, stdClass $instance) {
+        global $COURSE;
         // Only interfere with UES courses
         if (is_null($instance)) {
             return;
         }
 
-        if ($this->setting('course_form_replace')) {
-            $url = new moodle_url(
-                '/enrol/ues/edit.php',
-                array('id' => $instance->courseid)
-            );
-
-            $nodes->parent->parent->get('editsettings')->action = $url;
-        }
+        $coursecontext = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $can_change = has_capability('moodle/course:update', $coursecontext);
+        if ($can_change) {
+            if ($this->setting('course_form_replace')) {
+                $url = new moodle_url(
+                    '/enrol/ues/edit.php',
+                    array('id' => $instance->courseid)
+                );
+                $nodes->parent->parent->get('editsettings')->action = $url;
+            }
+	}
 
         // Allow outside interjection
         $params = array($nodes, $instance);
