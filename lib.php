@@ -351,12 +351,13 @@ class enrol_ues_plugin extends enrol_plugin {
     public function handle_enrollments() {
         // will be unenrolled
         $pending = ues_section::get_all(array('status' => ues::PENDING));
-
+        mtrace(var_dump($pending));
         $this->handle_pending_sections($pending);
 
         // will be enrolled
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
 
+        mtrace(var_dump($processed));
         $this->handle_processed_sections($processed);
 
     }
@@ -963,7 +964,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_section[] $sections
      */
     public function handle_pending_sections($sections) {
-        global $DB;
+        global $DB, $USER;
 
         if ($sections) {
             $this->log('Found ' . count($sections) . ' Sections that will not be manifested.');
@@ -999,7 +1000,13 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 if ($last_section) {
-                    $course->visible = 0;
+                    // set course visibility according to user preferences (cps)
+                    $setting_params = ues::where()
+                        ->userid->equal($USER->id)
+                        ->name->starts_with('creation_');
+
+                    $settings  = cps_setting::get_to_name($setting_params);
+                    $course->visible = $settings['creation_visible']->value;
 
                     $DB->update_record('course', $course);
 
