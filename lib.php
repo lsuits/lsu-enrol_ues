@@ -351,15 +351,11 @@ class enrol_ues_plugin extends enrol_plugin {
     public function handle_enrollments() {
         // will be unenrolled
         $pending = ues_section::get_all(array('status' => ues::PENDING));
-        mtrace(var_dump($pending));
         $this->handle_pending_sections($pending);
 
         // will be enrolled
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
-
-        mtrace(var_dump($processed));
         $this->handle_processed_sections($processed);
-
     }
 
     /**
@@ -1000,7 +996,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 if ($last_section) {
-                    // set course visibility according to user preferences (cps)
+                    // set course visibility according to user preferences (block_cps)
                     $setting_params = ues::where()
                         ->userid->equal($USER->id)
                         ->name->starts_with('creation_');
