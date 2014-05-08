@@ -25,7 +25,7 @@ $base_url = new moodle_url('/admin/settings.php', array(
     'section' => 'enrolsettingsues'
 ));
 
-$PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+$PAGE->set_context(context_system::instance());
 $PAGE->set_title($pluginname . ': '. $action);
 $PAGE->set_heading($pluginname . ': '. $action);
 $PAGE->set_url('/enrol/ues/ignore.php');

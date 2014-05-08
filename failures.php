@@ -27,7 +27,7 @@ $blockname = $_s('pluginname');
 
 $action = $_s('reprocess_failures');
 
-$PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+$PAGE->set_context(context_system::instance());
 $PAGE->set_title($blockname. ': '. $action);
 $PAGE->set_heading($blockname. ': '. $action);
 $PAGE->set_url('/enrol/ues/cleanup.php');

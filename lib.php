@@ -124,7 +124,7 @@ class enrol_ues_plugin extends enrol_plugin {
             return $errors;
         }
 
-        $system = get_context_instance(CONTEXT_SYSTEM);
+        $system = context_system::instance();
         $can_change = has_capability('moodle/course:update', $system);
 
         $restricted = explode(',', $this->setting('course_restricted_fields'));
@@ -182,7 +182,7 @@ class enrol_ues_plugin extends enrol_plugin {
             return;
         }
 
-        $coursecontext = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $coursecontext = context_course::instance($COURSE->id);
         $can_change = has_capability('moodle/course:update', $coursecontext);
         if ($can_change) {
             if ($this->setting('course_form_replace')) {
@@ -1297,7 +1297,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $roleid = $this->setting($shortname . '_role');
 
             // Ignore pending statuses for users who have no role assignment
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            $context = context_course::instance($course->id);
             if (!is_enrolled($context, $user->userid)) {
                 continue;
             }

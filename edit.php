@@ -20,7 +20,7 @@ $PAGE->set_url('/course/edit.php', array('id' => $courseid));
 
 require_login($course);
 
-$context = get_context_instance(CONTEXT_COURSE, $courseid);
+$context = context_course::instance($courseid);
 
 require_capability('moodle/course:update', $context);
 
