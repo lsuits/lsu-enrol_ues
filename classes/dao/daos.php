@@ -369,9 +369,11 @@ abstract class user_handler extends ues_dao {
 
     public function user() {
         if (empty($this->user)) {
-            $user = ues_user::get(array('id' => $this->userid), true,
-                'id, firstname, lastname, username, email, idnumber');
 
+            $username_fields = user_picture::fields();
+
+            $user = ues_user::get(array('id' => $this->userid), true,
+                "{$username_fields}, username, idnumber");
             $this->user = $user;
         }
 
