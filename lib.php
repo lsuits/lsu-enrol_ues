@@ -200,6 +200,7 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function is_cron_required() {
+
         $automatic = $this->setting('cron_run');
 
         $running = (bool)$this->setting('running');
@@ -268,7 +269,6 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->setting('running', true);
 
         $this->setting('starttime', time());
-
         if ($this->provider()) {
             $this->log('------------------------------------------------');
             $this->log(ues::_s('pluginname'));
@@ -1001,8 +1001,11 @@ class enrol_ues_plugin extends enrol_plugin {
                         ->userid->equal($USER->id)
                         ->name->starts_with('creation_');
 
-                    $settings  = cps_setting::get_to_name($setting_params);
-                    $course->visible = $settings['creation_visible']->value;
+                    $settings        = cps_setting::get_to_name($setting_params);
+                    $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
+
+                    //@todo1 Use the site default rather tham hard-coding '0'.
+                    $course->visible = isset($setting->value) ? $setting->value : 0;
 
                     $DB->update_record('course', $course);
 
@@ -1487,6 +1490,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * hint which caused problems for ues enrollment process_all()
      * causes problems 
      * 
+     * @todo fix badgeslib issue
      * @global type $CFG
      * @param type $u
      * 
