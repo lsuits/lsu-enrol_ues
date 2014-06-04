@@ -544,10 +544,12 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
+     * Workhorse method that brings enrollment data from the provider together with existing records
+     * and then dispatches sub processes that operate on the differences between the two.
      * 
-     * @param ues_section $semester
-     * @param string $department
-     * @param ues_section[] $current_sections
+     * @param ues_semester $semester semester to process
+     * @param string $department department to process
+     * @param ues_section[] $current_sections current UES records for the department/semester combination
      */
     public function process_enrollment_by_department($semester, $department, $current_sections) {
         try {
@@ -635,8 +637,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * or 'teacher'
      * @param ues_section $semester
      * @param string $department
-     * @param object[] $pulled_users
-     * @param ues_teacher[] | ues_student[] $current_users
+     * @param object[] $pulled_users incoming users from the provider
+     * @param ues_teacher[] | ues_student[] $current_users all UES users for this semester
      */
     private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
         foreach ($pulled_users as $user) {
@@ -1582,26 +1584,23 @@ class enrol_ues_plugin extends enrol_plugin {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
      * 
-     * @param string $type eg 'student' or 'teacher'
+     * @param string $type 'student' or 'teacher'
      * @param ues_section $section
      * @param object[] $users
-     * @param ues_student[] $current_users
-     * @param callback $extra_params function returning 
+     * @param ues_student[] $current_users all users currently registered in the UES tables for this section
+     * @param callback $extra_params function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
      */
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
         $class = 'ues_' . $type;
-
         $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
 
         foreach ($users as $user) {
-
             $ues_user = $this->create_user($user);
 
             $params = array(
@@ -1609,16 +1608,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 'userid'    => $ues_user->id
             );
 
-            
-            // teacher-specific; returns users primary flag
             if ($extra_params) {
+                // teacher-specific; returns user's primary flag key => value
                 $params += $extra_params($ues_user);
             }
             
             $ues_type = $class::upgrade($ues_user);
 
             unset($ues_type->id);
-
             if ($prev = $class::get($params, true)) {
                 $ues_type->id = $prev->id;
                 unset($current_users[$prev->id]);
