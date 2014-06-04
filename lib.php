@@ -1561,7 +1561,22 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function user_changed($prev, $current) {
-        if (fullname($prev) != fullname($current)){
+        global $DB;
+        $namefields   = user_picture::fields();
+        $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
+
+        // @TODO ues_user does not currently upgrade with the alt names.
+        $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
+
+        // Fullname requires alt name fields; make sure they exist.
+        $altnames     = array_keys(get_all_user_name_fields());
+        foreach($altnames as $a){
+            if(!isset($current->$a)){
+                $current->$a = null;
+            }
+        }
+
+        if (fullname($previoususer) != fullname($current)){
             return true;
         }
 
