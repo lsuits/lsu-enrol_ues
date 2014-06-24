@@ -1557,6 +1557,22 @@ class enrol_ues_plugin extends enrol_plugin {
             events_trigger('user_updated', (object)$user);
         }
 
+        // If the provider supplies initial password information, set it now.
+        if(isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)){
+            $user->password = $user->init_password;
+            update_internal_user_password($user, $user->init_password);
+
+            // let's not pass this any further.
+            unset($user->init_password);
+
+            // Need an instance of stdClass in the try stack.
+            $userX = (array) $user;
+            $userY = (object) $userX;
+
+            // Force user to change password on next login.
+            set_user_preference('auth_forcepasswordchange', 1, $userY);
+        }
+
         return $user;
     }
 
