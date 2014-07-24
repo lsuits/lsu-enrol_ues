@@ -99,7 +99,7 @@ abstract class ues {
             $section->status = self::PROCESSED;
 
             // Appropriate events needs to be adhered to
-            events_trigger('ues_section_process', $section);
+            events_trigger_legacy('ues_section_process', $section);
 
             $section->save();
         }
@@ -261,7 +261,7 @@ abstract class ues {
             $types = array('ues_student', 'ues_teacher');
 
             // Triggered before db removal and enrollment drop
-            events_trigger('ues_section_drop', $section);
+            events_trigger_legacy('ues_section_drop', $section);
 
             // Optimize enrollment deletion
             foreach ($types as $class) {
@@ -283,7 +283,7 @@ abstract class ues {
 
         $log('Dropped all ' . $count . " sections...\n");
 
-        events_trigger('ues_semester_drop', $semester);
+        events_trigger_legacy('ues_semester_drop', $semester);
         ues_semester::delete($semester->id);
 
         $log('Done');
@@ -317,7 +317,7 @@ abstract class ues {
         // $data->plugins += array('plugin_name' => 'Plugin name');
         $data->plugins = array();
 
-        events_trigger('ues_list_provider', $data);
+        events_trigger_legacy('ues_list_provider', $data);
 
         return $data->plugins;
     }
@@ -343,7 +343,7 @@ abstract class ues {
 
         // Handlers should provide the correct provider class and
         // libs so it can be instantiated
-        events_trigger("ues_load_{$provider_name}_provider", $data);
+        events_trigger_legacy("ues_load_{$provider_name}_provider", $data);
 
         return $data->provider_class;
     }

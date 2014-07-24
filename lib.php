@@ -115,7 +115,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         // Delete extension handler
-        events_trigger('ues_course_updated', array($course, $data));
+        events_trigger_legacy('ues_course_updated', array($course, $data));
     }
 
     public function course_edit_validation($instance, array $data, $context) {
@@ -147,7 +147,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $event->context = $context;
         $event->errors = $errors;
 
-        events_trigger('ues_course_edit_validation', $event);
+        events_trigger_legacy('ues_course_edit_validation', $event);
 
         return $event->errors;
     }
@@ -172,7 +172,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $event->data = $data;
         $event->context = $context;
 
-        events_trigger('ues_course_edit_form', $event);
+        events_trigger_legacy('ues_course_edit_form', $event);
     }
 
     public function add_course_navigation($nodes, stdClass $instance) {
@@ -196,7 +196,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Allow outside interjection
         $params = array($nodes, $instance);
-        events_trigger('ues_course_settings_navigation', $params);
+        events_trigger_legacy('ues_course_settings_navigation', $params);
     }
 
     public function is_cron_required() {
@@ -544,10 +544,12 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
+     * Workhorse method that brings enrollment data from the provider together with existing records
+     * and then dispatches sub processes that operate on the differences between the two.
      * 
-     * @param ues_section $semester
-     * @param string $department
-     * @param ues_section[] $current_sections
+     * @param ues_semester $semester semester to process
+     * @param string $department department to process
+     * @param ues_section[] $current_sections current UES records for the department/semester combination
      */
     public function process_enrollment_by_department($semester, $department, $current_sections) {
         try {
@@ -635,8 +637,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * or 'teacher'
      * @param ues_section $semester
      * @param string $department
-     * @param object[] $pulled_users
-     * @param ues_teacher[] | ues_student[] $current_users
+     * @param object[] $pulled_users incoming users from the provider
+     * @param ues_teacher[] | ues_student[] $current_users all UES users for this semester
      */
     private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
         foreach ($pulled_users as $user) {
@@ -694,7 +696,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 // Call event before potential insert, as to notify creation
-                events_trigger('ues_semester_process', $ues);
+                events_trigger_legacy('ues_semester_process', $ues);
 
                 //persist to {ues_semesters}
                 $ues->save();
@@ -734,7 +736,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = ues_course::upgrade_and_get($course, $params);
 
-                events_trigger('ues_course_process', $ues_course);
+                events_trigger_legacy('ues_course_process', $ues_course);
 
                 $ues_course->save();
 
@@ -825,7 +827,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->save();
 
             // Specific release for instructor
-            events_trigger('ues_' . $type . '_release', $user);
+            events_trigger_legacy('ues_' . $type . '_release', $user);
 
             // Drop manifested sections for teacher POTENTIAL drops
             if ($user->status == ues::PENDING and $type == 'teacher') {
@@ -886,7 +888,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Allow outside interaction
-            events_trigger('ues_section_process', $section);
+            events_trigger_legacy('ues_section_process', $section);
 
             if ($previous_status != $section->status) {
                 $section->save();
@@ -1011,7 +1013,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                     $this->log('Unloading ' . $course->idnumber);
 
-                    events_trigger('ues_course_severed', $course);
+                    events_trigger_legacy('ues_course_severed', $course);
                 }
 
                 $section->idnumber = '';
@@ -1170,7 +1172,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $data->section = $section;
             $data->old_primary = $old_primary;
             $data->new_primary = $new_primary;
-            events_trigger('ues_primary_change', $data);
+            events_trigger_legacy('ues_primary_change', $data);
 
             $section = $data->section;
         }
@@ -1280,7 +1282,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 'ues_user' => $user
             );
 
-            events_trigger('ues_' . $shortname . '_enroll', $event_params);
+            events_trigger_legacy('ues_' . $shortname . '_enroll', $event_params);
         }
     }
 
@@ -1351,7 +1353,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     'ues_user' => $user
                 );
 
-                events_trigger('ues_' . $shortname . '_unenroll', $event_params);
+                events_trigger_legacy('ues_' . $shortname . '_unenroll', $event_params);
             }
 
         }
@@ -1360,7 +1362,7 @@ class enrol_ues_plugin extends enrol_plugin {
         if (!$DB->count_records('groups_members', $count_params)) {
             // Going ahead and delete as delete
             groups_delete_group($group);
-            events_trigger('ues_group_emptied', $group);
+            events_trigger_legacy('ues_group_emptied', $group);
         }
     }
 
@@ -1455,7 +1457,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Actually needs to happen, before the create call
-            events_trigger('ues_course_create', $moodle_course);
+            events_trigger_legacy('ues_course_create', $moodle_course);
 
             try {
                 $moodle_course = create_course($moodle_course);
@@ -1535,7 +1537,7 @@ class enrol_ues_plugin extends enrol_plugin {
         if (!empty($created)) {
             $user->save();
 
-            events_trigger('user_created', $user);
+            events_trigger_legacy('user_created', $user);
         } else if ($prev and $this->user_changed($prev, $user)) {
             // Re-throw exception with more helpful information
             try {
@@ -1552,14 +1554,45 @@ class enrol_ues_plugin extends enrol_plugin {
                 throw new Exception(sprintf($new_err, $rea, $curr, $prev));
             }
 
-            events_trigger('user_updated', (object)$user);
+            events_trigger_legacy('user_updated', (object)$user);
+        }
+
+        // If the provider supplies initial password information, set it now.
+        if(isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)){
+            $user->password = $user->init_password;
+            update_internal_user_password($user, $user->init_password);
+
+            // let's not pass this any further.
+            unset($user->init_password);
+
+            // Need an instance of stdClass in the try stack.
+            $userX = (array) $user;
+            $userY = (object) $userX;
+
+            // Force user to change password on next login.
+            set_user_preference('auth_forcepasswordchange', 1, $userY);
         }
 
         return $user;
     }
 
     private function user_changed($prev, $current) {
-        if (fullname($prev) != fullname($current)){
+        global $DB;
+        $namefields   = user_picture::fields();
+        $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
+
+        // @TODO ues_user does not currently upgrade with the alt names.
+        $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
+
+        // Fullname requires alt name fields; make sure they exist.
+        $altnames     = array_keys(get_all_user_name_fields());
+        foreach($altnames as $a){
+            if(!isset($current->$a)){
+                $current->$a = null;
+            }
+        }
+
+        if (fullname($previoususer) != fullname($current)){
             return true;
         }
 
@@ -1582,26 +1615,23 @@ class enrol_ues_plugin extends enrol_plugin {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
      * 
-     * @param string $type eg 'student' or 'teacher'
+     * @param string $type 'student' or 'teacher'
      * @param ues_section $section
      * @param object[] $users
-     * @param ues_student[] $current_users
-     * @param callback $extra_params function returning 
+     * @param ues_student[] $current_users all users currently registered in the UES tables for this section
+     * @param callback $extra_params function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
      */
     private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
         $class = 'ues_' . $type;
-
         $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
 
         foreach ($users as $user) {
-
             $ues_user = $this->create_user($user);
 
             $params = array(
@@ -1609,16 +1639,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 'userid'    => $ues_user->id
             );
 
-            
-            // teacher-specific; returns users primary flag
             if ($extra_params) {
+                // teacher-specific; returns user's primary flag key => value
                 $params += $extra_params($ues_user);
             }
             
             $ues_type = $class::upgrade($ues_user);
 
             unset($ues_type->id);
-
             if ($prev = $class::get($params, true)) {
                 $ues_type->id = $prev->id;
                 unset($current_users[$prev->id]);
@@ -1642,7 +1670,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $ues_type->save();
 
             if (empty($prev) or $prev->status == ues::UNENROLLED) {
-                events_trigger($class . '_process', $ues_type);
+                events_trigger_legacy($class . '_process', $ues_type);
             }
         }
     }
