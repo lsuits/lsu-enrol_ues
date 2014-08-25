@@ -975,8 +975,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $course = $section->moodle();
 
-                $last_section = ues_section::count($params) == 1;
-
                 $ues_course = $section->course();
 
                 foreach (array('student', 'teacher') as $type) {
@@ -997,24 +995,22 @@ class enrol_ues_plugin extends enrol_plugin {
                     $this->unenroll_users($group, $users);
                 }
 
-                if ($last_section) {
-                    // set course visibility according to user preferences (block_cps)
-                    $setting_params = ues::where()
-                        ->userid->equal($USER->id)
-                        ->name->starts_with('creation_');
+                // set course visibility according to user preferences (block_cps)
+                $setting_params = ues::where()
+                    ->userid->equal($USER->id)
+                    ->name->starts_with('creation_');
 
-                    $settings        = cps_setting::get_to_name($setting_params);
-                    $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
+                $settings        = cps_setting::get_to_name($setting_params);
+                $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
 
-                    //@todo1 Use the site default rather tham hard-coding '0'.
-                    $course->visible = isset($setting->value) ? $setting->value : 0;
+                //@todo1 Use the site default rather tham hard-coding '0'.
+                $course->visible = isset($setting->value) ? $setting->value : 0;
 
-                    $DB->update_record('course', $course);
+                $DB->update_record('course', $course);
 
-                    $this->log('Unloading ' . $course->idnumber);
+                $this->log('Unloading ' . $course->idnumber);
 
-                    events_trigger_legacy('ues_course_severed', $course);
-                }
+                events_trigger_legacy('ues_course_severed', $course);
 
                 $section->idnumber = '';
             }
