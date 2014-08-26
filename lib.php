@@ -302,7 +302,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             foreach ($admins as $admin) {
                 email_to_user($admin, ues::_s('pluginname'),
-                    'UES Log', $email_text);
+                    sprintf('UES Log [%s]', $CFG->wwwroot), $email_text);
             }
         }
 
