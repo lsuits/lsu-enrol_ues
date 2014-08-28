@@ -954,9 +954,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Get the students and teachers enrolled in the course and unenroll them.
      * Finally, set the idnumber to the empty string ''.
      *
-     * In case this is the last section for a given course, we will NOT
-     * unenroll the primary instructor(s), and we will set the mdl_course record
-     * visibility to 0 (not visible). In addition, we will @see events_trigger TRIGGER EVENT 'ues_course_severed'.
+     * In addition, we will @see events_trigger TRIGGER EVENT 'ues_course_severed'.
      *
      * @global object $DB
      * @param ues_section[] $sections
@@ -986,10 +984,6 @@ class enrol_ues_plugin extends enrol_plugin {
                     $params = ues::where()
                         ->sectionid->equal($section->id)
                         ->status->in(ues::ENROLLED, ues::UNENROLLED);
-
-                    if ($last_section and $type == 'teacher') {
-                        $params->primary_flag->equal(0);
-                    }
 
                     $users = $class::get_all($params);
                     $this->unenroll_users($group, $users);
