@@ -997,8 +997,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $settings        = cps_setting::get_to_name($setting_params);
                 $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
 
-                //@todo1 Use the site default rather tham hard-coding '0'.
-                $course->visible = isset($setting->value) ? $setting->value : 0;
+                $course->visible = isset($setting->value) ? $setting->value : get_config('moodlecourse', 'visible');
 
                 $DB->update_record('course', $course);
 
