@@ -954,9 +954,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Get the students and teachers enrolled in the course and unenroll them.
      * Finally, set the idnumber to the empty string ''.
      *
-     * In case this is the last section for a given course, we will NOT
-     * unenroll the primary instructor(s), and we will set the mdl_course record
-     * visibility to 0 (not visible). In addition, we will @see events_trigger TRIGGER EVENT 'ues_course_severed'.
+     * In addition, we will @see events_trigger TRIGGER EVENT 'ues_course_severed'.
      *
      * @global object $DB
      * @param ues_section[] $sections
@@ -975,8 +973,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $course = $section->moodle();
 
-                $last_section = ues_section::count($params) == 1;
-
                 $ues_course = $section->course();
 
                 foreach (array('student', 'teacher') as $type) {
@@ -989,32 +985,25 @@ class enrol_ues_plugin extends enrol_plugin {
                         ->sectionid->equal($section->id)
                         ->status->in(ues::ENROLLED, ues::UNENROLLED);
 
-                    if ($last_section and $type == 'teacher') {
-                        $params->primary_flag->equal(0);
-                    }
-
                     $users = $class::get_all($params);
                     $this->unenroll_users($group, $users);
                 }
 
-                if ($last_section) {
-                    // set course visibility according to user preferences (block_cps)
-                    $setting_params = ues::where()
-                        ->userid->equal($USER->id)
-                        ->name->starts_with('creation_');
+                // set course visibility according to user preferences (block_cps)
+                $setting_params = ues::where()
+                    ->userid->equal($USER->id)
+                    ->name->starts_with('creation_');
 
-                    $settings        = cps_setting::get_to_name($setting_params);
-                    $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
+                $settings        = cps_setting::get_to_name($setting_params);
+                $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
 
-                    //@todo1 Use the site default rather tham hard-coding '0'.
-                    $course->visible = isset($setting->value) ? $setting->value : 0;
+                $course->visible = isset($setting->value) ? $setting->value : get_config('moodlecourse', 'visible');
 
-                    $DB->update_record('course', $course);
+                $DB->update_record('course', $course);
 
-                    $this->log('Unloading ' . $course->idnumber);
+                $this->log('Unloading ' . $course->idnumber);
 
-                    events_trigger_legacy('ues_course_severed', $course);
-                }
+                events_trigger_legacy('ues_course_severed', $course);
 
                 $section->idnumber = '';
             }
