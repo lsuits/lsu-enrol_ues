@@ -311,7 +311,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             foreach ($admins as $admin) {
                 email_to_user($admin, ues::_s('pluginname'),
-                    '[SEVERE] UES Errors', $error_text);
+                    sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $error_text);
             }
         }
     }
