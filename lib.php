@@ -1585,6 +1585,11 @@ class enrol_ues_plugin extends enrol_plugin {
             return true;
         }
 
+        if(!empty($previoususer->alternatename) && $previoususer->firstname == $current->firstname){
+            events_trigger_legacy('preferred_name_legitimized', $current);
+            return true;
+        }
+
         if ($prev->idnumber != $current->idnumber){
             return true;
         }
