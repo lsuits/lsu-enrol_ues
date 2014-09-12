@@ -1565,7 +1565,21 @@ class enrol_ues_plugin extends enrol_plugin {
         return $user;
     }
 
-    private function user_changed($prev, $current) {
+
+    /**
+     *
+     * @global object $DB
+     * @param ues_user $prev these var names are misleading: $prev is the user
+     * 'previously' stored in the DB- that is the current DB record for a user.
+     * @param ues_user $current Also a tad misleading, $current repressents the
+     * incoming user currently being evaluated at this point in the UES process.
+     * Depending on the outcome of this function, current's data may or may not ever
+     * be used of stored.
+     * @return boolean According to our comparissons, does current hold new information
+     * for a previously stored user that we need to replace the DB record with [replacement
+     * happens in the calling function]?
+     */
+    private function user_changed(ues_user $prev, ues_user $current) {
         global $DB;
         $namefields   = user_picture::fields();
         $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
@@ -1581,11 +1595,13 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        if (fullname($previoususer) != fullname($current)){
-            return true;
-        }
+        // If user has a preferred name set in CPS, altname will equal current firstname; no change.
+        $haspreferredname = fullname($previoususer) != fullname($current) && $previoususer->alternatename != $current->firstname;
+        // If user preferred/alternate name matches the incoming firstname, report change so that
+        // altname will be removed by the calling function; event gives CPS a chance to delete it's name record.
+        $legitpreferredname = !empty($previoususer->alternatename) && $previoususer->firstname == $current->firstname;
 
-        if(!empty($previoususer->alternatename) && $previoususer->firstname == $current->firstname){
+        if($haspreferredname|| $legitpreferredname){
             events_trigger_legacy('preferred_name_legitimized', $current);
             return true;
         }
