@@ -1587,22 +1587,32 @@ class enrol_ues_plugin extends enrol_plugin {
         // @TODO ues_user does not currently upgrade with the alt names.
         $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
 
-        // Fullname requires alt name fields; make sure they exist.
-        $altnames     = array_keys(get_all_user_name_fields());
-        foreach($altnames as $a){
-            if(!isset($current->$a)){
-                $current->$a = null;
+        // Need to establish which users have preferred names.
+        $haspreferredname            = !empty($previoususer->alternatename);
+
+        // For users without preferred names, check that old and new firstnames match.
+        // No need to take action, if true.
+        $reguser_firstnameunchanged  = !$haspreferredname && $previoususer->firstname == $current->firstname;
+
+        // For users with preferred names, check that old altname matches incoming firstname.
+        // No need to take action, if true.
+        $prefuser_firstnameunchanged = $haspreferredname && $previoususer->alternatename == $current->firstname;
+
+        // Composition of the previous two variables. If either if false,
+        // we need to take action and return 'true'.
+        $firstnameunchanged          = $reguser_firstnameunchanged || $prefuser_firstnameunchanged;
+
+        // We take action if last name has changed at all.
+        $lastnameunchanged           = $previoususer->lastname == $current->lastname;
+
+        // If there is change in either first or last, we are going to update the user DB record.
+        if(!$firstnameunchanged || !$lastnameunchanged){
+            // When the first name of a user who has set a preferred
+            // name changes, we reset the preference in CPS.
+            if(!$prefuser_firstnameunchanged){
+                $DB->set_field('user', 'alternatename', NULL, array('id'=>$previoususer->id));
+                events_trigger_legacy('preferred_name_legitimized', $current);
             }
-        }
-
-        // If user has a preferred name set in CPS, altname will equal current firstname; no change.
-        $haspreferredname = fullname($previoususer) != fullname($current) && $previoususer->alternatename != $current->firstname;
-        // If user preferred/alternate name matches the incoming firstname, report change so that
-        // altname will be removed by the calling function; event gives CPS a chance to delete it's name record.
-        $legitpreferredname = !empty($previoususer->alternatename) && $previoususer->firstname == $current->firstname;
-
-        if($haspreferredname|| $legitpreferredname){
-            events_trigger_legacy('preferred_name_legitimized', $current);
             return true;
         }
 
