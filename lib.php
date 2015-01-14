@@ -1565,7 +1565,21 @@ class enrol_ues_plugin extends enrol_plugin {
         return $user;
     }
 
-    private function user_changed($prev, $current) {
+
+    /**
+     *
+     * @global object $DB
+     * @param ues_user $prev these var names are misleading: $prev is the user
+     * 'previously' stored in the DB- that is the current DB record for a user.
+     * @param ues_user $current Also a tad misleading, $current repressents the
+     * incoming user currently being evaluated at this point in the UES process.
+     * Depending on the outcome of this function, current's data may or may not ever
+     * be used of stored.
+     * @return boolean According to our comparissons, does current hold new information
+     * for a previously stored user that we need to replace the DB record with [replacement
+     * happens in the calling function]?
+     */
+    private function user_changed(ues_user $prev, ues_user $current) {
         global $DB;
         $namefields   = user_picture::fields();
         $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
@@ -1573,15 +1587,32 @@ class enrol_ues_plugin extends enrol_plugin {
         // @TODO ues_user does not currently upgrade with the alt names.
         $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
 
-        // Fullname requires alt name fields; make sure they exist.
-        $altnames     = array_keys(get_all_user_name_fields());
-        foreach($altnames as $a){
-            if(!isset($current->$a)){
-                $current->$a = null;
-            }
-        }
+        // Need to establish which users have preferred names.
+        $haspreferredname            = !empty($previoususer->alternatename);
 
-        if (fullname($previoususer) != fullname($current)){
+        // For users without preferred names, check that old and new firstnames match.
+        // No need to take action, if true.
+        $reguser_firstnameunchanged  = !$haspreferredname && $previoususer->firstname == $current->firstname;
+
+        // For users with preferred names, check that old altname matches incoming firstname.
+        // No need to take action, if true.
+        $prefuser_firstnameunchanged = $haspreferredname && $previoususer->alternatename == $current->firstname;
+
+        // Composition of the previous two variables. If either if false,
+        // we need to take action and return 'true'.
+        $firstnameunchanged          = $reguser_firstnameunchanged || $prefuser_firstnameunchanged;
+
+        // We take action if last name has changed at all.
+        $lastnameunchanged           = $previoususer->lastname == $current->lastname;
+
+        // If there is change in either first or last, we are going to update the user DB record.
+        if(!$firstnameunchanged || !$lastnameunchanged){
+            // When the first name of a user who has set a preferred
+            // name changes, we reset the preference in CPS.
+            if(!$prefuser_firstnameunchanged){
+                $DB->set_field('user', 'alternatename', NULL, array('id'=>$previoususer->id));
+                events_trigger_legacy('preferred_name_legitimized', $current);
+            }
             return true;
         }
 
