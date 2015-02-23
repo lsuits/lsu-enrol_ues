@@ -1041,7 +1041,15 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $this->log('Unloading ' . $course->idnumber);
 
-                events_trigger_legacy('ues_course_severed', $course);
+                //events_trigger_legacy('ues_course_severed', $course);
+                /**
+                 * Refactor events_trigger_legacy().
+                 */
+                global $CFG;
+                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                    cps_ues_handler::ues_course_severed($course);
+                }
 
                 $section->idnumber = '';
             }
