@@ -1407,7 +1407,10 @@ class enrol_ues_plugin extends enrol_plugin {
         if (!$DB->count_records('groups_members', $count_params)) {
             // Going ahead and delete as delete
             groups_delete_group($group);
-            events_trigger_legacy('ues_group_emptied', $group);
+
+            // No-op event.
+            // @see cps_ues_handler::ues_group_emptied()
+            // events_trigger_legacy('ues_group_emptied', $group);
         }
     }
 
