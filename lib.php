@@ -1397,7 +1397,8 @@ class enrol_ues_plugin extends enrol_plugin {
                     'ues_user' => $user
                 );
 
-                events_trigger_legacy('ues_' . $shortname . '_unenroll', $event_params);
+                // Unmonitored event.
+                //events_trigger_legacy('ues_' . $shortname . '_unenroll', $event_params);
             }
 
         }
