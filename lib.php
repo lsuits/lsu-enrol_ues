@@ -115,7 +115,9 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         // Delete extension handler
-        events_trigger_legacy('ues_course_updated', array($course, $data));
+        // 2015-02-23 Not finding any handlers for this, there is no reason to
+        // refactor it to use either Events 2.
+        //events_trigger_legacy('ues_course_updated', array($course, $data));
     }
 
     public function course_edit_validation($instance, array $data, $context) {
