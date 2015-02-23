@@ -1505,7 +1505,15 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Actually needs to happen, before the create call
-            events_trigger_legacy('ues_course_create', $moodle_course);
+            //events_trigger_legacy('ues_course_create', $moodle_course);
+            /*
+             * Refactor events_trigger_legacy cal
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                $moodle_course = cps_ues_handler::ues_course_create($moodle_course);
+            }
 
             try {
                 $moodle_course = create_course($moodle_course);
