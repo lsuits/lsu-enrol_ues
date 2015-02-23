@@ -99,7 +99,14 @@ abstract class ues {
             $section->status = self::PROCESSED;
 
             // Appropriate events needs to be adhered to
-            events_trigger_legacy('ues_section_process', $section);
+            //events_trigger_legacy('ues_section_process', $section);
+            /*
+             * Refactor legacy events
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                $section = cps_ues_handler::ues_section_process($section);
+            }
 
             $section->save();
         }
