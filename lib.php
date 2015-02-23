@@ -1679,7 +1679,16 @@ class enrol_ues_plugin extends enrol_plugin {
             // name changes, we reset the preference in CPS.
             if(!$prefuser_firstnameunchanged){
                 $DB->set_field('user', 'alternatename', NULL, array('id'=>$previoususer->id));
-                events_trigger_legacy('preferred_name_legitimized', $current);
+
+                //events_trigger_legacy('preferred_name_legitimized', $current);
+                /*
+                 * Refactor events_trigger_legacy
+                 */
+                global $CFG;
+                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                    cps_ues_handler::preferred_name_legitimized($current);
+                }
             }
             return true;
         }
