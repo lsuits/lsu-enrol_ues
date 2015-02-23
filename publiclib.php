@@ -59,11 +59,11 @@ abstract class ues {
         self::enroll_users($sections, $silent);
     }
 
-    
+
     /**
      * Unenroll users from the given sections.
      * Note: this will erase the idnumber of the sections
-     * 
+     *
      * @param ues_sections[] $sections
      * @param boolean $silent
      * @return type
@@ -268,7 +268,20 @@ abstract class ues {
             $types = array('ues_student', 'ues_teacher');
 
             // Triggered before db removal and enrollment drop
-            events_trigger_legacy('ues_section_drop', $section);
+            //events_trigger_legacy('ues_section_drop', $section);
+            /*
+             * Refactor legacy events call
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                ues_logs_event_handler::ues_section_drop($section);
+            }
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                cps_ues_handler::ues_section_drop($section);
+            }
+            if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
+                post_grades_handler::ues_section_drop($section);
+            }
 
             // Optimize enrollment deletion
             foreach ($types as $class) {
@@ -290,7 +303,18 @@ abstract class ues {
 
         $log('Dropped all ' . $count . " sections...\n");
 
-        events_trigger_legacy('ues_semester_drop', $semester);
+        //events_trigger_legacy('ues_semester_drop', $semester);
+        /*
+         * Refactor legacy events.
+         */
+        global $CFG;
+        if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+            cps_ues_handler::ues_section_drop($semester);
+        }
+        if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
+            post_grades_handler::ues_section_drop($semester);
+        }
+
         ues_semester::delete($semester->id);
 
         $log('Done');
