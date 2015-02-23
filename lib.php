@@ -1325,13 +1325,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 'ues_user' => $user
             );
 
-            events_trigger_legacy('ues_' . $shortname . '_enroll', $event_params);
+            // Unmonitored event.
+            //events_trigger_legacy('ues_' . $shortname . '_enroll', $event_params);
         }
     }
 
     private function unenroll_users($group, $users) {
         global $DB;
-        
+
 
         $instance = $this->get_instance($group->courseid);
 
