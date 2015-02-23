@@ -149,13 +149,14 @@ class enrol_ues_plugin extends enrol_plugin {
         $event->context = $context;
         $event->errors = $errors;
 
-        events_trigger_legacy('ues_course_edit_validation', $event);
+        //Unmonitored event.
+        //events_trigger_legacy('ues_course_edit_validation', $event);
 
         return $event->errors;
     }
 
     /**
-     * 
+     *
      * @param type $instance
      * @param MoodleQuickForm $form
      * @param type $data
@@ -174,7 +175,8 @@ class enrol_ues_plugin extends enrol_plugin {
         $event->data = $data;
         $event->context = $context;
 
-        events_trigger_legacy('ues_course_edit_form', $event);
+        //Unmonitored event.
+        //events_trigger_legacy('ues_course_edit_form', $event);
     }
 
     public function add_course_navigation($nodes, stdClass $instance) {
@@ -198,7 +200,16 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Allow outside interjection
         $params = array($nodes, $instance);
-        events_trigger_legacy('ues_course_settings_navigation', $params);
+
+        /**
+         * Refactor events_trigger_legacy()
+         */
+        global $CFG;
+        if(file_exists($CFG->dirroot.'/blocks/ues_reprocess/eventslib.php')){
+            require_once $CFG->dirroot.'/blocks/ues_reprocess/eventslib.php';
+            ues_event_handler::ues_course_settings_navigation($params);
+        }
+        //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
 
     public function is_cron_required() {
@@ -698,7 +709,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
 
                 // Call event before potential insert, as to notify creation
-                events_trigger_legacy('ues_semester_process', $ues);
+                // Unmonitored event.
+                //events_trigger_legacy('ues_semester_process', $ues);
 
                 //persist to {ues_semesters}
                 $ues->save();
@@ -738,7 +750,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = ues_course::upgrade_and_get($course, $params);
 
-                events_trigger_legacy('ues_course_process', $ues_course);
+                // Unmonitored event.
+                //events_trigger_legacy('ues_course_process', $ues_course);
 
                 $ues_course->save();
 
@@ -828,8 +841,22 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->status = $status;
             $user->save();
 
-            // Specific release for instructor
-            events_trigger_legacy('ues_' . $type . '_release', $user);
+            global $CFG;
+            if($type === 'teacher'){
+                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+
+                    // Specific release for instructor
+                    //events_trigger_legacy('ues_teacher_release', $user);
+                    $user = cps_ues_handler::ues_teacher_release($user);
+                }
+            }else if($type === 'student'){
+                if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
+                    $user = ues_logs_event_handler::ues_student_release($user);
+                }
+
+            }
 
             // Drop manifested sections for teacher POTENTIAL drops
             if ($user->status == ues::PENDING and $type == 'teacher') {
@@ -890,7 +917,16 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Allow outside interaction
-            events_trigger_legacy('ues_section_process', $section);
+            // events_trigger_legacy('ues_section_process', $section);
+            /**
+             * Refactor old events_trigger_legacy
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/bloicks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                $section = cps_ues_handler::ues_section_process($section);
+            }
+
 
             if ($previous_status != $section->status) {
                 $section->save();
