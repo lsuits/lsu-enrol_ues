@@ -1207,7 +1207,15 @@ class enrol_ues_plugin extends enrol_plugin {
             $data->section = $section;
             $data->old_primary = $old_primary;
             $data->new_primary = $new_primary;
-            events_trigger_legacy('ues_primary_change', $data);
+            // events_trigger_legacy('ues_primary_change', $data);
+            /**
+             * Refactor events_trigger()
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                $data = cps_ues_handler::ues_primary_change($data);
+            }
 
             $section = $data->section;
         }
