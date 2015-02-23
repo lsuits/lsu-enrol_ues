@@ -343,13 +343,22 @@ abstract class ues {
     }
 
     public static function list_plugins() {
+        global $CFG;
         $data = new stdClass;
         // The plugins array should be allocated thusly:
         // $data->plugins += array('plugin_name' => 'Plugin name');
         $data->plugins = array();
 
-        events_trigger_legacy('ues_list_provider', $data);
+        $basedir = $CFG->dirroot.'/local/';
+        foreach(scandir($basedir) as $file){
 
+            if(file_exists($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'provider.php')){
+                require_once $basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'events.php';
+                $class = $file.'_enrollment_events';
+                $data = $class::ues_list_provider($data);
+            }
+        }
+        //events_trigger_legacy('ues_list_provider', $data);
         return $data->plugins;
     }
 
