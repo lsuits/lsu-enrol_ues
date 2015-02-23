@@ -1610,7 +1610,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 throw new Exception(sprintf($new_err, $rea, $curr, $prev));
             }
 
-            events_trigger_legacy('user_updated', (object)$user);
+            // Unmonitored event
+            // events_trigger_legacy('user_updated', (object)$user);
         }
 
         // If the provider supplies initial password information, set it now.
