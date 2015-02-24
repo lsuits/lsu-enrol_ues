@@ -383,8 +383,19 @@ abstract class ues {
 
         // Handlers should provide the correct provider class and
         // libs so it can be instantiated
-        events_trigger_legacy("ues_load_{$provider_name}_provider", $data);
+        //events_trigger_legacy("ues_load_{$provider_name}_provider", $data);
+        /*
+         * Refactor legacy events
+         */
+        global $CFG;
+        $basedir = $CFG->dirroot.'/local/'.$provider_name;
+        if(file_exists($basedir.'/events.php')){
+            require_once $basedir.'/events.php';
+            $class = $provider_name.'_enrollment_events';
+            $fn    = 'ues_load_'.$provider_name.'_provider';
+            $class::$fn($data);
 
+        }
         return $data->provider_class;
     }
 
