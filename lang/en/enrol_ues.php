@@ -175,3 +175,4 @@ $string['campus'] = 'Campus';
 $string['session_key'] = 'Session';
 $string['sections'] = 'Sections';
 $string['in_session'] = 'In Session?';
+$string['enrollments'] = 'UES Enrollments';

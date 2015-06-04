@@ -105,6 +105,7 @@ abstract class ues {
              */
             global $CFG;
             if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                include_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                 $section = cps_ues_handler::ues_section_process($section);
             }
 

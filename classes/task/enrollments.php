@@ -1,13 +1,11 @@
 <?php
-
-/**
- * @package enrol_ues
- */
-defined('MOODLE_INTERNAL') or die();
-
-require_once dirname(__FILE__) . '/publiclib.php';
+namespace enrol_ues\task;
 
 class enrol_ues_plugin extends enrol_plugin {
+    public function get_name() {
+        // Shown in admin screens
+        return get_string('enrollments', 'enrol_ues');
+    }
 
     /**
      * Typical errorlog for cron run
@@ -277,35 +275,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
         ues::reprocess_errors($errors, true);
     }
-
-/*
-    public function cron() {
-        $this->setting('running', true);
-
-        $this->setting('starttime', time());
-        if ($this->provider()) {
-            $this->log('------------------------------------------------');
-            $this->log(ues::_s('pluginname'));
-            $this->log('------------------------------------------------');
-
-            $start = microtime();
-
-            $this->full_process();
-
-            $end = microtime();
-
-            $how_long = microtime_diff($start, $end);
-
-            $this->log('------------------------------------------------');
-            $this->log('UES enrollment took: ' . $how_long . ' secs');
-            $this->log('------------------------------------------------');
-        }
-
-        $this->email_reports();
-
-        $this->setting('running', false);
-    }
-*/
 
     public function email_reports() {
         global $CFG;
@@ -1815,4 +1784,34 @@ function enrol_ues_supports($feature) {
         default:
             return null;
     }
+}
+
+class enrol_ues_plugin extends enrol_plugin {
+    public function execute() {
+
+//        \enrol_ues_plugin::setting('running', true);
+
+//        \enrol_ues_plugin::setting('starttime', time());
+//        if (\enrol_ues_plugin::provider()) {
+//            \enrol_ues_plugin::log('------------------------------------------------');
+//            \enrol_ues_plugin::log(ues::_s('pluginname'));
+//            \enrol_ues_plugin::log('------------------------------------------------');
+
+//            $start = microtime();
+
+            $this->full_process();
+
+//            $end = microtime();
+
+//            $how_long = microtime_diff($start, $end);
+
+//            \enrol_ues_plugin::log('------------------------------------------------');
+//            \enrol_ues_plugin::log('UES enrollment took: ' . $how_long . ' secs');
+//            \enrol_ues_plugin::log('------------------------------------------------');
+//        }
+
+//        \enrol_ues_plugin::email_reports();
+
+//        \enrol_ues_plugin::setting('running', false);
+    } 
 }
