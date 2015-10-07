@@ -1,16 +1,22 @@
 <?php
 
 $string['pluginname'] = 'UES Enrollment';
-$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is
-a pluggable enrollment system that adheres to common university criterion
-including Semesters, Courses, Sections tied to coures, and teacher and student
-enrollment tied to Sections.
+$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.<br><br>UES will load any enrollment provider that handles the `ues_list_provider`. A fully defined provider will show up in the dropdown below.<br><br>UES is a scheduled task within Moodle and can be managed by going to: Site Administration > Server > Scheduled Tasks';
 
-The enrollment module will load any enrollment provider that handles the
-`ues_list_provider`. A fully defined provider will show up in the dropdown below.';
+$string['full_process_task'] = 'UES - Full Process';
 
 $string['semester_cleanup'] = 'Semester Cleanup';
 $string['reprocess_failures'] = 'Reprocess Failures';
+
+$string['run_adhoc'] = 'Run Adhoc';
+$string['run_adhoc_desc'] = 'This will queue the UES process to run as soon as possible.';
+$string['run_adhoc_success'] = 'This task has been queued successfully.';
+$string['run_adhoc_status_disabled'] = 'disabled';
+$string['run_adhoc_status_enabled'] = 'enabled';
+$string['run_adhoc_last_run_time'] = 'The last time it ran as per schedule was: <strong>{$a}</strong>';
+$string['run_adhoc_next_run_time'] = 'It is scheduled to run next at: <strong>{$a}</strong>';
+$string['run_adhoc_scheduled_task_details'] = 'This scheduled task is currently: <strong>{$a->status}</strong><br><br>{$a->last}<br><br>{$a->next}';
+$string['run_adhoc_confirm_msg'] = 'Are you sure you want to queue this task to run as soon as possible? <strong>Note:</strong> The task\'s schedule will not be changed.';
 
 $string['reprocess_count'] = 'Found {$a} error(s)';
 
@@ -26,10 +32,8 @@ $string['delete_success'] = 'Successfully deleted errors';
 
 $string['no_errors'] = 'Congratulations! You have handled all the enrollment errors.';
 
-$string['already_running'] = 'UES did not run, but it was supposed to. UES may have failed unexpectingly in the last run, or the request to cron.php may have been killed during the enrollment process. An admin should disable the running status by going to Settings -> Site Administration -> Plugins -> Enrolments -> UES Enrollment or {$a}. Once enabled, UES will run as expected.';
-
-$string['cron_run'] = 'Daily Cron';
-$string['cron_run_desc'] = 'Enable the daily cron run, or run cron manually.';
+$string['already_running'] = 'UES did not run, but it was supposed to. UES may have failed unexpectedly in the last run, or there may have been an error during the enrollment process. An admin should disable the running status by going to Settings -> Site Administration -> Plugins -> Enrolments -> UES Enrollment or {$a}. Once enabled, UES will run as expected.';
+$string['within_grace_period'] = 'UES was scheduled to run, however, not enough time has elapsed since the last scheduled run as per the plugin\'s _Grace Period_ setting. Either modify the scheduled task\'s frequency at: Site Administration -> Server -> Scheduled Tasks or an admin should modify the grace period by going to Settings -> Site Administration -> Plugins -> Enrolments -> UES Enrollment or {$a}';
 
 $string['sub_days'] = 'Semester in Day Range';
 $string['sub_days_desc'] = 'How many days in the past (and future) should UES query
@@ -42,7 +46,7 @@ $string['recover_grades'] = 'Recover Grades';
 $string['recover_grades_desc'] = 'Recover grade history grades on enrollment, if grades were present on unenrollment.';
 
 $string['running'] = 'Currently Running';
-$string['running_desc'] = 'If this is checked then it either means that the process is still running, or the process died unexpectingly. Uncheck this if you think the process should be enabled.
+$string['running_desc'] = 'If this is checked then it either means that the process is still running, or the process died unexpectedly. Uncheck this if you think the process should be enabled.
 
 __Note__: One of the easiest ways to know the process has ended is to enable email logs.';
 
@@ -52,19 +56,13 @@ $string['please_note'] = 'The following semesters were selected: {$a}';
 $string['be_ignored'] = '{$a} - will be ignored';
 $string['be_recoged'] = '{$a} - will be recognized';
 
-$string['starttime'] = 'Last start time';
-$string['starttime_desc'] = 'This the timestamp of its last started cron run. This timestamp differentiates itself from the _lastcron_, as this field represents when the cron started not finished.';
-
 $string['grace_period'] = 'Grace Period';
-$string['grace_period_desc'] = 'Wait this long (in seconds) after the _'.$string['starttime'].'_ before sending out the running notification. Typically, an hour is long enough, but some runs may exceed an hour.';
-
-$string['cron_hour'] = 'Starting Hour';
-$string['cron_hour_desc'] = 'Start the automatic cron on this hour.';
+$string['grace_period_desc'] = 'Wait this long (in seconds) after the scheduled task\'s last run before running again. Typically, an hour is long enough, but some runs may exceed an hour.';
 
 $string['error_threshold'] = 'Error Threshold';
 $string['error_threshold_desc'] = 'The process will only automatically reprocess errors that occurred during the cron run whose numbers are less than or equal to the specified threshold.
 
-__Note__: This setting only applies if _'.$string['cron_run'].'_ is enabled';
+__Note__: This setting only applies if _scheduled task_ is enabled';
 
 $string['error_threshold_log'] = 'There are too many errors to reprocess automatically. Either clear out the error queue through the settings page, or raise the threshold number.';
 
@@ -77,6 +75,7 @@ $string['error_no_group'] = 'UES tried to add someone to the deleted group (name
 $string['semester_ignore'] = 'Semester Ignore';
 
 $string['general_settings'] = 'General Settings';
+$string['task_status'] = 'Status';
 $string['management'] = 'Internal Links';
 $string['management_links'] = '
 Below are some internal links to manage the enrollment data.
@@ -84,6 +83,7 @@ Below are some internal links to manage the enrollment data.
 * ['.$string['semester_cleanup'].']({$a->cleanup_url})
 * ['.$string['semester_ignore'].']({$a->ignore_url})
 * ['.$string['reprocess_failures'].']({$a->failure_url})
+* ['.$string['run_adhoc'].']({$a->adhoc_url})
 ';
 
 $string['email_report'] = 'Email Logs';

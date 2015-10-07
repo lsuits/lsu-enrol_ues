@@ -14,16 +14,25 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('enrol_ues_settings', '',
         $_s('pluginname_desc')));
 
+    // --------------------- Scheduled Task Status --------------------------------
+
+    $settings->add(new admin_setting_heading('enrol_ues_task_status',
+        $_s('task_status'), ues::get_task_status_description()));
+
+    // --------------------- Internal Links --------------------------------
+
     $urls = new stdClass;
     $urls->cleanup_url = $CFG->wwwroot . '/enrol/ues/cleanup.php';
     $urls->failure_url = $CFG->wwwroot . '/enrol/ues/failures.php';
     $urls->ignore_url = $CFG->wwwroot . '/enrol/ues/ignore.php';
+    $urls->adhoc_url = $CFG->wwwroot . '/enrol/ues/adhoc.php';
 
     $settings->add(new admin_setting_heading('enrol_ues_internal_links',
         $_s('management'), $_s('management_links', $urls)));
 
     // --------------------- General Settings --------------------------------
-    $settings->add(new admin_setting_heading('enrol_ues_genernal_settings',
+
+    $settings->add(new admin_setting_heading('enrol_ues_general_settings',
         $_s('general_settings'), ''));
 
     if (!empty($plugins)) {
@@ -34,22 +43,11 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
         $_s('process_by_department'), $_s('process_by_department_desc'), 1));
 
-    $settings->add(new admin_setting_configcheckbox('enrol_ues/cron_run',
-        $_s('cron_run'), $_s('cron_run_desc'), 1));
-
     $settings->add(new admin_setting_configcheckbox('enrol_ues/running',
         $_s('running'), $_s('running_desc'), 0));
 
-    $settings->add(new admin_setting_configtext('enrol_ues/starttime',
-        $_s('starttime'), $_s('starttime_desc'), 0));
-
     $settings->add(new admin_setting_configtext('enrol_ues/grace_period',
         $_s('grace_period'), $_s('grace_period_desc'), 3600));
-
-    $hours = range(0, 23);
-
-    $settings->add(new admin_setting_configselect('enrol_ues/cron_hour',
-        $_s('cron_hour'), $_s('cron_hour_desc'), 2, $hours));
 
     $settings->add(new admin_setting_configtext('enrol_ues/sub_days',
         $_s('sub_days'), $_s('sub_days_desc'), 60));
