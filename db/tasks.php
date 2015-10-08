@@ -14,8 +14,8 @@ $tasks = array(
     array(
         'classname' => 'enrol_ues\task\full_process',
         'blocking' => 0,
-        'minute' => '*/5',
-        'hour' => '*',
+        'minute' => '0',
+        'hour' => '22',
         'day' => '*',
         'month' => '*',
         'dayofweek' => '*'
