@@ -7,8 +7,6 @@ defined('MOODLE_INTERNAL') or die();
 if ($ADMIN->fulltree) {
     require_once dirname(__FILE__) . '/publiclib.php';
 
-    $plugins = ues::list_plugins();
-
     $_s = ues::gen_str();
 
     $settings->add(new admin_setting_heading('enrol_ues_settings', '',
@@ -35,7 +33,9 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('enrol_ues_general_settings',
         $_s('general_settings'), ''));
 
-    if (!empty($plugins)) {
+    $plugins = ues::list_plugins();
+
+    if ( ! empty($plugins)) {
         $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
             $_s('provider'), $_s('provider_desc'), key($plugins), $plugins));
     }

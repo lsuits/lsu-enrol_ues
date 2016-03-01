@@ -16,11 +16,86 @@ abstract class ues {
     const ENROLLED = 'enrolled';
     const UNENROLLED = 'unenrolled';
 
+    /**
+     * Returns an array of installed UES provider plugins
+     * 
+     * @return array ['plugin_name' => 'Plugin name']
+     */
+    public static function list_plugins() {
+        
+        global $CFG;
+        
+        $basedir = $CFG->dirroot . '/local';
+
+        $plugins = array();
+        
+        // scan 'local' directory for UES providers and add valid plugins to array
+        foreach(scandir($basedir) as $file) {
+            if(file_exists($basedir . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR . 'provider.php')){
+                require_once $basedir . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR . 'plugin.php';
+                $class = $file . '_enrollment_plugin';
+                $plugins += $class::ues_list_provider();
+            }
+        }
+
+        return $plugins;
+    }
+
+    /**
+     * Loads currently selected UES enrollment provider and returns class name
+     * 
+     * @return string
+     */
+    public static function provider_class() {
+
+        // get currently selected provider
+        $provider_name = get_config('enrol_ues', 'enrollment_provider');
+
+        if ( ! $provider_name) {
+            return false;
+        }
+
+        // check if this provider is still installed as a plugin
+        $plugins = self::list_plugins();
+
+        if ( ! isset($plugins[$provider_name])) {
+            return false;
+        }
+
+        // require UES libraries
+        self::require_libs();
+
+        global $CFG;
+        
+        $basedir = $CFG->dirroot . '/local/' . $provider_name;
+        $provider_class_name = $provider_name . '_enrollment_provider';
+        
+        // load provider
+        if (file_exists($basedir . '/plugin.php')) {
+            require_once $basedir . '/plugin.php';
+            $class = $provider_name . '_enrollment_plugin';
+            $fn = 'ues_load_' . $provider_name . '_provider';
+            $class::$fn();
+        }
+
+        return $provider_class_name;
+    }
+
+    /**
+     * Loads UES libraries
+     * 
+     * @return null
+     */
     public static function require_libs() {
         self::require_daos();
         self::require_extensions();
     }
 
+    /**
+     * Loads all UES data access object libraries
+     * 
+     * @return null
+     */
     public static function require_daos() {
         $dao = self::base('classes/dao');
 
@@ -32,12 +107,42 @@ abstract class ues {
         require_once $dao . '/filter.php';
     }
 
+    /**
+     * Loads all UES extensions
+     * 
+     * @return null
+     */
     public static function require_extensions() {
         $classes = self::base('classes');
 
         require_once $classes . '/processors.php';
         require_once $classes . '/provider.php';
     }
+
+    /**
+     * Returns base directory path for given directory
+     * 
+     * @param  string  $dir
+     * @return string
+     */
+    public static function base($dir = '') {
+        $path = empty($dir) ? '' : '/' . $dir;
+
+        return dirname(__FILE__) . $path;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     public static function format_time($time) {
         return strftime('%Y-%m-%d', $time);
@@ -336,67 +441,6 @@ abstract class ues {
         }
 
         return $pattern;
-    }
-
-    public static function base($dir='') {
-        return dirname(__FILE__) . (empty($dir) ? '' : '/'.$dir);
-    }
-
-    public static function list_plugins() {
-        global $CFG;
-        $data = new stdClass;
-        // The plugins array should be allocated thusly:
-        // $data->plugins += array('plugin_name' => 'Plugin name');
-        $data->plugins = array();
-
-        $basedir = $CFG->dirroot.'/local/';
-        foreach(scandir($basedir) as $file){
-
-            if(file_exists($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'provider.php')){
-                require_once $basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'events.php';
-                $class = $file.'_enrollment_events';
-                $data = $class::ues_list_provider($data);
-            }
-        }
-        //events_trigger_legacy('ues_list_provider', $data);
-        return $data->plugins;
-    }
-
-    public static function provider_class() {
-        $provider_name = get_config('enrol_ues', 'enrollment_provider');
-
-        if (!$provider_name) {
-            return false;
-        }
-
-        $plugins = self::list_plugins();
-
-        if (!isset($plugins[$provider_name])) {
-            return false;
-        }
-
-        // Require library code
-        self::require_libs();
-
-        $data = new stdClass;
-        $data->provider_class = "{$provider_name}_enrollment_provider";
-
-        // Handlers should provide the correct provider class and
-        // libs so it can be instantiated
-        //events_trigger_legacy("ues_load_{$provider_name}_provider", $data);
-        /*
-         * Refactor legacy events
-         */
-        global $CFG;
-        $basedir = $CFG->dirroot.'/local/'.$provider_name;
-        if(file_exists($basedir.'/events.php')){
-            require_once $basedir.'/events.php';
-            $class = $provider_name.'_enrollment_events';
-            $fn    = 'ues_load_'.$provider_name.'_provider';
-            $class::$fn($data);
-
-        }
-        return $data->provider_class;
     }
 
     public static function create_provider() {

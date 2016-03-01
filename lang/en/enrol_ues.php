@@ -1,7 +1,7 @@
 <?php
 
 $string['pluginname'] = 'UES Enrollment';
-$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.<br><br>UES will load any enrollment provider that handles the `ues_list_provider`. A fully defined provider will show up in the dropdown below.<br><br>UES is a scheduled task within Moodle and can be managed by going to: Site Administration > Server > Scheduled Tasks';
+$string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.<br><br>UES will detect any enrollment provider that contains a `plugin.php` file with the proper static method. A fully defined provider will show up in the dropdown below.<br><br>UES is a scheduled task within Moodle and can be managed by going to: Site Administration > Server > Scheduled Tasks';
 
 $string['full_process_task'] = 'UES - Full Process';
 
