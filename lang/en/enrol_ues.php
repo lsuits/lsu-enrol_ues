@@ -148,6 +148,7 @@ __Note to Developers__: Consider using the `adv_settings` for server side
 validation of settings.';
 
 $string['no_provider'] = 'No Enrollment Provider selected.';
+$string['no_provider_installed'] = 'You do <strong>NOT</strong> currently have a UES-compatible provider installed. Please install one now to use UES enrollment.';
 
 $string['provider_settings'] = '{$a} Settings';
 

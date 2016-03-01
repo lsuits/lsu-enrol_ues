@@ -30,10 +30,10 @@ if ($ADMIN->fulltree) {
 
     // --------------------- General Settings --------------------------------
 
-    $settings->add(new admin_setting_heading('enrol_ues_general_settings',
-        $_s('general_settings'), ''));
-
     $plugins = ues::list_plugins();
+    
+    $settings->add(new admin_setting_heading('enrol_ues_general_settings',
+        $_s('general_settings'), empty($plugins) ? $_s('no_provider_installed') : ''));
 
     if ( ! empty($plugins)) {
         $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
