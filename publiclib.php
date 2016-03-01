@@ -131,6 +131,92 @@ abstract class ues {
         return dirname(__FILE__) . $path;
     }
 
+    /**
+     * Attempts to reprocess all UES errors
+     * 
+     * @param  array    $errors
+     * @param  boolean  $report  whether or not to email a report
+     * @return null       
+     */
+    public static function reprocess_errors($errors, $report = false) {
+
+        $enrol = enrol_get_plugin('ues');
+
+        $amount = count($errors);
+
+        if ($amount) {
+            $e_txt = $amount === 1 ? 'error' : 'errors';
+
+            $enrol->log('-------------------------------------');
+            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $e_txt . ':');
+            $enrol->log('-------------------------------------');
+        }
+
+        foreach ($errors as $error) {
+            $enrol->log('Executing error code: ' . $error->name);
+
+            if ($error->handle($enrol)) {
+                $enrol->handle_enrollments();
+                ues_error::delete($error->id);
+            }
+        }
+
+        if ($report) {
+            $enrol->email_reports();
+        }
+    }
+
+    /**
+     * Instantiates a provider
+     * 
+     * @return enrollment_provider
+     */
+    public static function create_provider() {
+        $provider_class = self::provider_class();
+
+        return ($provider_class) ? new $provider_class() : false;
+    }
+
+    /**
+     * Returns a formatted error object from a given exception for use with various UES "problem" error messages
+     * 
+     * @param  Exception  $e
+     * @return object
+     */
+    public static function translate_error($e) {
+        
+        // instantiates a provider
+        $provider_class = self::provider_class();
+
+        // gets error message from exception
+        $message = $e->getMessage();
+
+        // sets error problem to string from provider or a default
+        $error = new stdClass;
+
+        if ($message == 'enrollment_unsupported') {
+            $error->problem = self::_s($message);
+        } else {
+            $error->problem = $provider_class::translate_error($message);
+        }
+
+        // sets provider plugin name
+        $error->pluginname = ($provider_class) ? $provider_class::get_name() : get_config('enrol_ues', 'enrollment_provider');
+
+        return $error;
+    }
+
+    /**
+     * Returns localized string for UES package
+     * 
+     * @param  string  $key
+     * @param  string  $a
+     * @return string
+     */
+    public static function _s($key, $a = null) {
+        return get_string($key, 'enrol_ues', $a);
+    }
+
 
 
 
@@ -330,34 +416,6 @@ abstract class ues {
         return self::reprocess_sections($teacher->sections(), $silent);
     }
 
-    public static function reprocess_errors($errors, $report = false) {
-
-        $enrol = enrol_get_plugin('ues');
-
-        $amount = count($errors);
-
-        if ($amount) {
-            $e_txt = $amount === 1 ? 'error' : 'errors';
-
-            $enrol->log('-------------------------------------');
-            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $e_txt . ':');
-            $enrol->log('-------------------------------------');
-        }
-
-        foreach ($errors as $error) {
-            $enrol->log('Executing error code: ' . $error->name);
-
-            if ($error->handle($enrol)) {
-                $enrol->handle_enrollments();
-                ues_error::delete($error->id);
-            }
-        }
-
-        if ($report) {
-            $enrol->email_reports();
-        }
-    }
-
     public static function drop_semester($semester, $report = false) {
         $log = function ($msg) use ($report) {
             if ($report) mtrace($msg);
@@ -431,43 +489,12 @@ abstract class ues {
         };
     }
 
-    public static function _s($key, $a=null) {
-        return get_string($key, 'enrol_ues', $a);
-    }
-
     public static function format_string($pattern, $obj) {
         foreach (get_object_vars($obj) as $key => $value) {
             $pattern = preg_replace('/\{' . $key . '\}/', $value, $pattern);
         }
 
         return $pattern;
-    }
-
-    public static function create_provider() {
-        $provider_class = self::provider_class();
-
-        return $provider_class ? new $provider_class() : false;
-    }
-
-    public static function translate_error($e) {
-        $provider_class = self::provider_class();
-
-        $code = $e->getMessage();
-
-        $a = new stdClass;
-
-        if ($code == "enrollment_unsupported") {
-            $a->problem = self::_s($code);
-        } else {
-            $a->problem = $provider_class::translate_error($code);
-        }
-
-        $a->pluginname =
-            $provider_class ?
-            $provider_class::get_name() :
-            get_config('enrol_ues', 'enrollment_provider');
-
-        return $a;
     }
 
     public static function get_task_status_description() {
