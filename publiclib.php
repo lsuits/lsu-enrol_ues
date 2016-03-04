@@ -187,11 +187,19 @@ abstract class ues {
      */
     public static function getProvider() {
         
-        $plugin = self::getPlugin();
+        try {
+            $plugin = self::getPlugin();
 
-        $provider = $plugin->provider();
+            $provider = $plugin->provider();
+        
+        } catch(Exception $e) {
+
+            return false;
+            
+        }
 
         return $provider;
+
     }
 
     /**
