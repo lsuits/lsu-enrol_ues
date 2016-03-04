@@ -20,9 +20,11 @@ class full_process_adhoc extends \core\task\adhoc_task {
     public function execute() {
 
         global $CFG;
-        require_once($CFG->dirroot . '/enrol/ues/lib.php');
-        $ues = new \enrol_ues_plugin();
-        $ues->full_process(true);
+
+        // @TODO - is this require necessary?
+        require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
+        
+        ues::runEnrollment('adhoc');
 
     }
 }

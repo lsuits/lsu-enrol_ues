@@ -1,3 +1,10 @@
+## v3.0.0
+
+- removed static functions from UES namespace:
+	- create_provider()
+	- provider_class()
+- changed list_plugins() to listAvailableProviders()
+
 ## v2.0.0
 
 - Subplugins are now supported through events [#31][31]

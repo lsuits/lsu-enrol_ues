@@ -5,6 +5,7 @@ define('CLI_SCRIPT', true);
 require_once '../../../config.php';
 global $CFG;
 require_once($CFG->libdir.'/clilib.php');
+require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
 require_once($CFG->dirroot . '/enrol/ues/lib.php');
 
 // get cli options

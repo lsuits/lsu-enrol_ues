@@ -40,7 +40,7 @@ $string['sub_days_desc'] = 'How many days in the past (and future) should UES qu
 the semester source. This might be important for installing the system for the first
 time.';
 
-$string['could_not_enroll'] = 'Could not process enrollment for courses in {$a->year} {$a->name} {$a->campus} {$a->session_key}. Consider changing the Process by Department setting';
+$string['could_not_enroll_semester'] = 'Could not process enrollment for courses in {$a->year} {$a->name} {$a->campus} {$a->session_key}. Consider changing the Process by Department setting';
 
 $string['recover_grades'] = 'Recover Grades';
 $string['recover_grades_desc'] = 'Recover grade history grades on enrollment, if grades were present on unenrollment.';

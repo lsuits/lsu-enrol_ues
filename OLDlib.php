@@ -10,18 +10,18 @@ require_once dirname(__FILE__) . '/publiclib.php';
 class enrol_ues_plugin extends enrol_plugin {
 
     /**
-     * Error log container
+     * Typical error log
      *
      * @var array
      */
-    private $errorLog = array();
+    private $errors = array();
 
     /**
-     * Message log container
+     * Typical email log
      *
      * @var array
      */
-    private $messageLog = array();
+    private $emaillog = array();
 
     /**
      * admin config setting
@@ -104,7 +104,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
         
         // require UES libs
-        ues::require_libs();
+        // ues::require_libs();
         
         // instantiate new provider
         $provider = $this->newProvider($providerKey);
@@ -194,449 +194,122 @@ class enrol_ues_plugin extends enrol_plugin {
      * @return null
      */
     public function nowRunning($isRunning) {
-        $this->config('running', $isRunning, ! $isRunning);
-        $this->log(($isRunning) ? 'Process is now running.' : 'Process has stopped.', true);
+        $this->config('running', $isRunning);
     }
 
-    /**
-     * Fetches filtered UES semesters and process enrollment for each.
-     * 
-     * @return null
-     */
-    public function runEnrollmentProcess() {
 
-        // get all semesters that are considered valid right now
-        $semesters = $this->getUesSemesters(time());
 
-        foreach ($semesters as $semester) {
-            $this->processUesSemester($semester);
-        }
-    }
+
+
+
+
+
 
     /**
-     * Fetches semesters from the enrollment provider, convert to ues_semesters, persist, and return filtered collection
+     * Run UES enrollment
      * 
-     * @param  int  $time  timestamp
-     * @return ues_semester[]
-     *
+     * @param  string  $priority
+     * @return boolean $success
      */
-    private function getUesSemesters($time) {
-
-        // calculate date threshold for semester query
-        $sub_days = $this->calculateSubDaysTime();
-        $formattedDate = ues::format_time($time - $sub_days);
-
-        $this->log('Pulling semesters for ' . $formattedDate . '...');
+    public function full_process($priority = '', $verbose = false) {
 
         try {
-            
-            // gets semester data source
-            $semester_source = $this->provider()->semester_source();
-            
-            // fetch semesters from data source
-            // @TODO - it doesn't look like this function is using the data parameter. problem? looks like they are filtered correctly later on though...
-            $semesters = $semester_source->semesters($formattedDate);
 
-            $this->log('Found ' . count($semesters) . ' semesters...', true);
-            
-            // convert fetched semesters into persisted ues_semester collection
-            $ues_semesters = $this->convertSemesters($semesters);
+            if ($this->can_run_task($adhoc)) {
 
-            // filter out invalid, ignored, or out-of-date-range semesters
-            $filteredSemesters = $this->filterUesSemesters($ues_semesters, $time);
+                $this->config('running', true);
 
-            return $filteredSemesters;
+                $provider = $this->provider();
 
-        } catch (Exception $e) {
+                if ($provider) {
+                    $this->log('------------------------------------------------');
+                    $this->log(' ' . ues::_s('pluginname') . ' is starting');
+                    $this->log('------------------------------------------------');
 
-            $this->logError($e->getMessage());
-            return array();
-        }
-    }
+                    $provider_name = $provider->get_name();
 
-    /**
-     * Returns the UES sub_days config, formatted
-     * 
-     * @return int
-     */
-    private function calculateSubDaysTime() {
-        $set_days = (int) $this->config('sub_days');
-        $sub_days = 24 * $set_days * 60 * 60;
+                    $this->log('Loading provider: ' . $provider_name . '...');
 
-        return $sub_days;
-    }
+                    if ( ! $provider->preprocess($this)) {
+                        $this->logError('Error during preprocess.');
+                    }
+                    
+                    $this->process_all();
 
-    /**
-     * Returns a filtered ues_semester collection based on: validity, ignore config, and date
-     * 
-     * @param  ues_semesters[]  $ues_semesters
-     * @param  int  $time  timestamp
-     * @return ues_semesters[]  $ues_semesters
-     */
-    private function filterUesSemesters($ues_semesters, $time) {
-        
-        // filter out from ues_semester collection any semester without an end date
-        list($passedSemesters, $failedSemesters) = $this->partition($ues_semesters, function($s) {
-            return ! empty($s->grades_due);
-        });
+                    $this->log('Beginning manifestation...');
 
-        // log notice of failed semester
-        foreach ($failedSemesters as $failedSemester) {
-            $this->logError(ues::_s('failed_sem', $failedSemester));
-        }
+                    $this->handle_enrollments();
 
-        // filter out from remaining ues_semesters any semester that is set to be ignored
-        list($ignoredSemesters, $validSemesters) = $this->partition($passedSemesters, function($s) {
-            return ! empty($s->semester_ignore);
-        });
+                    if ( ! $provider->postprocess($this)) {
+                        $this->logError('Error during postprocess.');
+                    }
 
-        // update status of all ignored semesters from 'manifested' to 'pending' so that they may be unenrolled
-        foreach ($ignoredSemesters as $ignoredSemester) {
-            
-            $where_manifested = ues::where()
-                ->semesterid->equal($ignoredSemester->id)
-                ->status->equal(ues::MANIFESTED);
+                    $start = microtime();
+                    $end = microtime();
 
-            $to_drop = array('status' => ues::PENDING);
+                    $how_long = microtime_diff($start, $end);
 
-            // @TODO - does this make sense? marking them to pending status may send them back through the process?
-            ues_section::update($to_drop, $where_manifested);
-        }
+                    $this->log('------------------------------------------------');
+                    $this->log('UES enrollment took: ' . $how_long . ' secs');
+                    $this->log('------------------------------------------------');
 
-        $sub_days = $this->calculateSubDaysTime();
-
-        // filter out any semester outside of the appropriate date range as follows:
-        // semester's start date (and configured "sub_day" extension) must be less than the originally specified query date
-        // semester's end date (when grades are due) must be greated than the originally specified query date
-        $filteredSemesters = array_filter($validSemesters, function ($sem) use ($time, $sub_days) {
-            $end_check = $time < $sem->grades_due;
-
-            return ($sem->classes_start - $sub_days) < $time && $end_check;
-        });
-
-        return $filteredSemesters;
-    }
-
-    /**
-     * Iterates through an array of objects and filters into pass/fail arrays using a given anonymous function
-     * 
-     * @param  array     $collection  an array of objects
-     * @param  callable  $func        an anonymous function
-     * @return array
-     */
-    private function partition($collection, $func) {
-        $pass = array();
-        $fail = array();
-
-        foreach ($collection as $key => $single) {
-            if ($func($single)) {
-                $pass[$key] = $single;
-            } else {
-                $fail[$key] = $single;
-            }
-        }
-
-        return array($pass, $fail);
-    }
-
-    /**
-     * Receives semesters pull from the data source and persists them as ues_semesters
-     * 
-     * @param  stdClass[year, name, campus, session_key, classes_start] $semesters
-     * @return ues_semester[]
-     */
-    private function convertSemesters($semesters) {
-        
-        $ues_semesters = array();
-
-        foreach ($semesters as $semester) {
-            try {
-                $params = array(
-                    'year'        => $semester->year,
-                    'name'        => $semester->name,
-                    'campus'      => $semester->campus,
-                    'session_key' => $semester->session_key
-                );
-
-                // convert this semester to a ues_semester
-                $ues_semester = ues_semester::upgrade_and_get($semester, $params);
-
-                // if classes have not yet begun, do not process any further
-                if (empty($ues_semester->classes_start)) {
-                    continue;
+                    // success!
+                    return true;
                 }
 
-                // Call event before potential insert, as to notify creation
-                // events_trigger_legacy('ues_semester_process', $ues_semester);
-                // @EVENT (unmonitored)
+                $this->email_reports();
 
-                // persist to {ues_semesters}
-                $ues_semester->save();
+                if ($verbose) {
+                    $this->report_errors();
+                }
 
-                // Fill in metadata from {enrol_ues_semestermeta}
-                $ues_semester->fill_meta();
-
-                $ues_semesters[] = $ues_semester;
-
-            } catch (Exception $e) {
-                $this->logError($e->getMessage());
-            }
-        }
-
-        return $ues_semesters;
-    }
-
-    /**
-     * Process enrollment for a specific UES semester
-     * 
-     * @param  ues_semester[]  $ues_semester
-     * @return null
-     */
-    private function processUesSemester($ues_semester) {
-
-        $this->log('Pulling courses/sections for ' . $ues_semester . '...');
-
-        // fetch courses within this semester
-        $ues_courses = $this->getUesCourses($ues_semester);
-
-        // if no courses within this semester, skip it
-        if (empty($ues_courses)) {
-            return;
-        }
-
-        // determine how to process this semester (if not by department, then by section)
-        $setByDepartment = (bool) $this->config('process_by_department');
-
-        // process this semester by DEPARTMENT if ues config option enabled AND this provider supports this method
-        if ($setByDepartment and $this->provider()->supports_department_lookups()) {
-
-            $this->processSemesterByDepartment($ues_semester, $ues_courses);
-
-        // otherwise, process this semester by SECTION if this provider supports this method
-        } else if ( ! $setByDepartment and $this->provider()->supports_section_lookups()) {
-
-            $this->process_semester_by_section($ues_semester, $ues_courses);
-
-        // otherwise, do not process this semester and log the error
-        } else{
-
-            $message = ues::_s('could_not_enroll_semester', $ues_semester);
-
-            $this->logError($message);
-        }
-    }
-
-    /**
-     * @param ues_semester  $ues_semester
-     * @param ues_course[]  $ues_courses  NB: must have department attribute set
-     */
-    private function processSemesterByDepartment($ues_semester, $ues_courses) {
-        
-        // construct array of departments and its children course ids
-        $departments = ues_course::flatten_departments($ues_courses);
-
-        // iterate through each department, fetch its course's sections, and run enrollment for each
-        foreach ($departments as $department => $courseids) {
-            $filters = ues::where()
-                ->semesterid->equal($ues_semester->id)
-                ->courseid->in($courseids);
-
-            // get all 'current' sections (already existing in the DB)
-            $ues_sections = ues_section::get_all($filters);
-
-            $this->processEnrollmentByDepartment($ues_semester, $department, $ues_sections);
-        }
-    }
-
-    /**
-     * Workhorse method that brings enrollment data from the provider together with existing records
-     * and then dispatches sub processes that operate on the differences between the two.
-     *
-     * @param ues_semester  $ues_semester      semester to process
-     * @param string        $department        department to process
-     * @param ues_section[] $ues_sections  current UES records for the department/semester combination
-     */
-    public function processEnrollmentByDepartment($ues_semester, $department, $ues_sections) {
-        
-        try {
-
-            // get teacher data source from the provider
-            $teacher_source = $this->provider()->teacher_department_source();
-            
-            // fetch all teachers within this semester and department
-            $teachers = $teacher_source->teachers($ues_semester, $department);
-
-            // get student data source from the provider
-            $student_source = $this->provider()->student_department_source();
-
-            // fetch all students within this semester and department
-            $students = $student_source->students($ues_semester, $department);
-
-            // fetch all current section ids within this semester and department
-            $sectionids = ues_section::ids_by_course_department($ues_semester, $department);
-
-            $filter = ues::where('sectionid')->in($sectionids);
-            
-            $current_teachers = ues_teacher::get_all($filter);
-            $current_students = ues_student::get_all($filter);
-
-            $ids_param    = ues::where('id')->in($sectionids);
-            $all_sections = ues_section::get_all($ids_param);
-
-            $this->process_teachers_by_department($ues_semester, $department, $teachers, $current_teachers);
-            $this->process_students_by_department($ues_semester, $department, $students, $current_students);
-
-            unset($current_teachers);
-            unset($current_students);
-
-            foreach ($ues_sections as $section) {
-                $course = $section->course();
-                // Set status to ues::PROCESSED.
-                $this->post_section_process($ues_semester, $course, $section);
-
-                unset($all_sections[$section->id]);
-            }
-
-            // Drop remaining sections.
-            if (!empty($all_sections)) {
-                ues_section::update(
-                    array('status' => ues::PENDING),
-                    ues::where('id')->in(array_keys($all_sections))
-                );
+                $this->config('running', false);
+            } else {
+                // unsuccessful
+                return false;
             }
 
         } catch (Exception $e) {
 
-            $info = "$ues_semester $department";
+            // @TODO - more work done on exception handling structure
 
-            $message = sprintf(
-                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n",
-                    $e->getMessage(),
-                    $e->getFile(),
-                    $e->getLine(),
-                    $e->getTraceAsString()
-                    );
-            $this->logError(sprintf('Failed to process %s:\n%s', $info, $message));
-
-            ues_error::department($ues_semester, $department)->save();
+            $this->log('error!');
+            return false;
         }
     }
 
-    /**
-     * Fetches courses from the enrollment provider, convert to ues_courses, persist, and return filtered collection
-     * 
-     * @param  ues_semester  $ues_semester
-     * @return ues_course[]
-     *
-     */
-    public function getUesCourses($ues_semester) {
-        
-        try {
 
-            // gets course data source
-            $course_source = $this->provider()->course_source();
-
-            // fetch this semester's courses from data source
-            $courses = $course_source->courses($ues_semester);
-
-            $this->log('Found ' . count($courses) . ' courses...', true);
-
-            // convert fetched courses into persisted ues_course collection
-            $ues_courses = $this->convertCourses($courses, $ues_semester);
-
-            return $ues_courses;
-
-        } catch (Exception $e) {
-            
-            $this->logError(sprintf('Unable to process courses for %s; Message was: %s', $ues_semester, $e->getMessage()));
-
-            // Queue up errors
-            ues_error::courses($ues_semester)->save();
-
-            return array();
+    private function report_errors() {
+        if ( ! empty($this->emaillog)) {
+            $email_text = implode("\n", $this->emaillog);
+            $this->log($email_text);
         }
     }
 
-    /**
-     * Receives a semester's course pull from the data source and persists them and their sections as ues_courses and ues_sections, respectively
-     * 
-     * @param  stdClass[year, name, campus, session_key, classes_start] $courses
-     * @param  ues_semester  $ues_semester
-     * @return ues_course[]
-     */
-    public function convertCourses($courses, $ues_semester) {
-        
-        $ues_courses = array();
+    public function email_reports() {
+        global $CFG;
 
-        foreach ($courses as $course) {
-            
-            try {
-                
-                $params = array(
-                    'department' => $course->department,
-                    'cou_number' => $course->cou_number
-                );
+        return true; // @TODO - for testing only, remove this!
 
-                $ues_course = ues_course::upgrade_and_get($course, $params);
+        $admins = get_admins();
 
-                // Call event before potential insert, as to notify creation
-                // events_trigger_legacy('ues_course_process', $ues_course);
-                // @EVENT (unmonitored)
+        if ($this->config('email_report')) {
+            $email_text = implode("\n", $this->emaillog);
 
-                // persist to {ues_courses}
-                $ues_course->save();
-
-                // convert this course's sections to persisted ues_section collection
-                $ues_sections = $this->convertCourseSections($ues_course, $ues_semester);
-
-                // update this course's sections attribute to the ues_sections
-                $ues_course->sections = $ues_sections;
-
-                $ues_courses[] = $ues_course;
-
-            } catch (Exception $e) {
-                $this->logError($e->getMessage());
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'),
+                    sprintf('UES Log [%s]', $CFG->wwwroot), $email_text);
             }
         }
 
-        return $ues_courses;
-    }
+        if (!empty($this->errors)) {
+            $error_text = implode("\n", $this->errors);
 
-    /**
-     * Receives a UES course and semester and then converts and persists it's children sections to ues_sections
-     * 
-     * @param  ues_course    $ues_course
-     * @param  ues_semester  $ues_semester
-     * @return ues_section[]
-     */
-    public function convertCourseSections($ues_course, $ues_semester) {
-
-        $ues_sections = array();
-                
-        foreach ($ues_course->sections as $section) {
-            
-            $params = array(
-                'courseid'   => $ues_course->id,
-                'semesterid' => $ues_semester->id,
-                'sec_number' => $section->sec_number
-            );
-
-            // convert this section to a ues_section
-            $ues_section = ues_section::upgrade_and_get($section, $params);
-
-            // if this section does not exist, create and mark as PENDING
-            if (empty($ues_section->id)) {
-                $ues_section->courseid = $ues_course->id;
-                $ues_section->semesterid = $ues_semester->id;
-                $ues_section->status = ues::PENDING;
-
-                $ues_section->save();
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'),
+                    sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $error_text);
             }
-
-            $ues_sections[] = $ues_section;
         }
-
-        return $ues_sections;
     }
 
     
@@ -644,76 +317,223 @@ class enrol_ues_plugin extends enrol_plugin {
 
 
 
+
+    private function can_run_task($adhoc) {
+
+        // get scheduled task
+        $task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
+
+        // allow to run if there is no scheduled task
+        if ( ! $task) {
+            return true;
+        }
+
+        
+
+        // do not run task if disabled
+        if ( ! $adhoc and $task->get_disabled()) {
+            $this->logError(ues::_s('task_disabled', $url));
+
+            $this->email_reports();
+
+            return false;
+        }
+
+        $this->handle_automatic_errors();
+
+        return true;
+    }
+
+    private function handle_automatic_errors() {
+        $errors = ues_error::get_all();
+
+        // don't reprocess if the module is running
+        $running = (bool)$this->config('running');
+
+        if ($running) {
+            global $CFG;
+            $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
+            $this->logError(ues::_s('already_running', $url));
+            return;
+        }
+
+        $error_threshold = $this->config('error_threshold');
+
+        // don't reprocess if there are too many errors
+        if (count($errors) > $error_threshold) {
+            $this->logError(ues::_s('error_threshold_log'));
+            return;
+        }
+
+        ues::reprocess_errors($errors, true);
+    }
+
+    /**
+     * Get (fetch, instantiate, save) semesters and process enrollment for each.
+     * 
+     * Semesters must be considered valid at the current time.
+     */
+    public function process_all() {
+        $now = time();
+
+        $processed_semesters = $this->get_semesters($now);
+
+        foreach ($processed_semesters as $semester) {
+            $this->process_semester($semester);
+        }
+    }
+
+    /**
+     * @param ues_semester[] $semester
+     */
+    public function process_semester($semester) {
+        $process_courses = $this->get_courses($semester);
+
+        if (empty($process_courses)) {
+            return;
+        }
+
+        $set_by_department = (bool) $this->config('process_by_department');
+
+        $supports_department = $this->provider()->supports_department_lookups();
+
+        $supports_section = $this->provider()->supports_section_lookups();
+
+        if ($set_by_department and $supports_department) {
+            $this->process_semester_by_department($semester, $process_courses);
+        } else if (!$set_by_department and $supports_section) {
+            $this->process_semester_by_section($semester, $process_courses);
+        } else{
+            $message = ues::_s('could_not_enroll', $semester);
+
+            $this->log($message);
+            $this->logError($message);
+        }
+    }
+
+    /**
+     * Fetch courses from the enrollment provider, and pass them to
+     * process_courses() for instantiations as ues_course objects and for
+     * persisting to {enrol_ues(_courses|_sections)}.
+     *
+     * @param ues_semester $semester
+     * @return ues_course[]
+     */
+    public function get_courses($semester) {
+        $this->log('Pulling Courses / Sections for ' . $semester);
+        try {
+            $courses = $this->provider()->course_source()->courses($semester);
+
+            $this->log('Processing ' . count($courses) . " Courses...\n");
+            $process_courses = $this->process_courses($semester, $courses);
+
+            return $process_courses;
+        } catch (Exception $e) {
+            $this->logError(sprintf('Unable to process courses for %s; Message was: %s', $semester, $e->getMessage()));
+
+            // Queue up errors
+            ues_error::courses($semester)->save();
+
+            return array();
+        }
+    }
+
+    /**
+     * For each of the courses provided, instantiate as a ues_course
+     * object; persist to the {enrol_ues_courses} table; then iterate
+     * through each of its sections, instantiating and persisting each.
+     * Then, assign the sections to the <code>course->sections</code> attirbute,
+     * and add the course to the return array.
+     *
+     * @param ues_semester $semester
+     * @param object[] $courses
+     * @return ues_course[]
+     */
+    public function process_courses($semester, $courses) {
+        $processed = array();
+
+        foreach ($courses as $course) {
+            try {
+                $params = array(
+                    'department' => $course->department,
+                    'cou_number' => $course->cou_number
+                );
+
+                $ues_course = ues_course::upgrade_and_get($course, $params);
+
+                // Unmonitored event.
+                //events_trigger_legacy('ues_course_process', $ues_course);
+
+                $ues_course->save();
+
+                $processed_sections = array();
+                foreach ($ues_course->sections as $section) {
+                    $params = array(
+                        'courseid'   => $ues_course->id,
+                        'semesterid' => $semester->id,
+                        'sec_number' => $section->sec_number
+                    );
+
+                    $ues_section = ues_section::upgrade_and_get($section, $params);
+
+                    /*
+                     * If the section does not already exist
+                     * in {enrol_ues_sections}, insert it,
+                     * marking its status as PENDING.
+                     */
+                    if (empty($ues_section->id)) {
+                        $ues_section->courseid   = $ues_course->id;
+                        $ues_section->semesterid = $semester->id;
+                        $ues_section->status     = ues::PENDING;
+
+                        $ues_section->save();
+                    }
+
+                    $processed_sections[] = $ues_section;
+                }
+
+                /*
+                 * Replace the sections attribute of the course with
+                 * the fully instantiated, and now persisted,
+                 * ues_section objects.
+                 */
+                $ues_course->sections = $processed_sections;
+
+                $processed[] = $ues_course;
+            } catch (Exception $e) {
+                $this->logError($e->getMessage());
+            }
+        }
+
+        return $processed;
+    }
+
     //////////// PRIVATES //////////////////
 
     /**
-     * Outputs a message to the console and adds it to message log
+     * Outputs a log message to the console and adds it to the email log
      * 
-     * @param  string  $message
-     * @param  boolean $addLineBreak  whether or not to add a blank line beneath this message in the console output
+     * @param  string $message
      * @return null
      */
-    public function log($message, $addLineBreak = false) {
+    public function log($message) {
         
         if ( ! $this->is_silent) {
-            $this->output($message, $addLineBreak);
+            mtrace($message);
         }
 
-        $this->addToMessageLog($message);
+        $this->emaillog[] = $message;
     }
 
     /**
-     * Outputs an error message to the console and adds it to the message and error logs
+     * Logs an error message
      * 
-     * @param  string  $message
-     * @param  boolean $addLineBreak  whether or not to add a blank line beneath this message in the console output
+     * @param  string $message
      * @return null
      */
-    public function logError($message, $addLineBreak = false) {
-        
-        if ( ! $this->is_silent) {
-            $this->output($message, $addLineBreak);
-        }
-
-        $this->addToErrorLog($message);
-    }
-
-    /**
-     * Outputs a log message to the console
-     * 
-     * @param  string  $message
-     * @param  boolean $addLineBreak  whether or not to add a blank line beneath this message in the console output
-     * @return null
-     */
-    private function output($message, $addLineBreak = false) {
-        mtrace($message);
-
-        if ($addLineBreak)
-            mtrace('');
-    }
-
-    /**
-     * Adds a message to the message log array
-     * 
-     * @param  string  $message
-     * @return null
-     */
-    private function addToMessageLog($message) {
-        $this->messageLog[] = $message;
-    }
-
-    /**
-     * Adds an error message to the error log array and, by default, adds it to the message log as well
-     * 
-     * @param  string   $message
-     * @param  boolean  $addToMessageLog
-     * @return null
-     */
-    private function addToErrorLog($message, $addToMessageLog = true) {
-        $this->errorLog[] = $message;
-        
-        if ($addToMessageLog)
-            $this->messageLog[] = 'ERROR: ' . $message;
+    private function logError($message) {
+        $this->errors[] = $message;
+        $this->emaillog[] = $message;
     }
 
     /**
@@ -723,8 +543,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  mixed   $value
      * @return mixed 
      */
-    public function config($key, $value = false, $setToFalse = false) {
-        if ($value || ( ! $value and $setToFalse)) {
+    public function config($key, $value = false) {
+        if ($value) {
             return set_config($key, $value, 'enrol_ues');
         } else {
             return get_config('enrol_ues', $key);
@@ -853,7 +673,26 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->handle_processed_sections($processed);
     }
 
-    
+    /**
+     * @param ues_semester $semester
+     * @param ues_course[] $courses NB: must have department attribute set
+     */
+    private function process_semester_by_department($semester, $courses) {
+        $departments = ues_course::flatten_departments($courses);
+
+        foreach ($departments as $department => $courseids) {
+            $filters = ues::where()
+                ->semesterid->equal($semester->id)
+                ->courseid->in($courseids);
+
+            //'current' means they already exist in the DB
+            $current_sections = ues_section::get_all($filters);
+
+            $this->process_enrollment_by_department(
+                $semester, $department, $current_sections
+            );
+        }
+    }
 
     private function process_semester_by_section($semester, $courses) {
         foreach ($courses as $course) {
@@ -866,7 +705,149 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    
+    /**
+     * From enrollment provider, get, instantiate,
+     * save (to {enrol_ues_semesters}) and return all valid semesters.
+     * @param int time
+     * @return ues_semester[] these objects will be later upgraded to ues_semesters
+     *
+     */
+    public function get_semesters($time) {
+        $set_days = (int) $this->config('sub_days');
+        $sub_days = 24 * $set_days * 60 * 60;
+
+        $now = ues::format_time($time - $sub_days);
+
+        $this->log('Pulling Semesters for ' . $now . '...');
+
+        try {
+            $semester_source = $this->provider()->semester_source();
+            $semesters = $semester_source->semesters($now);
+            $this->log('Processing ' . count($semesters) . " Semesters...\n");
+            $p_semesters = $this->process_semesters($semesters);
+
+            $v = function($s) {
+                return !empty($s->grades_due);
+            };
+
+            $i = function($s) {
+                return !empty($s->semester_ignore);
+            };
+
+            list($other, $failures) = $this->partition($p_semesters, $v);
+
+            // Notify improper semester
+            foreach ($failures as $failed_sem) {
+                $this->logError(ues::_s('failed_sem', $failed_sem));
+            }
+
+            list($ignored, $valids) = $this->partition($other, $i);
+
+            // Ignored sections with semesters will be unenrolled
+            foreach ($ignored as $ignored_sem) {
+                $where_manifested = ues::where()
+                    ->semesterid->equal($ignored_sem->id)
+                    ->status->equal(ues::MANIFESTED);
+
+                $to_drop = array('status' => ues::PENDING);
+
+                // This (what? Pending status?) will be caught in regular process
+                ues_section::update($to_drop, $where_manifested);
+            }
+
+            $sems_in = function ($sem) use ($time, $sub_days) {
+                $end_check = $time < $sem->grades_due;
+
+                return ($sem->classes_start - $sub_days) < $time && $end_check;
+            };
+
+            return array_filter($valids, $sems_in);
+        } catch (Exception $e) {
+
+            $this->logError($e->getMessage());
+            return array();
+        }
+    }
+
+    public function partition($collection, $func) {
+        $pass = array();
+        $fail = array();
+
+        foreach ($collection as $key => $single) {
+            if ($func($single)) {
+                $pass[$key] = $single;
+            } else {
+                $fail[$key] = $single;
+            }
+        }
+
+        return array($pass, $fail);
+    }
+
+    /**
+     * Workhorse method that brings enrollment data from the provider together with existing records
+     * and then dispatches sub processes that operate on the differences between the two.
+     *
+     * @param ues_semester $semester semester to process
+     * @param string $department department to process
+     * @param ues_section[] $current_sections current UES records for the department/semester combination
+     */
+    public function process_enrollment_by_department($semester, $department, $current_sections) {
+        try {
+
+            $teacher_source = $this->provider()->teacher_department_source();
+            $student_source = $this->provider()->student_department_source();
+
+            $teachers = $teacher_source->teachers($semester, $department);
+            $students = $student_source->students($semester, $department);
+
+            $sectionids = ues_section::ids_by_course_department($semester, $department);
+
+            $filter = ues::where('sectionid')->in($sectionids);
+            $current_teachers = ues_teacher::get_all($filter);
+            $current_students = ues_student::get_all($filter);
+
+            $ids_param    = ues::where('id')->in($sectionids);
+            $all_sections = ues_section::get_all($ids_param);
+
+            $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
+            $this->process_students_by_department($semester, $department, $students, $current_students);
+
+            unset($current_teachers);
+            unset($current_students);
+
+            foreach ($current_sections as $section) {
+                $course = $section->course();
+                // Set status to ues::PROCESSED.
+                $this->post_section_process($semester, $course, $section);
+
+                unset($all_sections[$section->id]);
+            }
+
+            // Drop remaining sections.
+            if (!empty($all_sections)) {
+                ues_section::update(
+                    array('status' => ues::PENDING),
+                    ues::where('id')->in(array_keys($all_sections))
+                );
+            }
+
+        } catch (Exception $e) {
+
+            $info = "$semester $department";
+
+            $message = sprintf(
+                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n",
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                    $e->getTraceAsString()
+                    );
+            $this->logError(sprintf('Failed to process %s:\n%s', $info, $message));
+
+            ues_error::department($semester, $department)->save();
+        }
+    }
 
     /**
      *
@@ -929,6 +910,49 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         $this->release($type, $current_users);
+    }
+
+    /**
+     *
+     * @param stdClass[] $semesters
+     * @return ues_semester[]
+     */
+    public function process_semesters($semesters) {
+        $processed = array();
+
+        foreach ($semesters as $semester) {
+            try {
+                $params = array(
+                    'year'        => $semester->year,
+                    'name'        => $semester->name,
+                    'campus'      => $semester->campus,
+                    'session_key' => $semester->session_key
+                );
+
+                //convert obj to full-fledged ues_semester
+                $ues = ues_semester::upgrade_and_get($semester, $params);
+
+                if (empty($ues->classes_start)) {
+                    continue;
+                }
+
+                // Call event before potential insert, as to notify creation
+                // Unmonitored event.
+                //events_trigger_legacy('ues_semester_process', $ues);
+
+                //persist to {ues_semesters}
+                $ues->save();
+
+                // Fill in metadata from {enrol_ues_semestermeta}
+                $ues->fill_meta();
+
+                $processed[] = $ues;
+            } catch (Exception $e) {
+                $this->logError($e->getMessage());
+            }
+        }
+
+        return $processed;
     }
 
     /**
@@ -1679,7 +1703,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Triggers an event, 'user_updated' which is consumed by block_cps
      * and other. The badgeslib.php event handler uses a run-time type
-     * hint which caused problems for ues enrollment runEnrollmentProcess()
+     * hint which caused problems for ues enrollment process_all()
      * causes problems
      *
      * @todo fix badgeslib issue
@@ -1928,56 +1952,6 @@ class enrol_ues_plugin extends enrol_plugin {
             $role = 'student';
         }
         return $role;
-    }
-
-    public function email_reports() {
-        global $CFG;
-
-        return true; // @TODO - for testing only, remove this!
-
-        $admins = get_admins();
-
-        if ($this->config('email_report')) {
-            $email_text = implode("\n", $this->messageLog);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('UES Log [%s]', $CFG->wwwroot), $email_text);
-            }
-        }
-
-        if (!empty($this->errorLog)) {
-            $error_text = implode("\n", $this->errorLog);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $error_text);
-            }
-        }
-    }
-
-    private function handle_automatic_errors() {
-        $errors = ues_error::get_all();
-
-        // don't reprocess if the module is running
-        $running = (bool)$this->config('running');
-
-        if ($running) {
-            global $CFG;
-            $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
-            $this->logError(ues::_s('already_running', $url));
-            return;
-        }
-
-        $error_threshold = $this->config('error_threshold');
-
-        // don't reprocess if there are too many errors
-        if (count($errors) > $error_threshold) {
-            $this->logError(ues::_s('error_threshold_log'));
-            return;
-        }
-
-        ues::reprocess_errors($errors, true);
     }
 }
 

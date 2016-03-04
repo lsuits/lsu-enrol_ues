@@ -17,71 +17,6 @@ abstract class ues {
     const UNENROLLED = 'unenrolled';
 
     /**
-     * Returns an array of installed UES provider plugins
-     * 
-     * @return array ['plugin_name' => 'Plugin name']
-     */
-    public static function list_plugins() {
-        
-        global $CFG;
-        
-        $basedir = $CFG->dirroot . '/local';
-
-        $plugins = array();
-        
-        // scan 'local' directory for UES providers and add valid plugins to array
-        foreach(scandir($basedir) as $file) {
-            if(file_exists($basedir . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR . 'provider.php')){
-                require_once $basedir . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR . 'plugin.php';
-                $class = $file . '_enrollment_plugin';
-                $plugins += $class::ues_list_provider();
-            }
-        }
-
-        return $plugins;
-    }
-
-    /**
-     * Loads currently selected UES enrollment provider and returns class name
-     * 
-     * @return string
-     */
-    public static function provider_class() {
-
-        // get currently selected provider
-        $provider_name = get_config('enrol_ues', 'enrollment_provider');
-
-        if ( ! $provider_name) {
-            return false;
-        }
-
-        // check if this provider is still installed as a plugin
-        $plugins = self::list_plugins();
-
-        if ( ! isset($plugins[$provider_name])) {
-            return false;
-        }
-
-        // require UES libraries
-        self::require_libs();
-
-        global $CFG;
-        
-        $basedir = $CFG->dirroot . '/local/' . $provider_name;
-        $provider_class_name = $provider_name . '_enrollment_provider';
-        
-        // load provider
-        if (file_exists($basedir . '/plugin.php')) {
-            require_once $basedir . '/plugin.php';
-            $class = $provider_name . '_enrollment_plugin';
-            $fn = 'ues_load_' . $provider_name . '_provider';
-            $class::$fn();
-        }
-
-        return $provider_class_name;
-    }
-
-    /**
      * Loads UES libraries
      * 
      * @return null
@@ -89,6 +24,7 @@ abstract class ues {
     public static function require_libs() {
         self::require_daos();
         self::require_extensions();
+        self::require_exceptions();
     }
 
     /**
@@ -117,6 +53,193 @@ abstract class ues {
 
         require_once $classes . '/processors.php';
         require_once $classes . '/provider.php';
+        require_once $classes . '/guard.php';
+    }
+
+    /**
+     * Loads all UES exceptions
+     * 
+     * @return null
+     */
+    public static function require_exceptions() {
+        $exception = self::base('classes/exceptions');
+
+        require_once $exception . '/UESGuardException.php';
+        require_once $exception . '/UESProviderException.php';
+    }
+
+    /**
+     * Runs the full enrollment process
+     * 
+     * @return [type] [description]
+     */
+    public static function runEnrollment($priority = '') {
+        
+        // require UES libraries
+        self::require_libs();
+
+        try {
+            
+            $ues = ues::getPlugin();
+
+            $ues->log('------------------------------------------------');
+            $ues->log(' ' . ues::_s('pluginname') . ' launched');
+            $ues->log('------------------------------------------------', true);
+
+            $startTime = microtime();
+
+            // check to make sure UES can be run right now
+            ues_guard::checkFullProcess($priority);
+            
+            $ues->nowRunning(true);
+
+            // instantiate the provider
+            $provider = $ues->provider();
+
+            $ues->log('Provider loaded: ' . $provider->get_name(), true);
+
+            // check that this provider meets compatibility requirements
+            ues::checkProviderSupportLookups($provider, array(
+                'section', 
+                'department'
+            ));
+            
+            // run any provider preprocesses
+            $ues->log('Running ' . $provider->get_name() . ' preprocesses.');
+            if ( ! $provider->preprocess($ues)) {
+                throw new Exception('An error occurred during the provider preprocess.');
+            }
+            $ues->log('Provider preprocesses complete.', true);
+
+            $ues->log('Fetching enrollment data...', true);
+
+            $ues->runEnrollmentProcess();
+
+            $ues->log('Beginning manifestation...');
+
+            
+
+            $ues->handle_enrollments();
+
+            // @TODO - execute these?
+            // $this->email_reports();
+            // $this->handle_automatic_errors();
+            
+
+            // run any provider postprocesses
+            $ues->log('Running ' . $provider->get_name() . ' postprocesses.');
+            if ( ! $provider->preprocess($ues)) {
+                throw new Exception('An error occurred during the provider postprocess.');
+            }
+            $ues->log('Provider postprocesses complete.', true);
+
+            $ues->nowRunning(false);
+
+            $ues->log('------------------------------------------------');
+            $ues->log(' UES Enrollment completed (' . microtime_diff($startTime, microtime()) . ' secs)');
+            $ues->log('------------------------------------------------');
+
+        } catch (UESGuardException $e) {
+            
+            $ues->log('UES stopped: ' .$e->getMessage(), true);
+            $ues->nowRunning(false);
+
+        } catch (UESProviderException $e) {
+            
+            $ues->log('UES stopped: ' .$e->getMessage(), true);
+            $ues->nowRunning(false);
+
+        } catch (UESException $e) {
+            
+            $ues->log('UES stopped: ' .$e->getMessage(), true);
+            $ues->nowRunning(false);
+
+        } catch (Exception $e) {
+            
+            $ues->log('UES stopped: ' .$e->getMessage(), true);
+            $ues->nowRunning(false);
+
+        }
+
+    }
+
+    /**
+     * Instantiates UES plugin
+     * 
+     * @throws UESException
+     * @return enrol_ues_plugin
+     */
+    public static function getPlugin() {
+        
+        // instantiate UES
+        $ues = enrol_get_plugin('ues');
+
+        if ( ! $ues)
+            throw new UESException('Fatal error: Could not load UES enrollment plugin!');
+
+        return $ues;
+    }
+
+    /**
+     * Returns an instance of currently loaded selected UES enrollment provider
+     * 
+     * @return enrollment_provider
+     */
+    public static function getProvider() {
+        
+        $plugin = self::getPlugin();
+
+        $provider = $plugin->provider();
+
+        return $provider;
+    }
+
+    /**
+     * Returns an array of installed UES provider plugins
+     * 
+     * @return array ['plugin_name' => 'Plugin name']
+     */
+    public static function listAvailableProviders() {
+        
+        // instantiate UES
+        $ues = enrol_get_plugin('ues');
+
+        return ( ! $ues) ? array() : $ues->listProviders();
+    }
+
+
+    /**
+     * Checks that a specific provider instance supports a given "lookup" method
+     * 
+     * @param  enrollment_provider  $provider
+     * @param  array                $entityKeys  ex: department, section, etc.
+     * @param  boolean              $verbose   will throw exceptions on fail if verbose, otherwise, a boolean
+     * @return mixed
+     */
+    public static function checkProviderSupportLookups($provider, $entityKeys = array(), $verbose = true) {
+
+        foreach ($entityKeys as $entityKey) {
+
+            $supports = 'supports_' . $entityKey . '_lookups';
+
+            if ( ! method_exists($provider, $supports)) {
+                if ($verbose) {
+                    throw new UESProviderException('Provider is missing the ' . $supports . ' method.');
+                } else {
+                    return false;
+                }
+            }
+
+            if ( ! $provider->$supports()) {
+                if ($verbose) {
+                    throw new UESProviderException('Provider does not support: ' . $entityKey . '_lookups');
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -130,6 +253,47 @@ abstract class ues {
 
         return dirname(__FILE__) . $path;
     }
+
+    /**
+     * Returns localized string for UES package
+     * 
+     * @param  string  $key
+     * @param  string  $a
+     * @return string
+     */
+    public static function _s($key, $a = null) {
+        return get_string($key, 'enrol_ues', $a);
+    }
+
+    /**
+     * Formats a timestamp to YYYY-MM-DD
+     * 
+     * @param  int  $time  timestamp
+     * @return string
+     */
+    public static function format_time($time) {
+        return strftime('%Y-%m-%d', $time);
+    }
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+    
+
+    
+
 
     /**
      * Attempts to reprocess all UES errors
@@ -167,17 +331,6 @@ abstract class ues {
     }
 
     /**
-     * Instantiates a provider
-     * 
-     * @return enrollment_provider
-     */
-    public static function create_provider() {
-        $provider_class = self::provider_class();
-
-        return ($provider_class) ? new $provider_class() : false;
-    }
-
-    /**
      * Returns a formatted error object from a given exception for use with various UES "problem" error messages
      * 
      * @param  Exception  $e
@@ -186,7 +339,7 @@ abstract class ues {
     public static function translate_error($e) {
         
         // instantiates a provider
-        $provider_class = self::provider_class();
+        $provider_class = self::provider_class();  // @TODO - this static function has been renamed!!!!
 
         // gets error message from exception
         $message = $e->getMessage();
@@ -206,16 +359,7 @@ abstract class ues {
         return $error;
     }
 
-    /**
-     * Returns localized string for UES package
-     * 
-     * @param  string  $key
-     * @param  string  $a
-     * @return string
-     */
-    public static function _s($key, $a = null) {
-        return get_string($key, 'enrol_ues', $a);
-    }
+    
 
 
 
@@ -230,9 +374,7 @@ abstract class ues {
 
     
 
-    public static function format_time($time) {
-        return strftime('%Y-%m-%d', $time);
-    }
+    
 
     public static function where($field = null) {
         return new ues_dao_filter($field);
@@ -385,7 +527,7 @@ abstract class ues {
     public static function reprocess_for($teacher, $silent = true) {
         $ues_user = $teacher->user();
 
-        $provider = self::create_provider();
+        $provider = self::create_provider();  // @TODO - this static function has been renamed!!!
 
         if ($provider and $provider->supports_reverse_lookups()) {
             $enrol = enrol_get_plugin('ues');

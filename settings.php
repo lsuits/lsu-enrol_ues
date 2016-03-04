@@ -30,14 +30,14 @@ if ($ADMIN->fulltree) {
 
     // --------------------- General Settings --------------------------------
 
-    $plugins = ues::list_plugins();
+    $providers = ues::listAvailableProviders();
     
     $settings->add(new admin_setting_heading('enrol_ues_general_settings',
-        $_s('general_settings'), empty($plugins) ? $_s('no_provider_installed') : ''));
+        $_s('general_settings'), empty($providers) ? $_s('no_provider_installed') : ''));
 
-    if ( ! empty($plugins)) {
+    if ( ! empty($providers)) {
         $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
-            $_s('provider'), $_s('provider_desc'), key($plugins), $plugins));
+            $_s('provider'), $_s('provider_desc'), key($providers), $providers));
     }
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
@@ -135,18 +135,16 @@ if ($ADMIN->fulltree) {
 
 
     // ------------------ Specific Provider Settings -------------------------
-    $provider = ues::provider_class();
+    $provider = ues::getProvider();
 
     if ($provider) {
         try {
-            // Attempting to create the provider
-            $test_provider = new $provider();
-
-            $test_provider->settings($settings);
+            
+            $provider->settings($settings);
 
             $works = (
-                $test_provider->supports_section_lookups() or
-                $test_provider->supports_department_lookups()
+                $provider->supports_section_lookups() or
+                $provider->supports_department_lookups()
             );
 
             if ($works === false) {
@@ -154,18 +152,18 @@ if ($ADMIN->fulltree) {
             }
 
             $a = new stdClass;
-            $a->name = $test_provider->get_name();
+            $a->name = $provider->get_name();
             $a->list = '';
 
-            if ($test_provider->supports_department_lookups()) {
+            if (ues::checkProviderSupportLookups($provider, array('department'), false)) {
                 $a->list .= '<li>' . ues::_s('process_by_department') . '</li>';
             }
 
-            if ($test_provider->supports_section_lookups()) {
+            if (ues::checkProviderSupportLookups($provider, array('section'), false)) {
                 $a->list .= '<li>' . ues::_s('process_by_section') . '</li>';
             }
 
-            if ($test_provider->supports_reverse_lookups()) {
+            if (ues::checkProviderSupportLookups($provider, array('reverse'), false)) {
                 $a->list .= '<li>' . ues::_s('reverse_lookups') . '</li>';
             }
 
