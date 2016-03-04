@@ -427,102 +427,6 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * @param ues_semester  $ues_semester
-     * @param ues_course[]  $ues_courses  NB: must have department attribute set
-     */
-    private function processSemesterByDepartment($ues_semester, $ues_courses) {
-        
-        // construct array of departments and its children course ids
-        $departments = ues_course::flatten_departments($ues_courses);
-
-        // iterate through each department, fetch its course's sections, and run enrollment for each
-        foreach ($departments as $department => $courseids) {
-            $filters = ues::where()
-                ->semesterid->equal($ues_semester->id)
-                ->courseid->in($courseids);
-
-            // get all 'current' sections (already existing in the DB)
-            $ues_sections = ues_section::get_all($filters);
-
-            $this->processEnrollmentByDepartment($ues_semester, $department, $ues_sections);
-        }
-    }
-
-    /**
-     * Workhorse method that brings enrollment data from the provider together with existing records
-     * and then dispatches sub processes that operate on the differences between the two.
-     *
-     * @param ues_semester  $ues_semester      semester to process
-     * @param string        $department        department to process
-     * @param ues_section[] $ues_sections  current UES records for the department/semester combination
-     */
-    public function processEnrollmentByDepartment($ues_semester, $department, $ues_sections) {
-        
-        try {
-
-            // get teacher data source from the provider
-            $teacher_source = $this->provider()->teacher_department_source();
-            
-            // fetch all teachers within this semester and department
-            $teachers = $teacher_source->teachers($ues_semester, $department);
-
-            // get student data source from the provider
-            $student_source = $this->provider()->student_department_source();
-
-            // fetch all students within this semester and department
-            $students = $student_source->students($ues_semester, $department);
-
-            // fetch all current section ids within this semester and department
-            $sectionids = ues_section::ids_by_course_department($ues_semester, $department);
-
-            $filter = ues::where('sectionid')->in($sectionids);
-            
-            $current_teachers = ues_teacher::get_all($filter);
-            $current_students = ues_student::get_all($filter);
-
-            $ids_param    = ues::where('id')->in($sectionids);
-            $all_sections = ues_section::get_all($ids_param);
-
-            $this->process_teachers_by_department($ues_semester, $department, $teachers, $current_teachers);
-            $this->process_students_by_department($ues_semester, $department, $students, $current_students);
-
-            unset($current_teachers);
-            unset($current_students);
-
-            foreach ($ues_sections as $section) {
-                $course = $section->course();
-                // Set status to ues::PROCESSED.
-                $this->post_section_process($ues_semester, $course, $section);
-
-                unset($all_sections[$section->id]);
-            }
-
-            // Drop remaining sections.
-            if (!empty($all_sections)) {
-                ues_section::update(
-                    array('status' => ues::PENDING),
-                    ues::where('id')->in(array_keys($all_sections))
-                );
-            }
-
-        } catch (Exception $e) {
-
-            $info = "$ues_semester $department";
-
-            $message = sprintf(
-                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n",
-                    $e->getMessage(),
-                    $e->getFile(),
-                    $e->getLine(),
-                    $e->getTraceAsString()
-                    );
-            $this->logError(sprintf('Failed to process %s:\n%s', $info, $message));
-
-            ues_error::department($ues_semester, $department)->save();
-        }
-    }
-
-    /**
      * Fetches courses from the enrollment provider, convert to ues_courses, persist, and return filtered collection
      * 
      * @param  ues_semester  $ues_semester
@@ -637,6 +541,206 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         return $ues_sections;
+    }
+
+    /**
+     * @param ues_semester  $ues_semester
+     * @param ues_course[]  $ues_courses  NB: must have department attribute set
+     */
+    private function processSemesterByDepartment($ues_semester, $ues_courses) {
+        
+        // construct array of departments and its children course ids
+        $departments = ues_course::flatten_departments($ues_courses);
+
+        // iterate through each department, fetch its course's sections, and run enrollment for each
+        foreach ($departments as $department => $courseids) {
+            $filters = ues::where()
+                ->semesterid->equal($ues_semester->id)
+                ->courseid->in($courseids);
+
+            // get all 'current' sections (already existing in the DB)
+            $ues_sections = ues_section::get_all($filters);
+
+            $this->processEnrollmentByDepartment($ues_semester, $department, $ues_sections);
+        }
+    }
+
+    /**
+     * Workhorse method that brings enrollment data from the provider together with existing records
+     * and then dispatches sub processes that operate on the differences between the two.
+     *
+     * @param ues_semester  $ues_semester  semester to process
+     * @param string        $department    department to process
+     * @param ues_section[] $ues_sections  current UES records for the department/semester combination
+     */
+    public function processEnrollmentByDepartment($ues_semester, $department, $ues_sections) {
+        
+        try {
+
+            // fetch all current UES section ids from within this semester and department
+            $sectionids = ues_section::ids_by_course_department($ues_semester, $department);
+
+            // process enrollment for given user types
+            $user_types = ['teacher', 'student'];
+
+            foreach ($user_types as $user_type) {
+                $this->processUserEnrollmentByDepartment($user_type, $ues_semester, $department, $sectionids);
+            }
+
+            // fetch all current UES sections from within this semester and department
+            $ids_param = ues::where('id')->in($sectionids);
+            $current_ues_sections = ues_section::get_all($ids_param);
+
+            // process enrollment for each section and remove from list of 'current' sections
+            foreach ($ues_sections as $ues_section) {
+                
+                $ues_course = $ues_section->course();
+                
+                $this->processSectionEnrollment($ues_semester, $ues_course, $ues_section);
+
+                unset($current_ues_sections[$ues_section->id]);
+            }
+
+            // set the status of any remaining sections to PENDING so that they may be dropped
+            if ( ! empty($current_ues_sections)) {
+                ues_section::update(
+                    array('status' => ues::PENDING),
+                    ues::where('id')->in(array_keys($current_ues_sections))
+                );
+            }
+
+        } catch (Exception $e) {
+
+            $message = sprintf(
+                    "Message: %s\nFile: %s\nLine: %s\nTRACE:\n%s\n",
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                    $e->getTraceAsString()
+            );
+
+            $this->logError(sprintf('Failed to process %s:\n%s', '$ues_semester $department', $message));
+
+            // save UES error for handling later
+            ues_error::department($ues_semester, $department)->save();
+        }
+    }
+
+    /**
+     * Fetches users of a specified type from the data source and processes enrollment by a semester's department's UES section ids
+     * 
+     * @param  string        $user_type        teacher|student
+     * @param  ues_semester  $ues_semester
+     * @param  string        $department       department to process
+     * @param  array         $ues_section_ids
+     * @return null
+     */
+    private function processUserEnrollmentByDepartment($user_type, $ues_semester, $department, $ues_section_ids) {
+
+        // get user_type data source from the provider
+        $type_src_fn = $user_type . '_department_source';
+        $dataSource = $this->provider()->$type_src_fn();
+
+        // fetch all users of this user_type from within this semester and department
+        $users_type_fn = $user_type . 's';
+        $users = $dataSource->$users_type_fn($ues_semester, $department);
+
+        // fetch all current UES users of this user_type from this department's semester's sections
+        $filter = ues::where('sectionid')->in($ues_section_ids);
+        $ues_user_type_class = 'ues_' . $user_type;
+        $ues_users = $ues_user_type_class::get_all($filter);
+
+        // process enrollment for these users within this department
+        $process_users_by_dept_fn = 'process_' . $user_type . 's_by_department';
+        $this->$process_users_by_dept_fn($ues_semester, $department, $users, $ues_users);
+    }
+
+    /**
+     * Process a section's user enrollment
+     *
+     * This method requires that there be at least one processable teacher in this section
+     * 
+     * @param  ues_semester  $ues_semester
+     * @param  ues_course    $ues_course
+     * @param  ues_section   $ues_section
+     * @return null
+     */
+    private function processSectionEnrollment($ues_semester, $ues_course, $ues_section) {
+        
+        // get count of all UES teachers from this section that have already been processed
+        $processed_filter = ues::where()
+            ->status->in(ues::PROCESSED, ues::ENROLLED)
+            ->sectionid->equal($ues_section->id);
+
+        $processedTeacherCount = ues_teacher::count($processed_filter);
+
+        // if this section has any teachers, allow it to be processed
+        if ( ! empty($processedTeacherCount)) {
+            
+            // remember section's previous status for later
+            $sectionPreviousStatus = $ues_section->status;
+
+            // update section attributes
+            $ues_section->semester = $ues_semester;
+            $ues_section->course = $ues_course;
+
+            // determine whether or not users of a given type will be enrolled in this section
+            $enrollmentWillOccur = false;
+
+            $user_types = ['teacher', 'student'];
+
+            foreach ($user_types as $user_type) {
+                if ($this->countProcessedUsersInSection($user_type, $ues_section));
+                    $enrollmentWillOccur = true;
+            }
+
+            // if there are any processed users of given types within this section, allow it's status to be updated to PROCESSED
+            if ($enrollmentWillOccur) {
+                
+                // update statuses of all teacher's within this section from ENROLLED to PROCESSED to make sure all teachers will be enrolled
+                ues_teacher::reset_status($ues_section, ues::PROCESSED, ues::ENROLLED);
+                
+                // update the status of this section to PROCESSED
+                $ues_section->status = ues::PROCESSED;
+            }
+
+            // Allow outside interaction
+            // events_trigger_legacy('ues_section_process', $ues_section);
+            // @EVENT
+            /**
+             * Refactor old events_trigger_legacy
+             */
+            global $CFG;
+            if(file_exists($CFG->dirroot.'/bloicks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                $ues_section = cps_ues_handler::ues_section_process($ues_section);
+            }
+
+            // if this section's status has changed, save all changes
+            if ($sectionPreviousStatus != $ues_section->status) {
+                $ues_section->save();
+            }
+        }
+    }
+
+    /**
+     * Returns the count of processed users of a given user type within a given section
+     * 
+     * @param  string       $user_type  teacher|student
+     * @param  ues_section  $ues_section
+     * @return int
+     */
+    private function countProcessedUsersInSection($user_type, $ues_section) {
+
+        $enrollment_filter = ues::where()
+            ->sectionid->equal($ues_section->id)
+            ->status->in(ues::PROCESSED, ues::PENDING);
+
+        $ues_user_class = 'ues_' . $user_type;
+
+        $count = $ues_user_class::count($enrollment_filter);
+
+        return $count;
     }
 
     
@@ -953,7 +1057,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $this->release('teacher', $current_teachers);
             $this->release('student', $current_students);
 
-            $this->post_section_process($semester, $course, $section);
+            $this->processSectionEnrollment($semester, $course, $section);
         } catch (Exception $e) {
             $this->logError($e->getMessage());
 
@@ -1008,62 +1112,6 @@ class enrol_ues_plugin extends enrol_plugin {
                         )
                     );
                 }
-            }
-        }
-    }
-
-    private function post_section_process($semester, $course, $section) {
-        // Process section only if teachers can be processed
-        // Take into consideration outside forces manipulating
-        // processed numbers through event handlers
-        $by_processed = ues::where()
-            ->status->in(ues::PROCESSED, ues::ENROLLED)
-            ->sectionid->equal($section->id);
-
-        $processed_teachers = ues_teacher::count($by_processed);
-
-        // A section _can_ be processed only if they have a teacher
-        // Further, this has to happen for a section to be queued
-        // for enrollment
-        if (!empty($processed_teachers)) {
-            // Full section
-            $section->semester = $semester;
-            $section->course = $course;
-
-            $previous_status = $section->status;
-
-            $count = function ($type) use ($section) {
-                $enrollment = ues::where()
-                    ->sectionid->equal($section->id)
-                    ->status->in(ues::PROCESSED, ues::PENDING);
-
-                $class = 'ues_'.$type;
-
-                return $class::count($enrollment);
-            };
-
-            $will_enroll = ($count('teacher') or $count('student'));
-
-            if ($will_enroll) {
-                // Make sure the teacher will be enrolled
-                ues_teacher::reset_status($section, ues::PROCESSED, ues::ENROLLED);
-                $section->status = ues::PROCESSED;
-            }
-
-            // Allow outside interaction
-            // events_trigger_legacy('ues_section_process', $section);
-            /**
-             * Refactor old events_trigger_legacy
-             */
-            global $CFG;
-            if(file_exists($CFG->dirroot.'/bloicks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                $section = cps_ues_handler::ues_section_process($section);
-            }
-
-
-            if ($previous_status != $section->status) {
-                $section->save();
             }
         }
     }
