@@ -651,8 +651,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $ues_users = $ues_user_type_class::get_all($filter);
 
         // process enrollment for these users within this department
-        $process_users_by_dept_fn = 'process_' . $user_type . 's_by_department';
-        $this->$process_users_by_dept_fn($ues_semester, $department, $users, $ues_users);
+        $this->fillUserRolesByDepartment($user_type, $ues_semester, $department, $users, $ues_users);
     }
 
     /**
@@ -741,6 +740,156 @@ class enrol_ues_plugin extends enrol_plugin {
         $count = $ues_user_class::count($enrollment_filter);
 
         return $count;
+    }
+
+    /**
+     * Fills roles
+     * 
+     * @param  string                         $user_type      teacher|student
+     * @param  ues_section                    $semester
+     * @param  string                         $department
+     * @param  object[]                       $pulled_users   incoming users from the provider
+     * @param  ues_teacher[] | ues_student[]  $current_users  all UES users for this semester
+     */
+    private function fillUserRolesByDepartment($user_type, $semester, $department, $pulled_users, $current_users) {
+        
+        foreach ($pulled_users as $pulled_user) {
+            
+            // find the UES course from the given department and the pulled user's course number
+            $course_params = array(
+                'department' => $department,
+                'cou_number' => $pulled_user->cou_number
+            );
+
+            $course = ues_course::get($course_params);
+
+            // if a course does not exist, proceed to the next user
+            if (empty($course)) {
+                continue;
+            }
+
+            // find the UES section from this UES course for the given department and the pulled user's section number
+            $section_params = array(
+                'semesterid' => $semester->id,
+                'courseid'   => $course->id,
+                'sec_number' => $pulled_user->sec_number
+            );
+
+            $section = ues_section::get($section_params);
+
+            // if a section does not exist, proceed to the next user
+            if (empty($section)) {
+                continue;
+            }
+            
+            // @HERE is where i left off!!!
+
+            // process this user
+            $this->processUserByType($user_type, $section, array($pulled_user), $current_users);
+            // $this->{'process_'.$user_type.'s'}($section, array($user), $current_users);
+        }
+
+        $this->release($user_type, $current_users);
+    }
+
+    /**
+     * Process a given user type
+     *
+     * @param  string                         $user_type
+     * @param  ues_section                    $ues_section
+     * @param  object[]                       $users
+     * @param  (ues_student | ues_teacher)[]  $current_users
+     * @return void
+     */
+    private function processUserByType($user_type, $ues_section, $users, &$current_users) {
+
+        switch ($user_type) {
+            
+            case 'teacher':
+                
+                $this->fillUserRoleByType('teacher', $ues_section, $users, $current_users, function($user) {
+                    return array('primary_flag' => $user->primary_flag);
+                });
+                
+                break;
+            
+            case 'student':
+
+                $this->fillUserRoleByType('student', $ues_section, $users, $current_users);
+
+                break;
+
+            default:
+                # code...
+                break;
+        }
+
+    }
+
+    /**
+     *
+     * @param string $type 'student' or 'teacher'
+     * @param ues_section $section
+     * @param object[] $users
+     * @param ues_student[] $current_users all users currently registered in the UES tables for this section
+     * @param callback $extra_params function returning additional user parameters/fields
+     * an associative array of additional params, given a user as input
+     */
+    private function fillUserRoleByType($type, $section, $users, &$current_users, $extra_params = null) {
+        $class = 'ues_' . $type;
+        $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
+
+        foreach ($users as $user) {
+            $ues_user = $this->create_user($user);
+
+            $params = array(
+                'sectionid' => $section->id,
+                'userid'    => $ues_user->id
+            );
+
+            if ($extra_params) {
+                // teacher-specific; returns user's primary flag key => value
+                $params += $extra_params($ues_user);
+            }
+
+            $ues_type = $class::upgrade($ues_user);
+
+            unset($ues_type->id);
+            if ($prev = $class::get($params, true)) {
+                $ues_type->id = $prev->id;
+                unset($current_users[$prev->id]);
+
+                // Intentionally save meta fields before continuing
+                // Meta fields can change without enrollment changes
+                $fields = get_object_vars($ues_type);
+                if ($ues_type->params_contains_meta($fields)) {
+                    $ues_type->save();
+                }
+
+                if (in_array($prev->status, $already_enrolled)) {
+                    continue;
+                }
+            }
+
+            $ues_type->userid = $ues_user->id;
+            $ues_type->sectionid = $section->id;
+            $ues_type->status = ues::PROCESSED;
+
+            $ues_type->save();
+
+            if (empty($prev) or $prev->status == ues::UNENROLLED) {
+                // events_trigger_legacy($class . '_process', $ues_type);
+                /*
+                 * Refactor events_trigger_legacy
+                 */
+                global $CFG;
+                if($class === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                    ues_logs_event_handler::ues_student_process($ues_type);
+                }elseif($class === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    cps_ues_handler::ues_teacher_process($ues_type);
+                }
+            }
+        }
     }
 
     
@@ -970,71 +1119,6 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    
-
-    /**
-     *
-     * @param ues_semester $semester
-     * @param string $department
-     * @param object[] $teachers
-     * @param ues_teacher[] $current_teachers
-     */
-    public function process_teachers_by_department($semester, $department, $teachers, $current_teachers) {
-        $this->fill_roles_by_department('teacher', $semester, $department, $teachers, $current_teachers);
-    }
-
-    /**
-     *
-     * @param ues_semester $semester
-     * @param string $department
-     * @param object[] $students
-     * @param ues_student[] $current_students
-     */
-    public function process_students_by_department($semester, $department, $students, $current_students) {
-        $this->fill_roles_by_department('student', $semester, $department, $students, $current_students);
-    }
-
-    /**
-     *
-     * @param string $type @see process_teachers_by_department
-     * and @see process_students_by_department for possible values 'student'
-     * or 'teacher'
-     * @param ues_section $semester
-     * @param string $department
-     * @param object[] $pulled_users incoming users from the provider
-     * @param ues_teacher[] | ues_student[] $current_users all UES users for this semester
-     */
-    private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
-        foreach ($pulled_users as $user) {
-            $course_params = array(
-                'department' => $department,
-                'cou_number' => $user->cou_number
-            );
-
-            $course = ues_course::get($course_params);
-
-            if (empty($course)) {
-                continue;
-            }
-
-            $section_params = array(
-                'semesterid' => $semester->id,
-                'courseid'   => $course->id,
-                'sec_number' => $user->sec_number
-            );
-
-            $section = ues_section::get($section_params);
-
-            if (empty($section)) {
-                continue;
-            }
-            $this->{'process_'.$type.'s'}($section, array($user), $current_users);
-
-        }
-
-        $this->release($type, $current_users);
-    }
-
     /**
      * Could be used to process a single course upon request
      */
@@ -1051,8 +1135,16 @@ class enrol_ues_plugin extends enrol_plugin {
             $current_teachers = ues_teacher::get_all($filter);
             $current_students = ues_student::get_all($filter);
 
-            $this->process_teachers($section, $teachers, $current_teachers);
-            $this->process_students($section, $students, $current_students);
+            
+
+            // $this->process_teachers($section, $teachers, $current_teachers);
+            // changed to:
+            $this->processUserByType('teacher', $section, $teachers, $current_teachers);
+            // $this->process_students($section, $students, $current_students);
+            // changed to:
+            $this->processUserByType('student', $section, $students, $current_students);
+
+            
 
             $this->release('teacher', $current_teachers);
             $this->release('student', $current_students);
@@ -1116,27 +1208,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    public function process_teachers($section, $users, &$current_users) {
-        return $this->fill_role('teacher', $section, $users, $current_users, function($user) {
-            return array('primary_flag' => $user->primary_flag);
-        });
-    }
-
-    /**
-     * Process students.
-     *
-     * This function passes params on to enrol_ues_plugin::fill_role()
-     * which does not return any value.
-     *
-     * @see enrol_ues_plugin::fill_role()
-     * @param ues_section $section
-     * @param object[] $users
-     * @param (ues_student | ues_teacher)[] $current_users
-     * @return void
-     */
-    public function process_students($section, $users, &$current_users) {
-        return $this->fill_role('student', $section, $users, $current_users);
-    }
+    
 
     // Allow public API to reset unenrollments
     public function reset_unenrollments($section) {
@@ -1895,72 +1967,6 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
         return false;
-    }
-
-    /**
-     *
-     * @param string $type 'student' or 'teacher'
-     * @param ues_section $section
-     * @param object[] $users
-     * @param ues_student[] $current_users all users currently registered in the UES tables for this section
-     * @param callback $extra_params function returning additional user parameters/fields
-     * an associative array of additional params, given a user as input
-     */
-    private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
-        $class = 'ues_' . $type;
-        $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
-
-        foreach ($users as $user) {
-            $ues_user = $this->create_user($user);
-
-            $params = array(
-                'sectionid' => $section->id,
-                'userid'    => $ues_user->id
-            );
-
-            if ($extra_params) {
-                // teacher-specific; returns user's primary flag key => value
-                $params += $extra_params($ues_user);
-            }
-
-            $ues_type = $class::upgrade($ues_user);
-
-            unset($ues_type->id);
-            if ($prev = $class::get($params, true)) {
-                $ues_type->id = $prev->id;
-                unset($current_users[$prev->id]);
-
-                // Intentionally save meta fields before continuing
-                // Meta fields can change without enrollment changes
-                $fields = get_object_vars($ues_type);
-                if ($ues_type->params_contains_meta($fields)) {
-                    $ues_type->save();
-                }
-
-                if (in_array($prev->status, $already_enrolled)) {
-                    continue;
-                }
-            }
-
-            $ues_type->userid = $ues_user->id;
-            $ues_type->sectionid = $section->id;
-            $ues_type->status = ues::PROCESSED;
-
-            $ues_type->save();
-
-            if (empty($prev) or $prev->status == ues::UNENROLLED) {
-                // events_trigger_legacy($class . '_process', $ues_type);
-                /*
-                 * Refactor events_trigger_legacy
-                 */
-                global $CFG;
-                if($class === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                    ues_logs_event_handler::ues_student_process($ues_type);
-                }elseif($class === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    cps_ues_handler::ues_teacher_process($ues_type);
-                }
-            }
-        }
     }
 
     /**
