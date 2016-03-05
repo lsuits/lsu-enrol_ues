@@ -368,7 +368,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 // Call event before potential insert, as to notify creation
                 // events_trigger_legacy('ues_semester_process', $ues_semester);
-                // @EVENT (unmonitored)
+                // @EVENT - ues_semester_process (unmonitored)
 
                 // persist to {ues_semesters}
                 $ues_semester->save();
@@ -485,7 +485,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 // Call event before potential insert, as to notify creation
                 // events_trigger_legacy('ues_course_process', $ues_course);
-                // @EVENT (unmonitored)
+                // @EVENT - ues_course_process (unmonitored)
 
                 // persist to {ues_courses}
                 $ues_course->save();
@@ -705,7 +705,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             // Allow outside interaction
             // events_trigger_legacy('ues_section_process', $ues_section);
-            // @EVENT
+            // @EVENT - ues_section_process
             /**
              * Refactor old events_trigger_legacy
              */
@@ -748,17 +748,17 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  string                         $user_type      teacher|student
      * @param  ues_section                    $semester
      * @param  string                         $department
-     * @param  object[]                       $pulled_users   incoming users from the provider
+     * @param  object[]                       $providedUsers   incoming users from the provider
      * @param  ues_teacher[] | ues_student[]  $current_users  all UES users for this semester
      */
-    private function fillUserRolesByDepartment($user_type, $semester, $department, $pulled_users, $current_users) {
+    private function fillUserRolesByDepartment($user_type, $semester, $department, $providedUsers, $current_users) {
         
-        foreach ($pulled_users as $pulled_user) {
+        foreach ($providedUsers as $providedUser) {
             
             // find the UES course from the given department and the pulled user's course number
             $course_params = array(
                 'department' => $department,
-                'cou_number' => $pulled_user->cou_number
+                'cou_number' => $providedUser->cou_number
             );
 
             $course = ues_course::get($course_params);
@@ -772,7 +772,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $section_params = array(
                 'semesterid' => $semester->id,
                 'courseid'   => $course->id,
-                'sec_number' => $pulled_user->sec_number
+                'sec_number' => $providedUser->sec_number
             );
 
             $section = ues_section::get($section_params);
@@ -782,14 +782,73 @@ class enrol_ues_plugin extends enrol_plugin {
                 continue;
             }
             
-            // @HERE is where i left off!!!
-
-            // process this user
-            $this->processUserByType($user_type, $section, array($pulled_user), $current_users);
-            // $this->{'process_'.$user_type.'s'}($section, array($user), $current_users);
+            // process enrollment for the provided users, removing users from the 'current' list in the process
+            // @TODO - make sure this passing by reference stuff is working properly!!!
+            // $this->{'process_'.$user_type.'s'}($section, array($user), $current_users);  <--- OLD
+            $this->processUsersByType($user_type, $section, array($providedUser), $current_users);
         }
 
-        $this->release($user_type, $current_users);
+        // release any remaining users
+        if (is_array($current_users) and count($current_users)) {
+            $this->releaseUsers($user_type, $current_users);
+        }
+    }
+
+    private function releaseUsers($user_type, $ues_users) {
+
+        foreach ($ues_users as $ues_user) {
+            
+            // No reason to release a second time
+            if ($ues_user->status == ues::UNENROLLED) {
+                continue;
+            }
+
+            // Maybe the course hasn't been created... clear the pending flag
+            $status = $ues_user->status == ues::PENDING ? ues::UNENROLLED : ues::PENDING;
+
+            $ues_user->status = $status;
+            $ues_user->save();
+
+            global $CFG;
+            
+            if ($user_type === 'teacher') {
+                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+
+                    // Specific release for instructor
+                    //events_trigger_legacy('ues_teacher_release', $ues_user);
+                    // @EVENT - ues_teacher_release
+                    $ues_user = cps_ues_handler::ues_teacher_release($ues_user);
+                }
+            } else if($user_type === 'student') {
+
+                // @EVENT - ues_student_release
+                if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
+                    $ues_user = ues_logs_event_handler::ues_student_release($ues_user);
+                }
+            }
+
+            // @HERE - THIS IS WHERE I STOPPED!!!
+
+            // Drop manifested sections for teacher POTENTIAL drops
+            if ($ues_user->status == ues::PENDING and $user_type == 'teacher') {
+                $existing = ues_teacher::get_all(ues::where()
+                    ->status->in(ues::PROCESSED, ues::ENROLLED)
+                );
+
+                // No other primary, so we can safely flip the switch
+                if (empty($existing)) {
+                    ues_section::update(
+                        array('status' => ues::PENDING),
+                        array(
+                            'status' => ues::MANIFESTED,
+                            'id' => $ues_user->sectionid
+                        )
+                    );
+                }
+            }
+        }
     }
 
     /**
@@ -801,13 +860,13 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  (ues_student | ues_teacher)[]  $current_users
      * @return void
      */
-    private function processUserByType($user_type, $ues_section, $users, &$current_users) {
+    private function processUsersByType($user_type, $ues_section, $users, &$current_users) {
 
         switch ($user_type) {
             
             case 'teacher':
                 
-                $this->fillUserRoleByType('teacher', $ues_section, $users, $current_users, function($user) {
+                $this->addUsersToSectionFromList('teacher', $ues_section, $users, &$current_users, function($user) {
                     return array('primary_flag' => $user->primary_flag);
                 });
                 
@@ -815,7 +874,7 @@ class enrol_ues_plugin extends enrol_plugin {
             
             case 'student':
 
-                $this->fillUserRoleByType('student', $ues_section, $users, $current_users);
+                $this->addUsersToSectionFromList('student', $ues_section, $users, &$current_users);
 
                 break;
 
@@ -827,37 +886,58 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     *
-     * @param string $type 'student' or 'teacher'
-     * @param ues_section $section
-     * @param object[] $users
-     * @param ues_student[] $current_users all users currently registered in the UES tables for this section
-     * @param callback $extra_params function returning additional user parameters/fields
+     * Recieves a list of provided users objects to be enrolled in this section and enrolls them.
+     * 
+     * This method will insure that all UES user's (and moodle users) are created or updated
+     * 
+     * In addition, this method will accept an optional array of UES users (ues_teacher|ues_student) and remove
+     * user's from that list by id as enrollment is taking place.
+     * 
+     * In addition, this method may recieve an option callback function to help with default data assignment
+     * 
+     * @param string         $user_type          teacher|student
+     * @param ues_section    $ues_section
+     * @param object[]       $providedUsers
+     * @param ues_student[]  $currentUsers(REF)  all users currently registered in the UES tables for this section
+     * @param callback       $extra_params       function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
      */
-    private function fillUserRoleByType($type, $section, $users, &$current_users, $extra_params = null) {
-        $class = 'ues_' . $type;
+    private function addUsersToSectionFromList($user_type, $ues_section, $providedUsers, &$currentUsers, $extra_params = null) {
+        
+        $ues_user_class = 'ues_' . $user_type;
+        
         $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
 
-        foreach ($users as $user) {
+        foreach ($providedUsers as $user) {
+            
+            // create user
             $ues_user = $this->create_user($user);
 
+            // set lookup params
             $params = array(
-                'sectionid' => $section->id,
+                'sectionid' => $ues_section->id,
                 'userid'    => $ues_user->id
             );
 
-            if ($extra_params) {
-                // teacher-specific; returns user's primary flag key => value
+            // add any additional params
+            if ( ! is_null($extra_params)) {
                 $params += $extra_params($ues_user);
             }
 
-            $ues_type = $class::upgrade($ues_user);
+            // instantiate this user as it's ues type (ues_teacher|ues_student)
+            $ues_type = $ues_user_class::upgrade($ues_user);
 
             unset($ues_type->id);
-            if ($prev = $class::get($params, true)) {
-                $ues_type->id = $prev->id;
-                unset($current_users[$prev->id]);
+            
+            // if there already exists a UES user of this type within the same section (and any additional criteria)
+            if ($persisted_ues_type = $ues_user_class::get($params, true)) {
+                
+                // update the new instantiation's id to the persisted ues user type's id
+                $ues_type->id = $persisted_ues_type->id;
+                
+                // if a list of current users was provided, remove this user by id
+                if ( is_array($currentUsers))
+                    unset($currentUsers[$persisted_ues_type->id]);
 
                 // Intentionally save meta fields before continuing
                 // Meta fields can change without enrollment changes
@@ -866,30 +946,250 @@ class enrol_ues_plugin extends enrol_plugin {
                     $ues_type->save();
                 }
 
-                if (in_array($prev->status, $already_enrolled)) {
+                // if this user is already enrolled in this section, move to next provided user
+                if (in_array($persisted_ues_type->status, $already_enrolled)) {
                     continue;
                 }
             }
 
+            // assign this UES user type its moodle user id and given section criteria
             $ues_type->userid = $ues_user->id;
-            $ues_type->sectionid = $section->id;
+            $ues_type->sectionid = $ues_section->id;
+
+            // update this user's status to PROCESSED
             $ues_type->status = ues::PROCESSED;
 
+            // persist the UES user type
             $ues_type->save();
 
-            if (empty($prev) or $prev->status == ues::UNENROLLED) {
-                // events_trigger_legacy($class . '_process', $ues_type);
+            // if this was a "fresh" processing job - OR - the old user was marked as UNENROLLED
+            if (empty($persisted_ues_type) or $persisted_ues_type->status == ues::UNENROLLED) {
+                
+                // @EVENT - ues_student_process
+                // @EVENT - ues_teacher_process
+                // 
+                // events_trigger_legacy($ues_user_class . '_process', $ues_type);
                 /*
                  * Refactor events_trigger_legacy
                  */
                 global $CFG;
-                if($class === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                if($ues_user_class === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
                     ues_logs_event_handler::ues_student_process($ues_type);
-                }elseif($class === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                } elseif($ues_user_class === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
                     cps_ues_handler::ues_teacher_process($ues_type);
                 }
             }
         }
+    }
+
+    /**
+     * Attempts to create a new UES user from a 'user' object pulled from the provider.
+     * 
+     * If there already exists a currently persisted user matching this pulled user's key details,
+     * the user record will be update accordingly. For example, if the ID is the same but the username
+     * is not, the email attribute will be updated based on the username and configured domain info.
+     * 
+     * Note: The badgeslib.php event handler uses a run-time type hint which caused problems for 
+     * ues enrollment runEnrollmentProcess()
+     * 
+     * @TODO - fix badgeslib issue
+     *
+     * @global type      $CFG
+     * @param  object    $u
+     * @return ues_user  $user
+     * @throws Exception
+     */
+    private function create_user($u) {
+        
+        // create a UES user instance from the given user object
+        $user = ues_user::upgrade($u);
+
+        // construct query params for current user lookup check
+        $by_idnumber = array('idnumber' => $u->idnumber);
+        $by_username = array('username' => $u->username);
+        $exact_params = $by_idnumber + $by_username;
+
+        // if there exists a current user with the given 'idnumber' AND 'username'
+        if ($persisted_user = ues_user::get($exact_params, true)) {
+            
+            // set the fresh instantiation's id to the current record's id
+            $user->id = $persisted_user->id;
+        
+        // otherwise, if there exists a current user with this 'idnumber' ONLY
+        } else if ( ! empty($u->idnumber) and $persisted_user = ues_user::get($by_idnumber, true)) {
+            
+            // set the fresh instantiation's id to the current record's id
+            $user->id = $persisted_user->id;
+            
+            // assign an email attribute to the fresh instantiation based on 'username' and config options
+            $user->email = $user->username . $this->config('user_email');
+
+        // otherwise, if there exists a current user with this 'username' ONLY
+        } else if ($persisted_user = ues_user::get($by_username, true)) {
+            
+            // set the fresh instantiation's id to the current record's id
+            $user->id = $persisted_user->id;
+
+        // otherwise, assign the user all of the default params
+        } else {
+            
+            global $CFG;
+            //@todo take a close look here - watch primary flag
+            $user->email = $user->username . $this->config('user_email');
+            $user->confirmed = $this->config('user_confirm');
+            $user->city = $this->config('user_city');
+            $user->country = $this->config('user_country');
+            $user->lang = $this->config('user_lang');
+            $user->firstaccess = time();
+            $user->timecreated = $user->firstaccess;
+            $user->auth = $this->config('user_auth');
+            $user->mnethostid = $CFG->mnet_localhost_id; // always local user
+
+            $created = true;
+        }
+
+        // if this is a "fresh" user, persist it
+        if ( ! empty($created)) {
+            
+            $user->save();
+
+            // @EVENT - user_created
+            events_trigger_legacy('user_created', $user);
+
+        // otherwise, if there was a current record but it has changed, attempt to save it
+        } else if ($persisted_user and $this->user_changed($persisted_user, $user)) {
+            
+            try {
+                
+                $user->save();
+
+            } catch (Exception $e) {
+                
+                // throw a formatted error
+                $message = $e->getMessage();
+
+                $error = "%s | Current %s | Stored %s";
+                $log = "(%s: '%s')";
+
+                $curr = sprintf($log, $user->username, $user->idnumber);
+                $persisted_user = sprintf($log, $persisted_user->username, $persisted_user->idnumber);
+
+                throw new Exception(sprintf($error, $message, $curr, $persisted_user));
+            }
+
+            // @EVENT - user_updated (unmonitored)
+            // events_trigger_legacy('user_updated', (object)$user);
+        }
+
+        // if the enrollment provider sets an initial password upon user creation, handle it now
+        if( isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)) {
+            
+            // update the user's password to the provider's initial password config
+            $user->password = $user->init_password;
+            update_internal_user_password($user, $user->init_password);
+
+            // let's not pass this any further.
+            unset($user->init_password);
+
+            // Need an instance of stdClass in the try stack.
+            $userX = (array) $user;
+            $userY = (object) $userX;
+
+            // Force user to change password on next login.
+            set_user_preference('auth_forcepasswordchange', 1, $userY);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Determine whether or not currently persisted UES user instance has been changed by comparing it to a candidate instantiation
+     * 
+     * This is decided by determining if the candidate user holds new information for a previously stored user.
+     * (firstname, lastname, id, username, meta)
+     * If it has changed, we will need to update the DB record.
+     * 
+     * @global object    $DB
+     * @param  ues_user  $persisted_user  the currently persisted UES user instance
+     * @param  ues_user  $candidate_user  the incoming UES user instance currently being evaluated at this point in the UES process.
+     * @return boolean   $hasChanged
+     */
+    private function user_changed(ues_user $persisted_user, ues_user $candidate_user) {
+        
+        $hasChanged = false;
+
+        global $DB;
+        $namefields   = user_picture::fields();
+        $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
+
+        // get the currently persisted user instance
+        // @TODO ues_user does not currently upgrade with the alt names.
+        $previousUser = $DB->get_record_sql($sql, array('id'=>$persisted_user->id));
+
+        $hasPreferredName = !empty($previousUser->alternatename);
+
+        // For users without preferred names, check that old and new firstnames match.
+        $regUserFirstNameUnchanged = !$hasPreferredName && $previousUser->firstname == $candidate_user->firstname;
+
+        // For users with preferred names, check that old altname matches incoming firstname.
+        $prefUserFirstNameUnchanged = $hasPreferredName && $previousUser->alternatename == $candidate_user->firstname;
+
+        // Composition of the previous two variables. If either is false, we need to take action and return 'true'.
+        $firstNameUnchanged = $regUserFirstNameUnchanged || $prefUserFirstNameUnchanged;
+
+        // We take action if last name has changed at all.
+        $lastNameUnchanged = $previousUser->lastname == $candidate_user->lastname;
+
+        // if either the first or last name has changed, mark the user as changed
+        if( ! $firstNameUnchanged || ! $lastNameUnchanged) {
+            
+            // When the first name of a user who has set a preferred name changes, we reset the preference in CPS.
+            if( ! $prefUserFirstNameUnchanged) {
+                
+                $DB->set_field('user', 'alternatename', NULL, array('id' => $previousUser->id));
+                
+                //events_trigger_legacy('preferred_name_legitimized', $candidate_user);
+                /*
+                 * Refactor events_trigger_legacy
+                 */
+                // @EVENT - preferred_name_legitimized
+                global $CFG;
+                
+                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                    cps_ues_handler::preferred_name_legitimized($candidate_user);
+                }
+            }
+
+            $hasChanged = true;
+        }
+
+        // if the id number has changed, mark the user as changed
+        if ($persisted_user->idnumber != $candidate_user->idnumber) {
+            $hasChanged = true;
+        }
+
+        // if the username has changed, mark the user as changed
+        if ($persisted_user->username != $candidate_user->username) {
+            $hasChanged = true;
+        }
+
+        // get the candidate's meta data
+        $candidate_meta = $candidate_user->meta_fields(get_object_vars($candidate_user));
+
+        // if any meta data has changed, mark the user as changed
+        foreach ($candidate_meta as $field) {
+            
+            if ( ! isset($persisted_user->{$field})) {
+                $hasChanged = true;
+            }
+
+            if ($persisted_user->{$field} != $candidate_user->{$field}) {
+                $hasChanged = true;
+            }
+        }
+        
+        return $hasChanged;
     }
 
     
@@ -1139,15 +1439,15 @@ class enrol_ues_plugin extends enrol_plugin {
 
             // $this->process_teachers($section, $teachers, $current_teachers);
             // changed to:
-            $this->processUserByType('teacher', $section, $teachers, $current_teachers);
+            $this->processUsersByType('teacher', $section, $teachers, $current_teachers);
             // $this->process_students($section, $students, $current_students);
             // changed to:
-            $this->processUserByType('student', $section, $students, $current_students);
+            $this->processUsersByType('student', $section, $students, $current_students);
 
             
 
-            $this->release('teacher', $current_teachers);
-            $this->release('student', $current_students);
+            $this->releaseUsers('teacher', $current_teachers);
+            $this->releaseUsers('student', $current_students);
 
             $this->processSectionEnrollment($semester, $course, $section);
         } catch (Exception $e) {
@@ -1157,56 +1457,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    private function release($type, $users) {
-
-        foreach ($users as $user) {
-            // No reason to release a second time
-            if ($user->status == ues::UNENROLLED) {
-                continue;
-            }
-
-            // Maybe the course hasn't been created... clear the pending flag
-            $status = $user->status == ues::PENDING ? ues::UNENROLLED : ues::PENDING;
-
-            $user->status = $status;
-            $user->save();
-
-            global $CFG;
-            if($type === 'teacher'){
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-
-                    // Specific release for instructor
-                    //events_trigger_legacy('ues_teacher_release', $user);
-                    $user = cps_ues_handler::ues_teacher_release($user);
-                }
-            }else if($type === 'student'){
-                if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
-                    $user = ues_logs_event_handler::ues_student_release($user);
-                }
-
-            }
-
-            // Drop manifested sections for teacher POTENTIAL drops
-            if ($user->status == ues::PENDING and $type == 'teacher') {
-                $existing = ues_teacher::get_all(ues::where()
-                    ->status->in(ues::PROCESSED, ues::ENROLLED)
-                );
-
-                // No other primary, so we can safely flip the switch
-                if (empty($existing)) {
-                    ues_section::update(
-                        array('status' => ues::PENDING),
-                        array(
-                            'status' => ues::MANIFESTED,
-                            'id' => $user->sectionid
-                        )
-                    );
-                }
-            }
-        }
-    }
+    
 
     
 
@@ -1794,179 +2045,6 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         return $moodle_course;
-    }
-
-    /**
-     * Triggers an event, 'user_updated' which is consumed by block_cps
-     * and other. The badgeslib.php event handler uses a run-time type
-     * hint which caused problems for ues enrollment runEnrollmentProcess()
-     * causes problems
-     *
-     * @todo fix badgeslib issue
-     * @global type $CFG
-     * @param type $u
-     *
-     * @return ues_user $user
-     * @throws Exception
-     */
-    private function create_user($u) {
-        $present = !empty($u->idnumber);
-
-        $by_idnumber = array('idnumber' => $u->idnumber);
-
-        $by_username = array('username' => $u->username);
-
-        $exact_params = $by_idnumber + $by_username;
-
-        $user = ues_user::upgrade($u);
-
-        if ($prev = ues_user::get($exact_params, true)) {
-            $user->id = $prev->id;
-        } else if ($present and $prev = ues_user::get($by_idnumber, true)) {
-            $user->id = $prev->id;
-            // Update email
-            $user->email = $user->username . $this->config('user_email');
-        } else if ($prev = ues_user::get($by_username, true)) {
-            $user->id = $prev->id;
-        } else {
-            global $CFG;
-            //@todo take a close look here - watch primary flag
-            $user->email = $user->username . $this->config('user_email');
-            $user->confirmed = $this->config('user_confirm');
-            $user->city = $this->config('user_city');
-            $user->country = $this->config('user_country');
-            $user->lang = $this->config('user_lang');
-            $user->firstaccess = time();
-            $user->timecreated = $user->firstaccess;
-            $user->auth = $this->config('user_auth');
-            $user->mnethostid = $CFG->mnet_localhost_id; // always local user
-
-            $created = true;
-        }
-
-        if (!empty($created)) {
-            $user->save();
-
-            events_trigger_legacy('user_created', $user);
-        } else if ($prev and $this->user_changed($prev, $user)) {
-            // Re-throw exception with more helpful information
-            try {
-                $user->save();
-            } catch (Exception $e) {
-                $rea = $e->getMessage();
-
-                $new_err = "%s | Current %s | Stored %s";
-                $log = "(%s: '%s')";
-
-                $curr = sprintf($log, $user->username, $user->idnumber);
-                $prev = sprintf($log, $prev->username, $prev->idnumber);
-
-                throw new Exception(sprintf($new_err, $rea, $curr, $prev));
-            }
-
-            // Unmonitored event
-            // events_trigger_legacy('user_updated', (object)$user);
-        }
-
-        // If the provider supplies initial password information, set it now.
-        if(isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)){
-            $user->password = $user->init_password;
-            update_internal_user_password($user, $user->init_password);
-
-            // let's not pass this any further.
-            unset($user->init_password);
-
-            // Need an instance of stdClass in the try stack.
-            $userX = (array) $user;
-            $userY = (object) $userX;
-
-            // Force user to change password on next login.
-            set_user_preference('auth_forcepasswordchange', 1, $userY);
-        }
-
-        return $user;
-    }
-
-
-    /**
-     *
-     * @global object $DB
-     * @param ues_user $prev these var names are misleading: $prev is the user
-     * 'previously' stored in the DB- that is the current DB record for a user.
-     * @param ues_user $current Also a tad misleading, $current repressents the
-     * incoming user currently being evaluated at this point in the UES process.
-     * Depending on the outcome of this function, current's data may or may not ever
-     * be used of stored.
-     * @return boolean According to our comparissons, does current hold new information
-     * for a previously stored user that we need to replace the DB record with [replacement
-     * happens in the calling function]?
-     */
-    private function user_changed(ues_user $prev, ues_user $current) {
-        global $DB;
-        $namefields   = user_picture::fields();
-        $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
-
-        // @TODO ues_user does not currently upgrade with the alt names.
-        $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
-
-        // Need to establish which users have preferred names.
-        $haspreferredname            = !empty($previoususer->alternatename);
-
-        // For users without preferred names, check that old and new firstnames match.
-        // No need to take action, if true.
-        $reguser_firstnameunchanged  = !$haspreferredname && $previoususer->firstname == $current->firstname;
-
-        // For users with preferred names, check that old altname matches incoming firstname.
-        // No need to take action, if true.
-        $prefuser_firstnameunchanged = $haspreferredname && $previoususer->alternatename == $current->firstname;
-
-        // Composition of the previous two variables. If either if false,
-        // we need to take action and return 'true'.
-        $firstnameunchanged          = $reguser_firstnameunchanged || $prefuser_firstnameunchanged;
-
-        // We take action if last name has changed at all.
-        $lastnameunchanged           = $previoususer->lastname == $current->lastname;
-
-        // If there is change in either first or last, we are going to update the user DB record.
-        if(!$firstnameunchanged || !$lastnameunchanged){
-            // When the first name of a user who has set a preferred
-            // name changes, we reset the preference in CPS.
-            if(!$prefuser_firstnameunchanged){
-                $DB->set_field('user', 'alternatename', NULL, array('id'=>$previoususer->id));
-
-                //events_trigger_legacy('preferred_name_legitimized', $current);
-                /*
-                 * Refactor events_trigger_legacy
-                 */
-                global $CFG;
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                    cps_ues_handler::preferred_name_legitimized($current);
-                }
-            }
-            return true;
-        }
-
-        if ($prev->idnumber != $current->idnumber){
-            return true;
-        }
-
-        if ($prev->username != $current->username){
-            return true;
-        }
-
-        $current_meta = $current->meta_fields(get_object_vars($current));
-
-        foreach ($current_meta as $field) {
-            if (!isset($prev->{$field})){
-                return true;
-            }
-
-            if ($prev->{$field} != $current->{$field}){
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
