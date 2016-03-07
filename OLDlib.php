@@ -49,8 +49,8 @@ class enrol_ues_plugin extends enrol_plugin {
     public function __construct() {
         global $CFG;
 
-        ues::require_daos();
-        ues::require_exceptions();
+        ues::requireDaoLibs();
+        ues::requireExceptionLibs();
         require_once $CFG->dirroot . '/group/lib.php';
         require_once $CFG->dirroot . '/course/lib.php';
     }
@@ -104,7 +104,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
         
         // require UES libs
-        // ues::require_libs();
+        ues::requireLibs();
         
         // instantiate new provider
         $provider = $this->newProvider($providerKey);
@@ -188,13 +188,19 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * Sets UES running status
+     * Sets UES running status and logs output
      * 
      * @param  boolean  $isRunning  whether or not UES is running
      * @return null
      */
     public function nowRunning($isRunning) {
         $this->config('running', $isRunning);
+
+        if ($isRunning) {
+            $ues->log('Now running: ' . $provider->get_name());
+        } else {
+            $ues->log($provider->get_name() . ' has stopped.');
+        }
     }
 
 
@@ -238,7 +244,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                     $this->log('Beginning manifestation...');
 
-                    $this->handle_enrollments();
+                    $this->handleEnrollment();
 
                     if ( ! $provider->postprocess($this)) {
                         $this->logError('Error during postprocess.');
@@ -663,10 +669,10 @@ class enrol_ues_plugin extends enrol_plugin {
         //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
 
-    public function handle_enrollments() {
+    public function handleEnrollment() {
         // will be unenrolled
         $pending = ues_section::get_all(array('status' => ues::PENDING));
-        $this->handle_pending_sections($pending);
+        $this->handlePendingSectionEnrollment($pending);
 
         // will be enrolled
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
@@ -1155,7 +1161,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @global object $DB
      * @param ues_section[] $sections
      */
-    public function handle_pending_sections($sections) {
+    public function handlePendingSectionEnrollment($sections) {
         global $DB, $USER;
 
         if ($sections) {

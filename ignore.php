@@ -5,7 +5,7 @@
 require_once '../../config.php';
 require_once 'publiclib.php';
 
-ues::require_daos();
+ues::requireDaoLibs();
 
 require_login();
 

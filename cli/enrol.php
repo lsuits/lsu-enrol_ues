@@ -31,7 +31,7 @@ Example:
     die;
 }
 
-$response = ues::runEnrollment();
+$response = ues::runFullEnrollment();
 
 echo $response . '
 ';

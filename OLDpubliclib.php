@@ -33,7 +33,7 @@
         }
 
         // require UES libraries
-        self::require_libs();
+        self::requireLibs();
 
         global $CFG;
         

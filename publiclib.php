@@ -1,10 +1,12 @@
 <?php
+
 /**
  * @package enrol_ues
  */
 defined('MOODLE_INTERNAL') or die();
 
 abstract class ues {
+    
     const PENDING = 'pending';
     const PROCESSED = 'processed';
 
@@ -17,14 +19,14 @@ abstract class ues {
     const UNENROLLED = 'unenrolled';
 
     /**
-     * Loads UES libraries
+     * Loads all UES libraries
      * 
      * @return null
      */
-    public static function require_libs() {
-        self::require_daos();
-        self::require_extensions();
-        self::require_exceptions();
+    public static function requireLibs() {
+        self::requireDaoLibs();
+        self::requireExtensionLibs();
+        self::requireExceptionLibs();
     }
 
     /**
@@ -32,7 +34,7 @@ abstract class ues {
      * 
      * @return null
      */
-    public static function require_daos() {
+    public static function requireDaoLibs() {
         $dao = self::base('classes/dao');
 
         require_once $dao . '/base.php';
@@ -44,11 +46,11 @@ abstract class ues {
     }
 
     /**
-     * Loads all UES extensions
+     * Loads all UES extension libraries
      * 
      * @return null
      */
-    public static function require_extensions() {
+    public static function requireExtensionLibs() {
         $classes = self::base('classes');
 
         require_once $classes . '/processors.php';
@@ -57,11 +59,11 @@ abstract class ues {
     }
 
     /**
-     * Loads all UES exceptions
+     * Loads all UES exception libraries
      * 
      * @return null
      */
-    public static function require_exceptions() {
+    public static function requireExceptionLibs() {
         $exception = self::base('classes/exceptions');
 
         require_once $exception . '/UESGuardException.php';
@@ -71,69 +73,57 @@ abstract class ues {
     /**
      * Runs the full enrollment process
      * 
-     * @return [type] [description]
+     * @return null
      */
-    public static function runEnrollment($priority = '') {
+    public static function runFullEnrollment($priority = '') {
         
         // require UES libraries
-        self::require_libs();
+        self::requireLibs();
 
         try {
             
+            // get UES implementation instance of moodle enrol_plugin
             $ues = ues::getPlugin();
 
             $ues->log('------------------------------------------------');
-            $ues->log(' ' . ues::_s('pluginname') . ' launched');
-            $ues->log('------------------------------------------------', true);
+            $ues->log(' ' . ues::_s('pluginname') . ' has been started');
+            $ues->log('------------------------------------------------');
+            $ues->log();
 
             $startTime = microtime();
 
             // check to make sure UES can be run right now
-            ues_guard::checkFullProcess($priority);
+            ues_guard::check($ues, $priority);
             
-            $ues->nowRunning(true);
-
-            // instantiate the provider
+            // get the configured enrollment provider
             $provider = $ues->provider();
 
-            $ues->log('Provider loaded: ' . $provider->get_name(), true);
-
-            // check that this provider meets compatibility requirements
+            // check that the provider meets all requirements
             ues::checkProviderSupportLookups($provider, array(
                 'section', 
                 'department'
             ));
             
-            // run any provider preprocesses
-            $ues->log('Running ' . $provider->get_name() . ' preprocesses.');
-            if ( ! $provider->preprocess($ues)) {
-                throw new Exception('An error occurred during the provider preprocess.');
-            }
-            $ues->log('Provider preprocesses complete.', true);
-
-            $ues->log('Fetching enrollment data...', true);
-
-            $ues->runEnrollmentProcess();
-
-            $ues->log('Beginning manifestation...');
-
+            // set status to running
+            $ues->running(true);
             
+            // run any provider preprocesses
+            $ues->handleProviderPreprocess();
 
-            $ues->handle_enrollments();
+            // provision UES by fetching data from the provider
+            $ues->handleProvisioning();
+
+            // manifest moodle enrollment
+            $ues->handleEnrollment();
 
             // @TODO - execute these?
             // $this->email_reports();
             // $this->handle_automatic_errors();
             
-
             // run any provider postprocesses
-            $ues->log('Running ' . $provider->get_name() . ' postprocesses.');
-            if ( ! $provider->preprocess($ues)) {
-                throw new Exception('An error occurred during the provider postprocess.');
-            }
-            $ues->log('Provider postprocesses complete.', true);
+            $ues->handleProviderPostprocess();
 
-            $ues->nowRunning(false);
+            $ues->running(false);
 
             $ues->log('------------------------------------------------');
             $ues->log(' UES Enrollment completed (' . microtime_diff($startTime, microtime()) . ' secs)');
@@ -141,37 +131,41 @@ abstract class ues {
 
         } catch (UESGuardException $e) {
             
-            $ues->log('UES stopped: ' .$e->getMessage(), true);
-            $ues->nowRunning(false);
+            $ues->log('UES Guard error: ' .$e->getMessage());
+            $ues->log();
+            $ues->running(false);
 
         } catch (UESProviderException $e) {
             
-            $ues->log('UES stopped: ' .$e->getMessage(), true);
-            $ues->nowRunning(false);
+            $ues->log('UES Provider error: ' .$e->getMessage());
+            $ues->log();
+            $ues->running(false);
 
         } catch (UESException $e) {
             
-            $ues->log('UES stopped: ' .$e->getMessage(), true);
-            $ues->nowRunning(false);
+            $ues->log('UES error: ' .$e->getMessage());
+            $ues->log();
+            $ues->running(false);
 
         } catch (Exception $e) {
             
-            $ues->log('UES stopped: ' .$e->getMessage(), true);
-            $ues->nowRunning(false);
+            $ues->log('UES fatal error: ' .$e->getMessage());
+            $ues->log();
+            $ues->running(false);
 
         }
 
     }
 
     /**
-     * Instantiates UES plugin
+     * Returns an instantiated UES implementation of a moodle enrollment plugin
      * 
-     * @throws UESException
-     * @return enrol_ues_plugin
+     * @throws  UESException
+     * @return  enrol_ues_plugin
      */
     public static function getPlugin() {
         
-        // instantiate UES
+        // instantiate UES enrollment plugin
         $ues = enrol_get_plugin('ues');
 
         if ( ! $ues)
@@ -181,13 +175,14 @@ abstract class ues {
     }
 
     /**
-     * Returns an instance of currently loaded selected UES enrollment provider
+     * Returns an instance of currently selected UES enrollment provider
      * 
      * @return enrollment_provider
      */
     public static function getProvider() {
         
         try {
+
             $plugin = self::getPlugin();
 
             $provider = $plugin->provider();
@@ -199,7 +194,6 @@ abstract class ues {
         }
 
         return $provider;
-
     }
 
     /**
@@ -220,27 +214,35 @@ abstract class ues {
      * Checks that a specific provider instance supports a given "lookup" method
      * 
      * @param  enrollment_provider  $provider
-     * @param  array                $entityKeys  ex: department, section, etc.
-     * @param  boolean              $verbose   will throw exceptions on fail if verbose, otherwise, a boolean
+     * @param  array                $entityKeys         ex: department, section, etc.
+     * @param  boolean              $throwsExceptions   will throw exceptions on fail if verbose, otherwise, a boolean
      * @return mixed
      */
-    public static function checkProviderSupportLookups($provider, $entityKeys = array(), $verbose = true) {
+    public static function checkProviderSupportLookups($provider = false, $entityKeys = array(), $throwsExceptions = true) {
+
+        if ( ! $provider || is_null($provider)) {
+            if ($throwsExceptions) {
+                throw new UESProviderException('No enrollment provider specified.');
+            } else {
+                return false;
+            }
+        }
 
         foreach ($entityKeys as $entityKey) {
 
             $supports = 'supports_' . $entityKey . '_lookups';
 
             if ( ! method_exists($provider, $supports)) {
-                if ($verbose) {
-                    throw new UESProviderException('Provider is missing the ' . $supports . ' method.');
+                if ($throwsExceptions) {
+                    throw new UESProviderException("Provider is expecting a '" . $supports . "' method.");
                 } else {
                     return false;
                 }
             }
 
             if ( ! $provider->$supports()) {
-                if ($verbose) {
-                    throw new UESProviderException('Provider does not support: ' . $entityKey . '_lookups');
+                if ($throwsExceptions) {
+                    throw new UESProviderException('Provider does not support: ' . (ucfirst($entityKey)) . ' lookups');
                 } else {
                     return false;
                 }
@@ -283,6 +285,29 @@ abstract class ues {
         return strftime('%Y-%m-%d', $time);
     }
 
+    /**
+     * Helper class for creating UES dao filters
+     * 
+     * @param  string          $field
+     * @return ues_dao_filter
+     */
+    public static function where($field = null) {
+        return new ues_dao_filter($field);
+    }
+
+    public static function gen_str($plugin = 'enrol_ues') {
+        return function ($key, $a = null) use ($plugin) {
+            return get_string($key, $plugin, $a);
+        };
+    }
+
+    public static function format_string($pattern, $obj) {
+        foreach (get_object_vars($obj) as $key => $value) {
+            $pattern = preg_replace('/\{' . $key . '\}/', $value, $pattern);
+        }
+
+        return $pattern;
+    }
 
 
 
@@ -328,7 +353,7 @@ abstract class ues {
             $enrol->log('Executing error code: ' . $error->name);
 
             if ($error->handle($enrol)) {
-                $enrol->handle_enrollments();
+                $enrol->handleEnrollment();
                 ues_error::delete($error->id);
             }
         }
@@ -367,27 +392,6 @@ abstract class ues {
         return $error;
     }
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-    public static function where($field = null) {
-        return new ues_dao_filter($field);
-    }
-
     public static function inject_manifest(array $sections, $inject = null, $silent = true) {
         self::unenroll_users($sections, $silent);
 
@@ -419,7 +423,7 @@ abstract class ues {
             $section->save();
         }
 
-        $enrol->handle_pending_sections($sections);
+        $enrol->handlePendingSectionEnrollment($sections);
 
         return $enrol->errors;
     }
@@ -490,7 +494,7 @@ abstract class ues {
         $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
         $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
 
-        $enrol->handle_pending_sections($pending);
+        $enrol->handlePendingSectionEnrollment($pending);
         $enrol->handle_processed_sections($processed);
 
         return true;
@@ -526,7 +530,7 @@ abstract class ues {
         $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
         $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
 
-        $enrol->handle_pending_sections($pending);
+        $enrol->handlePendingSectionEnrollment($pending);
         $enrol->handle_processed_sections($processed);
 
         return true;
@@ -559,7 +563,7 @@ abstract class ues {
                 }
             }
 
-            $enrol->handle_enrollments();
+            $enrol->handleEnrollment();
             return true;
         }
 
@@ -631,20 +635,6 @@ abstract class ues {
         ues_semester::delete($semester->id);
 
         $log('Done');
-    }
-
-    public static function gen_str($plugin = 'enrol_ues') {
-        return function ($key, $a = null) use ($plugin) {
-            return get_string($key, $plugin, $a);
-        };
-    }
-
-    public static function format_string($pattern, $obj) {
-        foreach (get_object_vars($obj) as $key => $value) {
-            $pattern = preg_replace('/\{' . $key . '\}/', $value, $pattern);
-        }
-
-        return $pattern;
     }
 
     public static function get_task_status_description() {

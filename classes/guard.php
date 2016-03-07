@@ -4,7 +4,7 @@
  * UES Guard
  * @package enrol_ues
  *
- * This class handles permissions within the UES package
+ * This class handles permissions within the UES package by throwing 'guard' exceptions.
  * 
  * @throws UESGuardException
  */
@@ -13,16 +13,18 @@ abstract class ues_guard {
 	/**
 	 * Determines whether or not the UES full process is able to be run
 	 * 
-	 * @throws UESGuardException
+     * @param   enrol_ues_plugin   a UES instantiation
+     * @param   string  (optional) forced|adhoc
+     * @throws  UESGuardException
 	 * @return boolean
 	 */
-	public static function checkFullProcess($priority = '') {
+	public static function check($ues, $priority = '') {
 
         if (self::isForcedRun($priority))
             return true;
 
         // check if is currently running
-        if (self::processIsRunning())
+        if ($ues->isRunning())
         	self::denyPermission('Process is still running.');
 
         // check if enough time has elapsed since last run (referrencing grace period)
@@ -37,18 +39,9 @@ abstract class ues_guard {
     }
 
     private static function denyPermission($message = 'Permission denied!') {
-    	ues::require_exceptions();
+    	ues::requireExceptionLibs();
     	
     	throw new UESGuardException($message);
-    }
-
-    /**
-     * Returns whether or not UES is currently running
-     * 
-     * @return boolean
-     */
-    private static function processIsRunning() {
-        return (bool)self::config('running');
     }
 
     /**
