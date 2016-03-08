@@ -1,5 +1,28 @@
 ## v3.0.0
 
+@TODO - edit this changelog properly to include the following changes:
+
+ues::require_libs => requireLibs()
+ues::require_extensions => requireExtensionLibs()
+ues::_s
+ues::gen_str
+ues::format_time
+ues::format_string
+ues::getPlugin
+ues::getProvider
+ues::runFullEnrollment
+ues::listAvailableProviders
+ues::checkProviderSupportLookups
+ues::reprocess_errors => reprocessErrors
+ues::translate_error
+ues::inject_manifest => injectManifest
+ues::unenroll_users => unenrollUsers
+ues::enroll_users  => enrollUsers
+ues::reset_unenrollments => resetUnenrollmentsForSection
+ues::reprocess_sections
+ues::drop_semester => dropSemester
+ues::get_task_status_description => getTaskStatusDescription
+
 - removed static functions from UES namespace:
 	- create_provider()
 	- provider_class()
