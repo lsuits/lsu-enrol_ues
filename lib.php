@@ -202,6 +202,9 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     public function running($setStatus) {
         $this->config('running', $setStatus, ! $setStatus);
+
+        $provider = $this->provider();
+
         $this->log(($setStatus) ? 'Running: ' . $provider->get_name() : $provider->get_name() . ' has stopped.');
         $this->log();
     }
@@ -285,7 +288,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $ues_semesters = $this->convertSemesterData($now);
 
         // if we have valid semesters, continue with provisioning
-        if (count($use_semesters)) {
+        if (count($ues_semesters)) {
             $this->log('Found ' . count($ues_semesters) . ' semester(s) to be provisioned...');
 
             // provision each semester
@@ -349,6 +352,8 @@ class enrol_ues_plugin extends enrol_plugin {
         $sub_days = $this->calculateSubDaysTime();
 
         $formattedDate = ues::format_time($time - $sub_days);
+
+        return $formattedDate;
     }
 
     /**
@@ -1399,7 +1404,7 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     public function handleEnrollment() {
 
-        $ues->log('Beginning manifestation...');
+        $this->log('Beginning manifestation...');
 
         // unenroll pending sections
         $this->handlePendingSectionEnrollment();
@@ -2153,10 +2158,12 @@ class enrol_ues_plugin extends enrol_plugin {
             // format the error log
             $errorLogText = implode("\n", $this->errorLog);
 
+            $this->log($errorLogText);
+
             // email error log to each admin
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'), sprintf('[SEVERE] UES Error Log [%s]', $CFG->wwwroot), $errorLogText);
-            }
+            // foreach ($admins as $admin) {
+                // email_to_user($admin, ues::_s('pluginname'), sprintf('[SEVERE] UES Error Log [%s]', $CFG->wwwroot), $errorLogText);
+            // }
         }
 
         // mail the message log?
@@ -2165,10 +2172,12 @@ class enrol_ues_plugin extends enrol_plugin {
             // format the message log
             $messageLogText = implode("\n", $this->messageLog);
 
+            $this->log($messageLogText);
+
             // email message log to each admin
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'), sprintf('UES Message Log [%s]', $CFG->wwwroot), $messageLogText);
-            }
+            // foreach ($admins as $admin) {
+                // email_to_user($admin, ues::_s('pluginname'), sprintf('UES Message Log [%s]', $CFG->wwwroot), $messageLogText);
+            // }
         }
     }
 

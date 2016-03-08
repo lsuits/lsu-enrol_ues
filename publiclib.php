@@ -237,7 +237,7 @@ abstract class ues {
             $ues->log(' UES Enrollment completed (' . microtime_diff($startTime, microtime()) . ' secs)');
             $ues->log('------------------------------------------------');
             
-            $ues->handleAutomaticErrors();
+            // $ues->handleAutomaticErrors();
             $ues->emailReports();
 
         } catch (UESGuardException $e) {
