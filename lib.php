@@ -780,17 +780,22 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // fetch all users of this user_type from within this semester and section
         $users_types_fn = $user_type . 's';
-        $users = $dataSource->$users_types_fn($ues_semester, $ues_course, $ues_section);
+        $providedUsers = $dataSource->$users_types_fn($ues_semester, $ues_course, $ues_section);
 
         $filter = array('sectionid' => $ues_section->id);
         $ues_user_type_class = 'ues_' . $user_type;
         $current_ues_users = $ues_user_type_class::get_all($filter);
 
-        // $this->process_teachers($ues_section, $users, $current_ues_users);
+        // process enrollment for the provided users, returning a list of "remaining" UES users in the process
+        // @NOTE - passing by reference was removed here
+        // $this->process_teachers($ues_section, $providedUsers, $current_ues_users);
         // changed to:
-        $this->processUsersByType($user_type, $ues_section, $users, $current_ues_users);
+        $remaining_ues_users = $this->processUsersByType($user_type, $ues_section, $providedUsers, $current_ues_users);
         
-        $this->releaseUsers($user_type, $current_ues_users);
+        // if we have some remaining users, release them now
+        if (count($remaining_ues_users)) {
+            $this->releaseUsers($user_type, $remaining_ues_users);
+        }
     }
 
     /**
@@ -910,14 +915,16 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Fills roles
      * 
-     * @param  string                         $user_type      teacher|student
-     * @param  ues_section                    $semester
+     * @param  string                         $user_type          teacher|student
+     * @param  ues_semester                   $ues_semester
      * @param  string                         $department
-     * @param  object[]                       $providedUsers   incoming users from the provider
-     * @param  ues_teacher[] | ues_student[]  $current_users  all UES users for this semester
+     * @param  object[]                       $providedUsers      incoming users from the provider
+     * @param  ues_teacher[] | ues_student[]  $current_ues_users  all UES users for this semester
      */
-    private function fillUserRolesByDepartment($user_type, $semester, $department, $providedUsers, $current_users) {
+    private function fillUserRolesByDepartment($user_type, $ues_semester, $department, $providedUsers, $current_ues_users) {
         
+        $remaining_ues_users = array();
+
         foreach ($providedUsers as $providedUser) {
             
             // find the UES course from the given department and the pulled user's course number
@@ -926,36 +933,36 @@ class enrol_ues_plugin extends enrol_plugin {
                 'cou_number' => $providedUser->cou_number
             );
 
-            $course = ues_course::get($course_params);
+            $ues_course = ues_course::get($course_params);
 
             // if a course does not exist, proceed to the next user
-            if (empty($course)) {
+            if (empty($ues_course)) {
                 continue;
             }
 
             // find the UES section from this UES course for the given department and the pulled user's section number
             $section_params = array(
-                'semesterid' => $semester->id,
-                'courseid'   => $course->id,
+                'semesterid' => $ues_semester->id,
+                'courseid'   => $ues_course->id,
                 'sec_number' => $providedUser->sec_number
             );
 
-            $section = ues_section::get($section_params);
+            $ues_section = ues_section::get($section_params);
 
             // if a section does not exist, proceed to the next user
-            if (empty($section)) {
+            if (empty($ues_section)) {
                 continue;
             }
             
-            // process enrollment for the provided users, removing users from the 'current' list in the process
-            // @TODO - make sure this passing by reference stuff is working properly!!!
-            // $this->{'process_'.$user_type.'s'}($section, array($user), $current_users);  <--- OLD
-            $this->processUsersByType($user_type, $section, array($providedUser), $current_users);
+            // process enrollment for the provided users, returning a list of "remaining" UES users in the process
+            // @NOTE - passing by reference was removed here
+            // $this->{'process_'.$user_type.'s'}($ues_section, array($user), $current_ues_users);  <--- OLD
+            $remaining_ues_users = $this->processUsersByType($user_type, $ues_section, array($providedUser), $current_ues_users);
         }
 
         // release any remaining users
-        if (is_array($current_users) and count($current_users)) {
-            $this->releaseUsers($user_type, $current_users);
+        if (count($remaining_ues_users)) {
+            $this->releaseUsers($user_type, $remaining_ues_users);
         }
     }
 
@@ -1026,21 +1033,24 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
-     * Process a given user type
+     * Dispatch method for processing (enrolling) a specific type of provided users into a specific section
      *
-     * @param  string                         $user_type
+     * Returns an array of UES users that were not enrolled during this process, if given
+     *
+     * @param  string                         $user_type   (student|teacher)
      * @param  ues_section                    $ues_section
-     * @param  object[]                       $users
-     * @param  (ues_student | ues_teacher)[]  $current_users
-     * @return void
+     * @param  object[]                       $providedUsers
+     * @param  ues_student[] | ues_teacher[]  $current_ues_users
+     * @return ues_student[] | ues_teacher[]  $remaining_ues_users
      */
-    private function processUsersByType($user_type, $ues_section, $users, &$current_users) {
+    private function processUsersByType($user_type, $ues_section, $providedUsers, $current_ues_users = array()) {
 
         switch ($user_type) {
             
             case 'teacher':
                 
-                $this->addUsersToSectionFromList('teacher', $ues_section, $users, &$current_users, function($user) {
+                // @NOTE - passing by reference was removed from this
+                $remaining_ues_users = $this->addUsersToSectionFromList('teacher', $ues_section, $providedUsers, $current_ues_users, function($user) {
                     return array('primary_flag' => $user->primary_flag);
                 });
                 
@@ -1048,19 +1058,22 @@ class enrol_ues_plugin extends enrol_plugin {
             
             case 'student':
 
-                $this->addUsersToSectionFromList('student', $ues_section, $users, &$current_users);
+                // @NOTE - passing by reference was removed from this
+                $remaining_ues_users = $this->addUsersToSectionFromList('student', $ues_section, $providedUsers, $current_ues_users);
 
                 break;
 
             default:
-                # code...
+                $remaining_ues_users = array();
+
                 break;
         }
 
+        return $remaining_ues_users;
     }
 
     /**
-     * Recieves a list of provided users objects to be enrolled in this section and enrolls them.
+     * Recieves a list of provided users objects to be enrolled in this section and enrolls them, returning an array of "remaining" UES users, if given
      * 
      * This method will insure that all UES user's (and moodle users) are created or updated
      * 
@@ -1068,16 +1081,19 @@ class enrol_ues_plugin extends enrol_plugin {
      * user's from that list by id as enrollment is taking place.
      * 
      * In addition, this method may recieve an option callback function to help with default data assignment
-     * 
-     * @param string         $user_type          teacher|student
-     * @param ues_section    $ues_section
-     * @param object[]       $providedUsers
-     * @param ues_student[]  $currentUsers(REF)  all users currently registered in the UES tables for this section
-     * @param callback       $extra_params       function returning additional user parameters/fields
+     *
+     * @param  string                         $user_type          teacher|student
+     * @param  ues_section                    $ues_section
+     * @param  object[]                       $providedUsers
+     * @param  ues_teacher[] | ues_student[]  $current_ues_users  all users currently registered in the UES tables for this section
+     * @param  callback                       $extra_params       function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
+     * @return ues_teacher[] | ues_student[]  $remaining_ues_users
      */
-    private function addUsersToSectionFromList($user_type, $ues_section, $providedUsers, &$currentUsers, $extra_params = null) {
+    private function addUsersToSectionFromList($user_type, $ues_section, $providedUsers, $current_ues_users = array(), $extra_params = null) {
         
+        $remaining_ues_users = $current_ues_users;
+
         $ues_user_class = 'ues_' . $user_type;
         
         $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
@@ -1110,8 +1126,8 @@ class enrol_ues_plugin extends enrol_plugin {
                 $ues_type->id = $persisted_ues_type->id;
                 
                 // if a list of current users was provided, remove this user by id
-                if ( is_array($currentUsers))
-                    unset($currentUsers[$persisted_ues_type->id]);
+                if ( is_array($current_ues_users))
+                    unset($remaining_ues_users[$persisted_ues_type->id]);
 
                 // Intentionally save meta fields before continuing
                 // Meta fields can change without enrollment changes
@@ -1154,6 +1170,9 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
             }
         }
+
+        // return any remaining UES users that were not enrolled during this process
+        return $remaining_ues_users;
     }
 
     /**
