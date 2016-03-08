@@ -68,7 +68,11 @@ class enrol_ues_plugin extends enrol_plugin {
             if ( ! $autoInit)
                 return false;
 
-            $this->_provider = $this->loadSelectedProvider();
+            try {
+                $this->_provider = $this->loadSelectedProvider();
+            } catch (Exception $e) {
+                return false;
+            }
         }
 
         return $this->_provider;
@@ -88,8 +92,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * Attempts to initialize the selected enrollment provider.
      * 
      * Checks if provider supports either section or department lookups.
-     * 
-     * @return boolean $success ?
+     *
+     * @return enrollment_provider
+     * @throws UESProviderException
      */
     private function loadSelectedProvider() {
         
@@ -216,6 +221,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  verbose  $verbose            if enabled, this will log the commands output
      * @param  boolean  $throwsExceptions   will throw exceptions on fail if verbose, otherwise, a boolean
      * @return mixed
+     * @throws UESProviderException
      */
     public function handleProviderPreprocess($verbose = true, $throwsExceptions = true) {
 
@@ -242,6 +248,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  verbose  $verbose            if enabled, this will log the commands output
      * @param  boolean  $throwsExceptions   will throw exceptions on fail if verbose, otherwise, a boolean
      * @return mixed
+     * @throws UESProviderException
      */
     public function handleProviderPostprocess($verbose = true, $throwsExceptions = true) {
 
@@ -555,7 +562,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Receives a UES semester's courses from the data source and persists them and their sections as ues_courses and ues_sections, respectively
      * 
-     * @param  stdClass[]    $courses
+     * @param  stdClass[]    $providedCourses
      * @param  ues_semester  $ues_semester
      * @return ues_course[]
      */
@@ -2126,9 +2133,118 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * Emails UES logs to admins.
+     *
+     * By default do NOT email message logs, but error logs only
+     * 
+     * @return null
+     */
+    public function emailReports() {
+        
+        global $CFG;
 
+        // get all moodle admin users
+        $admins = get_admins();
 
-    //////////// HELPERS //////////////////
+        // if there are any logged errors, email them
+        if ( ! empty($this->errorLog)) {
+            
+            // format the error log
+            $errorLogText = implode("\n", $this->errorLog);
+
+            // email error log to each admin
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'), sprintf('[SEVERE] UES Error Log [%s]', $CFG->wwwroot), $errorLogText);
+            }
+        }
+
+        // mail the message log?
+        if ($this->config('email_report')) {
+            
+            // format the message log
+            $messageLogText = implode("\n", $this->messageLog);
+
+            // email message log to each admin
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'), sprintf('UES Message Log [%s]', $CFG->wwwroot), $messageLogText);
+            }
+        }
+    }
+
+    /**
+     * Attempt to handle any errors.
+     *
+     * This method will NOT run if UES is still running, or if there are too many errors as determined by configuration
+     * 
+     * @return null
+     */
+    private function handleAutomaticErrors() {
+        
+        // fetch all UES errors
+        $ues_errors = ues_error::get_all();
+
+        if ($ues_errors) {
+
+            // don't attempt to reprocess errors if UES is still running
+            if ($this->isRunning()) {
+                $message = 'Attempting to handle UES errors but process is still running. Please try reprocessing errors again later.';
+                $this->logError($message);
+                throw new UESException($message);
+                return;
+            }
+
+            // don't attempt to reprocess errors if there are too many errors
+            $errorThreshold = $this->config('error_threshold');
+
+            if (count($ues_errors) > $errorThreshold) {
+                $message = ues::_s('error_threshold_log');
+                $this->logError($message);
+                throw new UESException($message);
+                return;
+            }
+
+            // attempt to reprocess errors (re-running enrollment if necessary) and then send an email report to the admins
+            ues::reprocessErrors($ues_errors, true);
+        }
+    }
+
+    /**
+     * Resets unenrollments for the given UES section by creating a moodle group and unenrolling that entire group
+     * 
+     * @param  ues_section  $ues_section
+     * @return null
+     */
+    public function resetSectionUnenrollments($ues_section) {
+        
+        // get moodle course from this UES section
+        $moodle_course = $ues_section->moodle();
+
+        // if no course exists, ignore this command
+        if (empty($moodle_course)) {
+            return;
+        }
+
+        // get the UES course from this UES section
+        $ues_course = $ues_section->course();
+
+        // iterate through each UES user type, unenrolling users within this course/section
+        foreach (array('student', 'teacher') as $type) {
+            
+            $group = $this->manifestGroup($moodle_course, $ues_course, $ues_section);
+
+            $class = 'ues_' . $type;
+
+            $params = array(
+                'sectionid' => $ues_section->id,
+                'status' => ues::UNENROLLED
+            );
+
+            $ues_users = $class::get_all($params);
+
+            $this->unenrollUsers($group, $ues_users);
+        }
+    }
 
     /**
      * Outputs a message to the console and adds it to message log
@@ -2213,12 +2329,8 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
 
-
-
-    //////////// NOT YET USED //////////////////
-
-
-    // @HERE - this is where I stopped!!!
+    ////////  EVENTY TYPE THINGS.... are these used?
+    
 
     public function course_updated($inserted, $course, $data) {
         // UES is the one to create the course
@@ -2323,101 +2435,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
         //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
-
     
-
-    
-
-    
-
-    
-
-    // Allow public API to reset unenrollments
-    public function reset_unenrollments($section) {
-        $course = $section->moodle();
-
-        // Nothing to do
-        if (empty($course)) {
-            return;
-        }
-
-        $ues_course = $section->course();
-
-        foreach (array('student', 'teacher') as $type) {
-            $group = $this->manifestGroup($course, $ues_course, $section);
-
-            $class = 'ues_' . $type;
-
-            $params = array(
-                'sectionid' => $section->id,
-                'status' => ues::UNENROLLED
-            );
-
-            $ues_users = $class::get_all($params);
-            $this->unenrollUsers($group, $ues_users);
-        }
-    }
-
-    
-
-    
-
-    
-
-
-
-
-    
-
-    public function email_reports() {
-        global $CFG;
-
-        return true; // @TODO - for testing only, remove this!
-
-        $admins = get_admins();
-
-        if ($this->config('email_report')) {
-            $email_text = implode("\n", $this->messageLog);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('UES Log [%s]', $CFG->wwwroot), $email_text);
-            }
-        }
-
-        if (!empty($this->errorLog)) {
-            $error_text = implode("\n", $this->errorLog);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $error_text);
-            }
-        }
-    }
-
-    private function handle_automatic_errors() {
-        $errors = ues_error::get_all();
-
-        // don't reprocess if the module is running
-        $running = (bool)$this->config('running');
-
-        if ($running) {
-            global $CFG;
-            $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
-            $this->logError(ues::_s('already_running', $url));
-            return;
-        }
-
-        $error_threshold = $this->config('error_threshold');
-
-        // don't reprocess if there are too many errors
-        if (count($errors) > $error_threshold) {
-            $this->logError(ues::_s('error_threshold_log'));
-            return;
-        }
-
-        ues::reprocess_errors($errors, true);
-    }
 }
 
 function enrol_ues_supports($feature) {

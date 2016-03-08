@@ -65,7 +65,7 @@ if ($posted and $data = data_submitted()) {
 
             echo $out->notification($msg, 'notifysuccess');
             echo html_writer::start_tag('pre');
-            ues::reprocess_errors($posted);
+            ues::reprocessErrors($posted);
             echo html_writer::end_tag('pre');
         };
     } else {

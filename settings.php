@@ -15,7 +15,7 @@ if ($ADMIN->fulltree) {
     // --------------------- Scheduled Task Status --------------------------------
 
     $settings->add(new admin_setting_heading('enrol_ues_task_status',
-        $_s('task_status'), ues::get_task_status_description()));
+        $_s('task_status'), ues::getTaskStatusDescription()));
 
     // --------------------- Internal Links --------------------------------
 
@@ -155,15 +155,15 @@ if ($ADMIN->fulltree) {
             $a->name = $provider->get_name();
             $a->list = '';
 
-            if (ues::checkProviderSupportLookups($provider, array('department'), false)) {
+            if (ues::checkProviderSupportLookups($provider, array('department'))) {
                 $a->list .= '<li>' . ues::_s('process_by_department') . '</li>';
             }
 
-            if (ues::checkProviderSupportLookups($provider, array('section'), false)) {
+            if (ues::checkProviderSupportLookups($provider, array('section'))) {
                 $a->list .= '<li>' . ues::_s('process_by_section') . '</li>';
             }
 
-            if (ues::checkProviderSupportLookups($provider, array('reverse'), false)) {
+            if (ues::checkProviderSupportLookups($provider, array('reverse'))) {
                 $a->list .= '<li>' . ues::_s('reverse_lookups') . '</li>';
             }
 

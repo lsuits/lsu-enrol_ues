@@ -46,7 +46,7 @@ abstract class ues {
     }
 
     /**
-     * Loads all UES extension libraries
+     * Loads all UES extension and exception libraries
      * 
      * @return null
      */
@@ -56,6 +56,8 @@ abstract class ues {
         require_once $classes . '/processors.php';
         require_once $classes . '/provider.php';
         require_once $classes . '/guard.php';
+
+        self::requireExceptionLibs();
     }
 
     /**
@@ -64,15 +66,125 @@ abstract class ues {
      * @return null
      */
     public static function requireExceptionLibs() {
-        $exception = self::base('classes/exceptions');
+        $exceptions = self::base('classes/exceptions');
 
-        require_once $exception . '/UESGuardException.php';
-        require_once $exception . '/UESProviderException.php';
+        require_once $exceptions . '/UESGuardException.php';
+        require_once $exceptions . '/UESProviderException.php';
     }
 
     /**
-     * Runs the full enrollment process
+     * Helper class for returing base directory path for given UES directory
      * 
+     * @param  string  $dir
+     * @return string
+     */
+    public static function base($dir = '') {
+        $path = empty($dir) ? '' : '/' . $dir;
+
+        return dirname(__FILE__) . $path;
+    }
+
+    /**
+     * Helper class for returning a localized string for UES package
+     * 
+     * @param  string  $key
+     * @param  string  $a
+     * @return string
+     */
+    public static function _s($key, $a = null) {
+        return get_string($key, 'enrol_ues', $a);
+    }
+
+    /**
+     * Helper class for generating a localized string from a moodle plugin (UES by default)
+     * 
+     * @param  string  $plugin 
+     * @return string
+     */
+    public static function gen_str($plugin = 'enrol_ues') {
+        return function ($key, $a = null) use ($plugin) {
+            return get_string($key, $plugin, $a);
+        };
+    }
+
+    /**
+     * Helper class for formatting a timestamp to YYYY-MM-DD
+     * 
+     * @param  int  $time  timestamp
+     * @return string
+     */
+    public static function format_time($time) {
+        return strftime('%Y-%m-%d', $time);
+    }
+
+    /**
+     * Helper class for creating UES dao filters
+     * 
+     * @param  string          $field
+     * @return ues_dao_filter
+     */
+    public static function where($field = null) {
+        return new ues_dao_filter($field);
+    }
+
+    /**
+     * Helper class for formatting a given object using a specified pattern
+     * 
+     * @param  string    $pattern
+     * @param  stdClass  $obj
+     * @return string
+     */
+    public static function format_string($pattern, $obj) {
+        foreach (get_object_vars($obj) as $key => $value) {
+            $pattern = preg_replace('/\{' . $key . '\}/', $value, $pattern);
+        }
+
+        return $pattern;
+    }
+
+    /**
+     * Returns an instantiated UES implementation of a moodle enrollment plugin
+     * 
+     * @throws  UESException
+     * @return  enrol_ues_plugin
+     * @throws  UESException
+     */
+    public static function getPlugin() {
+        
+        // attempt to instantiate a UES enrollment plugin
+        $ues = enrol_get_plugin('ues');
+
+        if ( ! $ues)
+            throw new UESException('Fatal UES error: Could not load UES enrollment plugin!');
+
+        return $ues;
+    }
+
+    /**
+     * Returns an instance of currently selected UES enrollment provider
+     * 
+     * @return enrollment_provider
+     */
+    public static function getProvider() {
+        
+        try {
+            $plugin = self::getPlugin();
+
+            $provider = $plugin->provider();
+        } catch(Exception $e) {
+            return false;
+        }
+
+        return $provider;
+    }
+
+
+
+
+    /**
+     * Runs the full UES enrollment process with an optional given priority
+     * 
+     * @param  string  $priority  (forced|adhoc)
      * @return null
      */
     public static function runFullEnrollment($priority = '') {
@@ -98,11 +210,11 @@ abstract class ues {
             // get the configured enrollment provider
             $provider = $ues->provider();
 
-            // check that the provider meets all requirements
+            // check that the provider meets all requirements, throwing an error if not
             ues::checkProviderSupportLookups($provider, array(
                 'section', 
                 'department'
-            ));
+            ), true);
             
             // set status to running
             $ues->running(true);
@@ -115,10 +227,6 @@ abstract class ues {
 
             // manifest moodle enrollment
             $ues->handleEnrollment();
-
-            // @TODO - execute these?
-            // $this->email_reports();
-            // $this->handle_automatic_errors();
             
             // run any provider postprocesses
             $ues->handleProviderPostprocess();
@@ -128,72 +236,31 @@ abstract class ues {
             $ues->log('------------------------------------------------');
             $ues->log(' UES Enrollment completed (' . microtime_diff($startTime, microtime()) . ' secs)');
             $ues->log('------------------------------------------------');
+            
+            $ues->handleAutomaticErrors();
+            $ues->emailReports();
 
         } catch (UESGuardException $e) {
-            
-            $ues->log('UES Guard error: ' .$e->getMessage());
+            $ues->logError('UES Guard error: ' .$e->getMessage());
             $ues->log();
             $ues->running(false);
-
+            $ues->emailReports();
         } catch (UESProviderException $e) {
-            
-            $ues->log('UES Provider error: ' .$e->getMessage());
+            $ues->logError('UES Provider error: ' .$e->getMessage());
             $ues->log();
             $ues->running(false);
-
+            $ues->emailReports();
         } catch (UESException $e) {
-            
-            $ues->log('UES error: ' .$e->getMessage());
+            $ues->logError('UES error: ' .$e->getMessage());
             $ues->log();
             $ues->running(false);
-
+            $ues->emailReports();
         } catch (Exception $e) {
-            
-            $ues->log('UES fatal error: ' .$e->getMessage());
+            $ues->logError('UES fatal error: ' .$e->getMessage());
             $ues->log();
             $ues->running(false);
-
+            $ues->emailReports();
         }
-
-    }
-
-    /**
-     * Returns an instantiated UES implementation of a moodle enrollment plugin
-     * 
-     * @throws  UESException
-     * @return  enrol_ues_plugin
-     */
-    public static function getPlugin() {
-        
-        // instantiate UES enrollment plugin
-        $ues = enrol_get_plugin('ues');
-
-        if ( ! $ues)
-            throw new UESException('Fatal error: Could not load UES enrollment plugin!');
-
-        return $ues;
-    }
-
-    /**
-     * Returns an instance of currently selected UES enrollment provider
-     * 
-     * @return enrollment_provider
-     */
-    public static function getProvider() {
-        
-        try {
-
-            $plugin = self::getPlugin();
-
-            $provider = $plugin->provider();
-        
-        } catch(Exception $e) {
-
-            return false;
-            
-        }
-
-        return $provider;
     }
 
     /**
@@ -204,21 +271,21 @@ abstract class ues {
     public static function listAvailableProviders() {
         
         // instantiate UES
-        $ues = enrol_get_plugin('ues');
+        $ues = self::getPlugin();
 
         return ( ! $ues) ? array() : $ues->listProviders();
     }
-
 
     /**
      * Checks that a specific provider instance supports a given "lookup" method
      * 
      * @param  enrollment_provider  $provider
      * @param  array                $entityKeys         ex: department, section, etc.
-     * @param  boolean              $throwsExceptions   will throw exceptions on fail if verbose, otherwise, a boolean
+     * @param  boolean              $throwsExceptions   will throw an exception on fail if enabled, otherwise a boolean
      * @return mixed
+     * @throws UESProviderException
      */
-    public static function checkProviderSupportLookups($provider = false, $entityKeys = array(), $throwsExceptions = true) {
+    public static function checkProviderSupportLookups($provider = false, $entityKeys = array(), $throwsExceptions = false) {
 
         if ( ! $provider || is_null($provider)) {
             if ($throwsExceptions) {
@@ -253,113 +320,46 @@ abstract class ues {
     }
 
     /**
-     * Returns base directory path for given directory
-     * 
-     * @param  string  $dir
-     * @return string
-     */
-    public static function base($dir = '') {
-        $path = empty($dir) ? '' : '/' . $dir;
-
-        return dirname(__FILE__) . $path;
-    }
-
-    /**
-     * Returns localized string for UES package
-     * 
-     * @param  string  $key
-     * @param  string  $a
-     * @return string
-     */
-    public static function _s($key, $a = null) {
-        return get_string($key, 'enrol_ues', $a);
-    }
-
-    /**
-     * Formats a timestamp to YYYY-MM-DD
-     * 
-     * @param  int  $time  timestamp
-     * @return string
-     */
-    public static function format_time($time) {
-        return strftime('%Y-%m-%d', $time);
-    }
-
-    /**
-     * Helper class for creating UES dao filters
-     * 
-     * @param  string          $field
-     * @return ues_dao_filter
-     */
-    public static function where($field = null) {
-        return new ues_dao_filter($field);
-    }
-
-    public static function gen_str($plugin = 'enrol_ues') {
-        return function ($key, $a = null) use ($plugin) {
-            return get_string($key, $plugin, $a);
-        };
-    }
-
-    public static function format_string($pattern, $obj) {
-        foreach (get_object_vars($obj) as $key => $value) {
-            $pattern = preg_replace('/\{' . $key . '\}/', $value, $pattern);
-        }
-
-        return $pattern;
-    }
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-    
-
-    
-
-
-    /**
      * Attempts to reprocess all UES errors
      * 
-     * @param  array    $errors
-     * @param  boolean  $report  whether or not to email a report
+     * @param  array    $ues_errors[]
+     * @param  boolean  $emailReport  whether or not to email a report
      * @return null       
      */
-    public static function reprocess_errors($errors, $report = false) {
+    public static function reprocessErrors($ues_errors, $emailReport = false) {
 
-        $enrol = enrol_get_plugin('ues');
+        $ues = self::getPlugin();
 
-        $amount = count($errors);
+        $errorCount = count($ues_errors);
 
-        if ($amount) {
-            $e_txt = $amount === 1 ? 'error' : 'errors';
+        // if there are any UES errors, attempt to handle each of them
+        if ($errorCount) {
+            
+            $errorString = ($errorCount === 1) ? 'error' : 'errors';
 
-            $enrol->log('-------------------------------------');
-            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $e_txt . ':');
-            $enrol->log('-------------------------------------');
-        }
+            $ues->log('-------------------------------------');
+            $ues->log('Attempting to reprocess ' . $errorCount . ' ' . $errorString . ':');
+            $ues->log('-------------------------------------');
+        
+            foreach ($ues_errors as $ues_error) {
+            
+                $ues->log('Handling error code: ' . $ues_error->name);
 
-        foreach ($errors as $error) {
-            $enrol->log('Executing error code: ' . $error->name);
+                // attempt to handle the UES error
+                if ($ues_error->handle($ues)) {
+                    
+                    // if handled properly, update enrollment
+                    $ues->handleEnrollment();
 
-            if ($error->handle($enrol)) {
-                $enrol->handleEnrollment();
-                ues_error::delete($error->id);
+                    // remove this error from the queue
+                    ues_error::delete($ues_error->id);
+                }
             }
-        }
 
-        if ($report) {
-            $enrol->email_reports();
+            // email report if enabled
+            if ($emailReport) {
+                $ues->emailReports();
+            }
         }
     }
 
@@ -372,7 +372,7 @@ abstract class ues {
     public static function translate_error($e) {
         
         // instantiates a provider
-        $provider_class = self::provider_class();  // @TODO - this static function has been renamed!!!!
+        $provider_class = self::getProvider();
 
         // gets error message from exception
         $message = $e->getMessage();
@@ -392,252 +392,382 @@ abstract class ues {
         return $error;
     }
 
-    public static function inject_manifest(array $sections, $inject = null, $silent = true) {
-        self::unenroll_users($sections, $silent);
+    /**
+     * This method injects itself within the UES interface to unenroll/enroll users by UES section.
+     *
+     * All users within the given sections will be unenrolled, unless there is a provided callback function.
+     * In case of the latter, any given sections meeting given filter criteria will be enrolled.
+     * 
+     * @param  ues_section[]  $ues_sections
+     * @param  function       $inject        an optional callback function to filter sections that should stay enrolled
+     * @param  boolean        $silent       [description]
+     * @return null
+     */
+    public static function injectManifest(array $ues_sections, $inject = null, $silent = true) {
+        
+        // uneroll
+        self::unenrollUsersBySections($ues_sections, $silent);
 
         if ($inject) {
-            foreach ($sections as $section) {
+            foreach ($ues_sections as $section) {
                 $inject($section);
             }
         }
 
-        self::enroll_users($sections, $silent);
+        self::enrollUsersBySections($ues_sections, $silent);
     }
-
 
     /**
-     * Unenroll users from the given sections.
+     * Unenroll users from the given UES sections, returning any UES errors, if any
+     * 
      * Note: this will erase the idnumber of the sections
      *
-     * @param ues_sections[] $sections
-     * @param boolean $silent
-     * @return type
+     * @param  ues_section[]  $ues_sections
+     * @param  boolean        $forceSilence
+     * @return ues_error[]
      */
-    public static function unenroll_users(array $sections, $silent = true) {
-        $enrol = enrol_get_plugin('ues');
+    public static function unenrollUsersBySections(array $ues_sections, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
 
-        $enrol->is_silent = $silent;
+        // force UES to become silent (if applicable)
+        $ues->is_silent = $forceSilence;
 
-        foreach ($sections as $section) {
-            $section->status = self::PENDING;
-            $section->save();
+        // set the status of each UES section to PENDING
+        foreach ($ues_sections as $ues_section) {
+            $ues_section->status = self::PENDING;
+            $ues_section->save();
         }
 
-        $enrol->handlePendingSectionEnrollment($sections);
+        // unenroll users by flushing out all PENDING UES sections
+        $ues->handlePendingSectionEnrollment($ues_sections);
 
-        return $enrol->errors;
+        return $ues->errors;
     }
 
-    // Note: this will cause manifestation (course creation if need be)
-    public static function enroll_users(array $sections, $silent = true) {
-        $enrol = enrol_get_plugin('ues');
+    /**
+     * Enroll users into the given UES sections, returning any UES errors, if any
+     *
+     * Note: this will cause manifestation (course creation if need be)
+     * 
+     * @param  ues_section[]  $ues_sections
+     * @param  boolean        $forceSilence
+     * @return ues_error[]
+     * @uses   fires event: ues_section_process
+     */
+    public static function enrollUsersBySections($ues_sections, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
 
-        $enrol->is_silent = $silent;
+        // force UES to become silent (if applicable)
+        $ues->is_silent = $forceSilence;
 
-        foreach ($sections as $section) {
+        // iterate through all given UES sections
+        foreach ($ues_sections as $ues_section) {
+            
+            // iterate through UES user types, setting the status of those users within this UES section to PROCESSED
             foreach (array('teacher', 'student') as $type) {
                 $class = 'ues_' . $type;
 
-                $class::reset_status($section, self::PROCESSED);
+                $class::reset_status($ues_section, self::PROCESSED);
             }
 
-            $section->status = self::PROCESSED;
+            // set the status of this UES section to PROCESSED
+            $ues_section->status = self::PROCESSED;
 
             // Appropriate events needs to be adhered to
-            //events_trigger_legacy('ues_section_process', $section);
+            // @EVENT - ues_section_process
+            //events_trigger_legacy('ues_section_process', $ues_section);
             /*
              * Refactor legacy events
              */
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                $section = cps_ues_handler::ues_section_process($section);
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                $ues_section = cps_ues_handler::ues_section_process($ues_section);
             }
 
-            $section->save();
+            // update the UES section
+            $ues_section->save();
         }
 
-        $enrol->handle_processed_sections($sections);
+        // enroll users by manifesting all with PROCESSED status
+        $ues->handleProcessedSectionEnrollment($ues_sections);
 
-        return $enrol->errors;
+        return $ues->errors;
     }
 
-    public static function reset_unenrollments(array $sections, $silent = true) {
-        $enrol = enrol_get_plugin('ues');
+    /**
+     * Resets the unenrollment status for each user within the given UES sections
+     * 
+     * @param  ues_section[]  $ues_sections
+     * @param  boolean        $forceSilence
+     * @return ues_error[]
+     */
+    public static function resetUnenrollmentsForSection($ues_sections, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
 
-        $enrol->is_silent = $silent;
+        // force UES to become silent (if applicable)
+        $ues->is_silent = $forceSilence;
 
-        foreach ($sections as $section) {
-            $enrol->reset_unenrollments($section);
+        foreach ($ues_sections as $ues_section) {
+            $ues->resetSectionUnenrollments($ues_section);
         }
 
-        return $enrol->errors;
+        return $ues->errors;
     }
 
-    public static function reprocess_department($semester, $department, $silent = true) {
-        $enrol = enrol_get_plugin('ues');
+    /**
+     * Reprocess enrollment by department for a given UES semester
+     * 
+     * @param  ues_semester  $ues_semester
+     * @param  string        $department
+     * @param  boolean       $forceSilence
+     * @return boolean
+     */
+    public static function reprocess_department($ues_semester, $department, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
 
-        if (!$enrol or $enrol->errors) {
+        // if there are any UESU errors, stop this process
+        if ( ! $ues or $ues->errors) {
             return false;
         }
 
-        if (!$enrol->provider()->supports_department_lookups()) {
+        // the configured UES provider must support department lookups in order to reprocess departments
+        if ( ! $ues->provider()->supports_department_lookups()) {
             return false;
         }
 
-        $enrol->is_silent = $silent;
+        // force UES to become silent (if applicable)
+        $ues->is_silent = $forceSilence;
 
-        // Work on making department reprocessing code separate
-        ues_error::department($semester, $department)->handle($enrol);
+        // @TODO - Work on making department reprocessing code separate
+        
+        // handle any department-related UES errors
+        ues_error::department($ues_semester, $department)->handle($ues);
 
-        $ids = ues_section::ids_by_course_department($semester, $department);
+        $section_ids = ues_section::ids_by_course_department($ues_semester, $department);
 
-        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
-        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
-
-        $enrol->handlePendingSectionEnrollment($pending);
-        $enrol->handle_processed_sections($processed);
+        // get all PENDING sections and handle enrollment
+        $pending = ues_section::get_all(ues::where('id')->in($section_ids)->status->equal(ues::PENDING));
+        $ues->handlePendingSectionEnrollment($pending);
+        
+        // get all PROCESSED sections and handle enrollment
+        $processed = ues_section::get_all(ues::where('id')->in($section_ids)->status->equal(ues::PROCESSED));
+        $ues->handleProcessedSectionEnrollment($processed);
 
         return true;
     }
 
-    public static function reprocess_course($course, $silent = true) {
-        $sections = ues_section::from_course($course, true);
+    /**
+     * Reprocess enrollment for a given UES course
+     * 
+     * @param  ues_course  $ues_course
+     * @param  boolean     $forceSilence
+     * @return boolean
+     */
+    public static function reprocess_course($ues_course, $forceSilence = true) {
+        
+        // get all UES sections of this UES course
+        $ues_sections = ues_section::from_course($ues_course, true);
 
-        return self::reprocess_sections($sections, $silent);
+        // handle by section
+        return self::reprocess_sections($ues_sections, $forceSilence);
     }
 
-    public static function reprocess_sections($sections, $silent = true) {
-        $enrol = enrol_get_plugin('ues');
+    /**
+     * Reprocess enrollment for given UES sections
+     * 
+     * @param  ues_section[]  $ues_sections
+     * @param  boolean        $forceSilence
+     * @return boolean
+     */
+    public static function reprocess_sections($ues_sections, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
 
-        if (!$enrol or $enrol->errors) {
+        // if there are any UESU errors, stop this process
+        if ( ! $ues or $ues->errors) {
             return false;
         }
 
-        if (!$enrol->provider()->supports_section_lookups()) {
+        // the configured UES provider must support section lookups in order to reprocess sections
+        if ( ! $ues->provider()->supports_section_lookups()) {
             return false;
         }
 
-        $enrol->is_silent = $silent;
+        // force UES to become silent (if applicable)
+        $ues->is_silent = $forceSilence;
 
-        foreach ($sections as $section) {
-            $enrol->process_enrollment(
-                $section->semester(), $section->course(), $section
-            );
+        // process enrollment for each given section
+        foreach ($ues_sections as $ues_section) {
+            $ues->processEnrollment($ues_section->semester(), $ues_section->course(), $ues_section);
         }
 
-        $ids = array_keys($sections);
+        // @TODO - Work on making department reprocessing code separate
 
-        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
-        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
+        $section_ids = array_keys($ues_sections);
 
-        $enrol->handlePendingSectionEnrollment($pending);
-        $enrol->handle_processed_sections($processed);
+        // get all PENDING sections and handle enrollment
+        $pending = ues_section::get_all(ues::where('id')->in($section_ids)->status->equal(ues::PENDING));
+        $ues->handlePendingSectionEnrollment($pending);
+
+        // get all PROCESSED sections and handle enrollment
+        $processed = ues_section::get_all(ues::where('id')->in($section_ids)->status->equal(ues::PROCESSED));
+        $ues->handleProcessedSectionEnrollment($processed);
 
         return true;
     }
 
-    public static function reprocess_for($teacher, $silent = true) {
-        $ues_user = $teacher->user();
+    /**
+     * Reprocess enrollment for a given UES teacher
+     *
+     * If "reverse lookups" are not supported, reprocess by section
+     * 
+     * @param  ues_teacher  $ues_teacher
+     * @param  boolean      $forceSilence
+     * @return boolean
+     */
+    public static function reprocess_for($ues_teacher, $forceSilence = true) {
+        
+        $ues = self::getPlugin();
+        
+        // get the configured enrollment provider
+        $provider = $ues->provider();
 
-        $provider = self::create_provider();  // @TODO - this static function has been renamed!!!
+        $ues_user = $ues_teacher->user();
 
-        if ($provider and $provider->supports_reverse_lookups()) {
-            $enrol = enrol_get_plugin('ues');
+        // if the configured enrollment provider does NOT support reverse lookups, reprocess by section
+        if ( ! $provider->supports_reverse_lookups()) {
+            return self::reprocess_sections($ues_teacher->sections(), $forceSilence);
+        }
 
-            $info = $provider->teacher_info_source();
+        $data_source = $provider->teacher_info_source();
 
-            $semesters = ues_semester::in_session();
+        // get all UES semesters currently in session
+        $ues_semesters = ues_semester::in_session();
 
-            foreach ($semesters as $semester) {
-                $courses = $info->teacher_info($semester, $ues_user);
+        // iterate through UES semesters, reprocessing teacher enrollment along the way
+        foreach ($ues_semesters as $ues_semester) {
+            
+            // get all courses for this
+            $providedCourses = $data_source->teacher_info($ues_semester, $ues_user);
 
-                $processed = $enrol->process_courses($semester, $courses);
+            // provision each of these pulled courses
+            $processed_ues_courses = $ues->convertCourses($providedCourses, $ues_semester);
 
-                foreach ($processed as $course) {
-
-                    foreach ($course->sections as $section) {
-                        $enrol->process_enrollment(
-                            $semester, $course, $section
-                        );
-                    }
+            // process enrollment for each of these course's sections
+            foreach ($processed_ues_courses as $ues_course) {
+                foreach ($ues_course->sections as $section) {
+                    $ues->processEnrollment($ues_semester, $ues_course, $section);
                 }
             }
-
-            $enrol->handleEnrollment();
-            return true;
         }
 
-        return self::reprocess_sections($teacher->sections(), $silent);
+        $ues->handleEnrollment();
+        
+        return true;
     }
 
-    public static function drop_semester($semester, $report = false) {
-        $log = function ($msg) use ($report) {
-            if ($report) mtrace($msg);
+    /**
+     * Handles the deletion of a semester and all of its sections
+     * 
+     * @param  ues_semester  $ues_semester
+     * @param  boolean       $verbose
+     * @return null
+     * @uses   fires event: ues_section_drop
+     * @uses   fires event: ues_semester_drop
+     */
+    public static function dropSemester($ues_semester, $verbose = false) {
+        
+        // if enabled, log announcement of semester drop attempt
+        $log = function ($msg) use ($verbose) {
+            if ($verbose) mtrace($msg);
         };
 
-        $log('Commencing ' . $semester . " drop...\n");
+        $log('Commencing ' . $ues_semester . " drop...\n");
 
-        $count = 0;
-        // Remove data from local tables
-        foreach ($semester->sections() as $section) {
-            $section_param = array('sectionid' => $section->id);
+        $sectionsDeleted = 0;
+        
+        // get all UES sections for this UES semester
+        $ues_sections = $ues_semester->sections();
 
-            $types = array('ues_student', 'ues_teacher');
-
+        // iterate through all UES sections
+        foreach ($ues_sections as $ues_section) {
+            
             // Triggered before db removal and enrollment drop
-            //events_trigger_legacy('ues_section_drop', $section);
+            //events_trigger_legacy('ues_section_drop', $ues_section);
+            // @EVENT - ues_section_drop
             /*
              * Refactor legacy events call
              */
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                ues_logs_event_handler::ues_section_drop($section);
+            if (file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
+                ues_logs_event_handler::ues_section_drop($ues_section);
             }
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                cps_ues_handler::ues_section_drop($section);
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                cps_ues_handler::ues_section_drop($ues_section);
             }
-            if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-                post_grades_handler::ues_section_drop($section);
+            if (file_exists($CFG->dirroot.'/blocks/post_grades/events.php')) {
+                post_grades_handler::ues_section_drop($ues_section);
             }
 
             // Optimize enrollment deletion
-            foreach ($types as $class) {
-                $class::delete_all(array('sectionid' => $section->id));
+            foreach (array('ues_student', 'ues_teacher') as $ues_user_type) {
+
+                // get the UES class for this user type
+                $ues_user_class = 'ues_' . $ues_user_type;
+
+                // delete all UES users of this type from this section
+                $ues_user_class::delete_all(array('sectionid' => $ues_section->id));
             }
-            ues_section::delete($section->id);
+            
+            // delete this UES section
+            ues_section::delete($ues_section->id);
 
-            $count ++;
+            $sectionsDeleted++;
 
-            $should_report = ($count <= 100 and $count % 10 == 0);
-            if ($should_report or $count % 100 == 0) {
-                $log('Dropped ' . $count . " sections...\n");
+            // log the deletion of sections
+            $should_report = ($sectionsDeleted <= 100 and $sectionsDeleted % 10 == 0);
+            
+            if ($should_report or $sectionsDeleted % 100 == 0) {
+                $log("Dropped " . $sectionsDeleted . " sections...\n");
             }
 
-            if ($count == 100) {
+            if ($sectionsDeleted == 100) {
                 $log("Reporting 100 sections at a time...\n");
             }
         }
 
-        $log('Dropped all ' . $count . " sections...\n");
+        $log("Dropped all " . $sectionsDeleted . " sections...\n");
 
-        //events_trigger_legacy('ues_semester_drop', $semester);
+        //events_trigger_legacy('ues_semester_drop', $ues_semester);
+        // @EVENT - ues_semester_drop
         /*
          * Refactor legacy events.
          */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            cps_ues_handler::ues_section_drop($semester);
+            cps_ues_handler::ues_section_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
         }
         if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            post_grades_handler::ues_section_drop($semester);
+            post_grades_handler::ues_section_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
         }
 
-        ues_semester::delete($semester->id);
+        // delete UES semester
+        ues_semester::delete($ues_semester->id);
 
-        $log('Done');
+        // log semester deletion
+        $log("Dropped semester: " . $ues_semester->id . "...\n");
     }
 
-    public static function get_task_status_description() {
+    /**
+     * Returns a formatted string indicating the status of the UES scheduled task
+     * 
+     * @return string
+     */
+    public static function getTaskStatusDescription() {
 
         $scheduled_task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
 
@@ -649,13 +779,13 @@ abstract class ues {
             $time_format = '%A, %e %B %G, %l:%M %p';
 
             $details = new stdClass();
-            $details->status = (!$disabled) ? ues::_s('run_adhoc_status_enabled') : ues::_s('run_adhoc_status_disabled');
+            $details->status = ( ! $disabled) ? ues::_s('run_adhoc_status_enabled') : ues::_s('run_adhoc_status_disabled');
             $details->last = ues::_s('run_adhoc_last_run_time', date_format_string($last_time, $time_format, usertimezone()));
             $details->next = ues::_s('run_adhoc_next_run_time', date_format_string($next_time, $time_format, usertimezone()));
 
             return ues::_s('run_adhoc_scheduled_task_details', $details);
         }
 
-        return false;
+        return '';
     }
 }

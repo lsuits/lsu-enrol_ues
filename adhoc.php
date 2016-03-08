@@ -62,7 +62,7 @@ $confirm_url = new moodle_url('/enrol/ues/adhoc.php', array(
 $cancel_url = new moodle_url('/admin/settings.php?section=enrolsettingsues');
 
 // generate a status/confirmation message
-$task_status_description = ues::get_task_status_description();
+$task_status_description = ues::getTaskStatusDescription();
 
 if ($task_status_description) {
     $confirm_msg = $task_status_description . '<br><br>' . $_s('run_adhoc_confirm_msg');

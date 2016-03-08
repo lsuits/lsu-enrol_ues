@@ -53,7 +53,7 @@ if ($semesterid) {
         // Report the drop
         echo $OUTPUT->box_start();
         echo html_writer::start_tag('pre');
-        ues::drop_semester($semester, true);
+        ues::dropSemester($semester, true);
         echo html_writer::end_tag('pre');
         echo $OUTPUT->box_end();
 

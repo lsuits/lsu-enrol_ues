@@ -40,16 +40,16 @@ class ues_error extends ues_external implements ues_error_types {
         return $this;
     }
 
-    public function handle($enrollment) {
+    public function handle($ues) {
         $params = $this->restore()->params;
 
         switch ($this->name) {
             case self::COURSE:
                 $semester = ues_semester::get(array('id' => $params['semesterid']));
 
-                $enrollment->log('Reprocessing ' . $semester);
+                $ues->log('Reprocessing ' . $semester);
 
-                $enrollment->process_semester($semester);
+                $ues->provisionUesSemester($semester);
                 break;
             case self::DEPARTMENT:
                 $semester = ues_semester::get(array('id' => $params['semesterid']));
@@ -58,11 +58,9 @@ class ues_error extends ues_external implements ues_error_types {
                 $ids = ues_section::ids_by_course_department($semester, $department);
                 $sections = ues_section::get_all(ues::where()->id->in($ids));
 
-                $enrollment->log('Reprocessing ' . $semester . ' ' . $department);
+                $ues->log('Reprocessing ' . $semester . ' ' . $department);
 
-                $enrollment->process_enrollment_by_department(
-                    $semester, $department, $sections
-                );
+                $ues->processEnrollmentByDepartment($semester, $department, $sections);
                 break;
             case self::SECTION:
                 $section = ues_section::get(array('id' => $params['sectionid']));
@@ -70,11 +68,9 @@ class ues_error extends ues_external implements ues_error_types {
                 $semester = $section->semester();
                 $course = $section->course();
 
-                $enrollment->log('Reprocessing ' . $section);
+                $ues->log('Reprocessing ' . $section);
 
-                $enrollment->process_enrollment(
-                    $semester, $course, $section
-                );
+                $ues->processEnrollment($semester, $course, $section);
                 break;
             case self::CUSTOM:
                 global $CFG;
@@ -86,17 +82,17 @@ class ues_error extends ues_external implements ues_error_types {
 
                     if (isset($handler->file) and file_exists($full_path)) {
                         require_once $full_path;
-                        $enrollment->log('Requiring ' . $full_path);
+                        $ues->log('Requiring ' . $full_path);
                     }
 
                     if (isset($handler->function) and is_callable($handler->function)) {
-                        $local_params = array($enrollment, $params['params']);
+                        $local_params = array($ues, $params['params']);
 
                         $format = is_array($handler->function) ?
                             $handler->function[1] . ' on ' . $handler->function[0] :
                             $handler->function;
 
-                        $enrollment->log('Calling function ' . $format);
+                        $ues->log('Calling function ' . $format);
                         call_user_func_array($handler->function, $local_params);
                     }
                 } catch (Exception $e) {
