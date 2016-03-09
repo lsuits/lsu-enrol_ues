@@ -3,12 +3,14 @@
 define('CLI_SCRIPT', true);
 
 require_once '../../../config.php';
+
 global $CFG;
-require_once($CFG->libdir.'/clilib.php');
+require_once($CFG->libdir . '/clilib.php');
+require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
 require_once($CFG->dirroot . '/enrol/ues/lib.php');
 
 // get cli options
-list($options, $unrecognized) = cli_get_params(array('help'=>false), array('h'=>'help'));
+list($options, $unrecognized) = cli_get_params(array('help' => false), array('h' => 'help'));
 
 if ($unrecognized) {
     $unrecognized = implode("\n  ", $unrecognized);
