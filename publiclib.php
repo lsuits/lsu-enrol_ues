@@ -701,15 +701,18 @@ abstract class ues {
         foreach ($ues_sections as $ues_section) {
             
             // Triggered before db removal and enrollment drop
-            //events_trigger_legacy('ues_section_drop', $ues_section);
+            
+            // trigger UES event
+            $event = \enrol_ues\event\ues_section_dropped::create(array(
+                'other' => array (
+                    'ues_section_id' => $ues_section->id
+                )
+            ))->trigger();
+
             // @EVENT - ues_section_drop
-            /*
-             * Refactor legacy events call
-             */
+            
             global $CFG;
-            if (file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
-                ues_logs_event_handler::ues_section_drop($ues_section);
-            }
+            
             if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
                 cps_ues_handler::ues_section_drop($ues_section);
             }
@@ -753,10 +756,10 @@ abstract class ues {
          */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            cps_ues_handler::ues_section_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
+            cps_ues_handler::ues_semester_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
         }
         if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            post_grades_handler::ues_section_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
+            post_grades_handler::ues_semester_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
         }
 
         // delete UES semester
