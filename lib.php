@@ -205,7 +205,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $provider = $this->provider();
 
-        $this->log(($setStatus) ? 'Running: ' . $provider->get_name() : $provider->get_name() . ' has stopped.');
+        $this->log(($setStatus) ? 'Connecting to: ' . $provider->get_name() : 'Disconnected from: ' . $provider->get_name());
         $this->log();
     }
 
@@ -229,7 +229,7 @@ class enrol_ues_plugin extends enrol_plugin {
     public function handleProviderPreprocess($verbose = true, $throwsExceptions = true) {
 
         if ($verbose)
-            $this->log('Running all preprocesses.');
+            $this->log('Running all provider preprocesses...');
 
         if ( ! $this->provider()->preprocess($this)) {
             if ($throwsExceptions) {
@@ -256,7 +256,7 @@ class enrol_ues_plugin extends enrol_plugin {
     public function handleProviderPostprocess($verbose = true, $throwsExceptions = true) {
 
         if ($verbose)
-            $this->log('Running all postprocesses.');
+            $this->log('Running all provider postprocesses...');
 
         if ( ! $this->provider()->postprocess($this)) {
             if ($throwsExceptions) {
@@ -289,11 +289,13 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // if we have valid semesters, continue with provisioning
         if (count($ues_semesters)) {
-            $this->log('Found ' . count($ues_semesters) . ' semester(s) to be provisioned...');
+            
+            $this->log(' => Found ' . count($ues_semesters) . ' ' . $this->pluralize(count($ues_semesters), 'semester') . ' to be provisioned.');
+            $this->log('');
 
             // provision each semester
             foreach ($ues_semesters as $ues_semester) {
-                $this->log('Pulling courses/sections for ' . $ues_semester . '...');
+                $this->log('Fetching courses/sections for ' . $ues_semester . '...');
 
                 $this->provisionUesSemester($ues_semester);
             }
@@ -313,7 +315,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $formattedDate = $this->getFormattedSemesterSubDaysTime($time);
 
-        $this->log('Fetching semesters for ' . $formattedDate . ' from provider...');
+        $this->log('Fetching all semesters since ' . $formattedDate . ' from provider...');
 
         try {
             // gets semester data source
@@ -322,8 +324,7 @@ class enrol_ues_plugin extends enrol_plugin {
             // fetch semesters from data source
             $semesters = $semester_source->semesters($formattedDate);
 
-            $this->log('Found ' . count($semesters) . ' semesters...');
-            $this->log();
+            $this->log(' => Found ' . count($semesters) . ' ' . $this->pluralize(count($semesters), 'semester') . ' total.');
             
             // convert fetched semesters into persisted ues_semester collection
             $ues_semesters = $this->convertProvidedSemesters($semesters);
@@ -545,7 +546,7 @@ class enrol_ues_plugin extends enrol_plugin {
             // fetch this semester's courses from data source
             $courses = $course_source->courses($ues_semester);
 
-            $this->log('Found ' . count($courses) . ' courses...');
+            $this->log(' => Found ' . count($courses) . ' ' . $this->pluralize(count($courses), 'course') . '.');
             $this->log();
 
             // convert fetched courses into persisted ues_course collection
@@ -1717,7 +1718,8 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // if there are any processed sections, enroll them now
         if ($ues_sections) {
-            $this->log('Found ' . count($ues_sections) . ' sections ready to be manifested.');
+            $this->log(' => Found ' . count($ues_sections) . ' ' . $this->pluralize(count($ues_sections), 'section') . ' ready to be manifested.');
+            $this->log('');
 
             foreach ($ues_sections as $ues_section) {
 
@@ -2059,14 +2061,14 @@ class enrol_ues_plugin extends enrol_plugin {
         // if any enrollment changes were made, log them
         if ($unenroll_count or $enroll_count) {
             
-            $this->log('Manifesting enrollment for: ' . $moodle_course->idnumber . ' ' . $ues_section->sec_number . '...');
+            $this->log('Manifesting: ' . $moodle_course->idnumber . ' ' . $ues_section->sec_number . '...');
 
             if ($unenroll_count) {
-                $this->log('Unenrolled ' . $unenroll_count . ' users.');
+                $this->log(' => Unenrolled ' . $unenroll_count . ' ' . $this->pluralize($unenroll_count, 'user') . '.');
             }
 
             if ($enroll_count) {
-                $this->log('Enrolled ' . $enroll_count . ' users.');
+                $this->log(' => Enrolled ' . $enroll_count . ' ' . $this->pluralize($enroll_count, 'user') . '.');
             }
         }
     }
@@ -2143,10 +2145,14 @@ class enrol_ues_plugin extends enrol_plugin {
      *
      * By default do NOT email message logs, but error logs only
      * 
+     * @param  boolean  $send  for testing purposes
      * @return null
      */
-    public function emailReports() {
+    public function emailReports($send = true) {
         
+        if ( ! $send)
+            return;
+
         global $CFG;
 
         // get all moodle admin users
@@ -2158,12 +2164,10 @@ class enrol_ues_plugin extends enrol_plugin {
             // format the error log
             $errorLogText = implode("\n", $this->errorLog);
 
-            $this->log($errorLogText);
-
             // email error log to each admin
-            // foreach ($admins as $admin) {
-                // email_to_user($admin, ues::_s('pluginname'), sprintf('[SEVERE] UES Error Log [%s]', $CFG->wwwroot), $errorLogText);
-            // }
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'), sprintf('[SEVERE] UES Error Log [%s]', $CFG->wwwroot), $errorLogText);
+            }
         }
 
         // mail the message log?
@@ -2172,12 +2176,10 @@ class enrol_ues_plugin extends enrol_plugin {
             // format the message log
             $messageLogText = implode("\n", $this->messageLog);
 
-            $this->log($messageLogText);
-
             // email message log to each admin
-            // foreach ($admins as $admin) {
-                // email_to_user($admin, ues::_s('pluginname'), sprintf('UES Message Log [%s]', $CFG->wwwroot), $messageLogText);
-            // }
+            foreach ($admins as $admin) {
+                email_to_user($admin, ues::_s('pluginname'), sprintf('UES Message Log [%s]', $CFG->wwwroot), $messageLogText);
+            }
         }
     }
 
@@ -2188,10 +2190,10 @@ class enrol_ues_plugin extends enrol_plugin {
      * 
      * @return null
      */
-    private function handleAutomaticErrors() {
+    public function handleAutomaticErrors($emailReport = true) {
         
         // fetch all UES errors
-        $ues_errors = ues_error::get_all();
+        $ues_errors = $this->fetchErrors();
 
         if ($ues_errors) {
 
@@ -2214,7 +2216,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // attempt to reprocess errors (re-running enrollment if necessary) and then send an email report to the admins
-            ues::reprocessErrors($ues_errors, true);
+            ues::reprocessErrors($ues_errors, $emailReport);
         }
     }
 
@@ -2337,6 +2339,49 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
+    /**
+     * Fetches all saved UES errors
+     * 
+     * @return ues_error[]
+     */
+    private function fetchErrors() {
+
+        // fetch all UES errors
+        $ues_errors = ues_error::get_all();
+
+        return $ues_errors;
+    }
+
+    /**
+     * Returns a count of all saved UES errors
+     * 
+     * @return int
+     */
+    public function getErrorCount() {
+
+        $ues_errors = $this->fetchErrors();
+
+        return count($ues_errors);
+    }
+
+    /**
+     * Returns a properly pluralized word based on the count
+     *
+     * An optional pluralized word may be sent through, otherwise, defaults to an 's' appeneded to singular
+     * 
+     * @param  int     $count
+     * @param  string  $singular
+     * @param  string  $plural
+     * @return string
+     */
+    private function pluralize($count, $singular, $plural = false) {
+        
+        if ( ! $plural)
+            $plural = $singular . 's';
+        
+        return ($count == 1) ? $singular : $plural;
+    }
+
 
     ////////  EVENTY TYPE THINGS.... are these used?
     
@@ -2444,7 +2489,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
         //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
-    
+
 }
 
 function enrol_ues_supports($feature) {

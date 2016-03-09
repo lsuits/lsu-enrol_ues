@@ -178,9 +178,6 @@ abstract class ues {
         return $provider;
     }
 
-
-
-
     /**
      * Runs the full UES enrollment process with an optional given priority
      * 
@@ -198,7 +195,7 @@ abstract class ues {
             $ues = ues::getPlugin();
 
             $ues->log('------------------------------------------------');
-            $ues->log(' ' . ues::_s('pluginname') . ' has been started');
+            $ues->log(' ' . ues::_s('pluginname') . ' has started');
             $ues->log('------------------------------------------------');
             $ues->log();
 
@@ -234,11 +231,15 @@ abstract class ues {
             $ues->running(false);
 
             $ues->log('------------------------------------------------');
-            $ues->log(' UES Enrollment completed (' . microtime_diff($startTime, microtime()) . ' secs)');
+            $ues->log(' UES Enrollment completed');
+            $ues->log('');
+            $ues->log(' Errors encountered: ' . $ues->getErrorCount());
+            $ues->log('');
+            $ues->log(' Time elapsed: ' . microtime_diff($startTime, microtime()) . ' secs');
             $ues->log('------------------------------------------------');
             
-            // $ues->handleAutomaticErrors();
-            $ues->emailReports();
+            $ues->handleAutomaticErrors(false); // @TODO - remove the 'false' for production, will send emails
+            $ues->emailReports(false); // @TODO - remove the 'false' for production, will send emails
 
         } catch (UESGuardException $e) {
             $ues->logError('UES Guard error: ' .$e->getMessage());
