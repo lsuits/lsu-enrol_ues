@@ -374,6 +374,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * 
      * @param  stdClass[year, name, campus, session_key, classes_start] $providedSemesters
      * @return ues_semester[]
+     *
+     * @throws EVENT-UES: ues_semester_process
      */
     private function convertProvidedSemesters($providedSemesters) {
         
@@ -571,6 +573,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  stdClass[]    $providedCourses
      * @param  ues_semester  $ues_semester
      * @return ues_course[]
+     *
+     * @throws EVENT-UES: ues_course_process
      */
     public function convertCourses($providedCourses, $ues_semester) {
         
@@ -848,6 +852,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_course    $ues_course
      * @param  ues_section   $ues_section
      * @return null
+     *
+     * @throws EVENT-UES: ues_section_process
      */
     private function processSectionEnrollment($ues_semester, $ues_course, $ues_section) {
         
@@ -985,6 +991,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  string                         $user_type  teacher|student
      * @param  ues_teacher[] | ues_student[]  $ues_users
      * @return null
+     *
+     * @throws EVENT-UES: ues_teacher_release
+     * @throws EVENT-UES: ues_student_release
      */
     private function releaseUsers($user_type, $ues_users) {
 
@@ -1102,6 +1111,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  callback                       $extra_params       function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
      * @return ues_teacher[] | ues_student[]  $remaining_ues_users
+     *
+     * @throws EVENT-UES: ues_student_process
+     * @throws EVENT-UES: ues_teacher_process
      */
     private function addUsersToSectionFromList($user_type, $ues_section, $providedUsers, $current_ues_users = array(), $extra_params = null) {
         
@@ -1202,6 +1214,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  object    $u
      * @return ues_user  $user
      * @throws Exception
+     *
+     * @throws EVENT-CORE: user_created
+     * @throws EVENT-CORE: user_updated
      */
     private function createUser($u) {
         
@@ -1317,6 +1332,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_user  $persisted_user  the currently persisted UES user instance
      * @param  ues_user  $candidate_user  the incoming UES user instance currently being evaluated at this point in the UES process.
      * @return boolean   $hasChanged
+     *
+     * @throws EVENT-UES: preferred_name_legitimized
      */
     private function userHasChanged(ues_user $persisted_user, ues_user $candidate_user) {
         
@@ -1424,7 +1441,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * Finally, set the idnumber to the empty string ''.
      * 
      * @return null
-     * @uses   fires event: ues_course_severed
+     *
+     * @throws EVENT-UES: ues_course_severed
      */
     public function handlePendingSectionEnrollment() {
         
@@ -1584,11 +1602,12 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  moodle group  $group
      * @param  ues_student[] | ues_teacher[]  $ues_users [description]
      * @return null
-     * @uses   fires event: ues_group_emptied 
-     * @uses   fires event: ues_student_unenroll
-     * @uses   fires event: ues_teacher_unenroll
-     * @uses   fires event: user_enrolment_deleted
-     * @uses   fires event: group_member_added
+     *
+     * @throws EVENT-UES: ues_group_emptied
+     * @throws EVENT-UES: ues_student_unenroll
+     * @throws EVENT-UES: ues_teacher_unenroll
+     * @throws EVENT-CORE: user_enrolment_deleted
+     * @throws EVENT-CORE: group_member_added
      */
     private function unenrollUsers($group, $ues_users) {
         
@@ -1650,13 +1669,13 @@ class enrol_ues_plugin extends enrol_plugin {
             if ( ! $is_enrolled) {
                 
                 // unenroll user from course using moodle's native enrol_plugin method
-                // @FIRES \core\event\user_enrolment_deleted
+                // @EVENT \core\event\user_enrolment_deleted
                 $this->unenrol_user($instance, $ues_user->userid, $roleid);
 
             } else if ($same_section) {
 
                 // keep this user in the group
-                // @FIRES - group_member_added
+                // @EVENT \core\event\group_member_added
                 groups_add_member($group->id, $ues_user->userid);
             }
 
@@ -1769,8 +1788,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_semester $ues_semester
      * @param ues_course   $ues_course
      * @param ues_section  $ues_section
-     * @event ues_primary_change
      * @return boolean
+     *
+     * @throws EVENT-UES: ues_primary_change
      */
     private function manifestCourse($ues_semester, $ues_course, $ues_section) {
         
@@ -1854,8 +1874,9 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_course    $ues_course
      * @param  ues_section   $ues_section
      * @return {course}
-     * @uses   fires event: ues_course_create
-     * @uses   fires event: \core\event\course_created
+     *
+     * @throws EVENT-UES: ues_course_create
+     * @throws EVENT-CORE: course_created
      */
     private function handleCourseManifestation($ues_semester, $ues_course, $ues_section) {
         
@@ -2081,10 +2102,11 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  moodle group  $group
      * @param  ues_student[] | ues_teacher[]  $ues_users [description]
      * @return null
-     * @uses   fires event: ues_teacher_enroll
-     * @uses   fires event: ues_student_enroll
-     * @uses   fires event: \core\event\user_enrolment_created
-     * @uses   fires event: group_member_added
+     *
+     * @throws EVENT-CORE: user_enrolment_created
+     * @throws EVENT-CORE: group_member_added
+     * @throws EVENT-UES: ues_teacher_enroll
+     * @throws EVENT-UES: ues_student_enroll
      */
     private function enrollUsers($group, $ues_users) {
         
@@ -2115,10 +2137,11 @@ class enrol_ues_plugin extends enrol_plugin {
             $roleid = $this->config($shortname . '_role');
 
             // enroll user from course using moodle's native enrol_plugin method
-            // @FIRES \core\event\user_enrolment_created
+            // @EVENT \core\event\user_enrolment_created
             $this->enrol_user($instance, $ues_user->userid, $roleid);
 
             // add user to moodle group
+            // @EVENT \core\event\group_member_added
             groups_add_member($group->id, $ues_user->userid);
 
             // if enabled, attempt to recover any old grades for this user

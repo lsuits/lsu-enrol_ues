@@ -145,8 +145,8 @@ abstract class ues {
     /**
      * Returns an instantiated UES implementation of a moodle enrollment plugin
      * 
-     * @throws  UESException
      * @return  enrol_ues_plugin
+     * 
      * @throws  UESException
      */
     public static function getPlugin() {
@@ -284,6 +284,7 @@ abstract class ues {
      * @param  array                $entityKeys         ex: department, section, etc.
      * @param  boolean              $throwsExceptions   will throw an exception on fail if enabled, otherwise a boolean
      * @return mixed
+     * 
      * @throws UESProviderException
      */
     public static function checkProviderSupportLookups($provider = false, $entityKeys = array(), $throwsExceptions = false) {
@@ -454,7 +455,8 @@ abstract class ues {
      * @param  ues_section[]  $ues_sections
      * @param  boolean        $forceSilence
      * @return ues_error[]
-     * @uses   fires event: ues_section_process
+     * 
+     * @throws EVENT-UES: ues_section_process
      */
     public static function enrollUsersBySections($ues_sections, $forceSilence = true) {
         
@@ -677,8 +679,9 @@ abstract class ues {
      * @param  ues_semester  $ues_semester
      * @param  boolean       $verbose
      * @return null
-     * @uses   fires event: ues_section_drop
-     * @uses   fires event: ues_semester_drop
+     * 
+     * @throws EVENT-UES: ues_section_drop
+     * @throws EVENT-UES: ues_semester_drop
      */
     public static function dropSemester($ues_semester, $verbose = false) {
         
