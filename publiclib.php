@@ -703,7 +703,7 @@ abstract class ues {
             // Triggered before db removal and enrollment drop
             
             // trigger UES event
-            $event = \enrol_ues\event\ues_section_dropped::create(array(
+            \enrol_ues\event\ues_section_dropped::create(array(
                 'other' => array (
                     'ues_section_id' => $ues_section->id
                 )

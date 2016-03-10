@@ -1468,7 +1468,8 @@ class enrol_ues_plugin extends enrol_plugin {
         // if there are pending sections, handle enrollment
         if ($ues_sections) {
 
-            $this->log('Found ' . count($ues_sections) . ' pending sections that will be unenrolled.');
+            $this->log(' => Found ' . count($ues_sections) . ' pending sections that will be unenrolled.');
+            $this->log('');
 
             foreach ($ues_sections as $ues_section) {
                 
@@ -1540,8 +1541,6 @@ class enrol_ues_plugin extends enrol_plugin {
                 }
                 
             }
-
-            $this->log('');
         }
     }
 
