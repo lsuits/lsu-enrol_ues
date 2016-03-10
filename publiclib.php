@@ -716,9 +716,6 @@ abstract class ues {
             if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
                 cps_ues_handler::ues_section_drop($ues_section);
             }
-            if (file_exists($CFG->dirroot.'/blocks/post_grades/events.php')) {
-                post_grades_handler::ues_section_drop($ues_section);
-            }
 
             // Optimize enrollment deletion
             foreach (array('ues_student', 'ues_teacher') as $ues_user_type) {
@@ -749,17 +746,17 @@ abstract class ues {
 
         $log("Dropped all " . $sectionsDeleted . " sections...\n");
 
-        //events_trigger_legacy('ues_semester_drop', $ues_semester);
+        // trigger UES event
+        \enrol_ues\event\ues_semester_dropped::create(array(
+            'other' => array (
+                'ues_semester_id' => $ues_semester->id
+            )
+        ))->trigger();
+
         // @EVENT - ues_semester_drop
-        /*
-         * Refactor legacy events.
-         */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
             cps_ues_handler::ues_semester_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
-        }
-        if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            post_grades_handler::ues_semester_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
         }
 
         // delete UES semester
