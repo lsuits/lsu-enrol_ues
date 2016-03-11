@@ -1,0 +1,1996 @@
+[23]=>
+  object(stdClass)#62 (9) {
+    ["idnumber"]=>
+    string(9) "898365017"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "dfont54"
+    ["firstname"]=>
+    string(6) "Donnie"
+    ["lastname"]=>
+    string(8) "Fontenot"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [24]=>
+  object(stdClass)#50 (9) {
+    ["idnumber"]=>
+    string(9) "892217729"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "dmendo7"
+    ["firstname"]=>
+    string(7) "Douglas"
+    ["lastname"]=>
+    string(7) "Mendoza"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [25]=>
+  object(stdClass)#63 (9) {
+    ["idnumber"]=>
+    string(9) "891001007"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "dprego1"
+    ["firstname"]=>
+    string(6) "Daniel"
+    ["lastname"]=>
+    string(5) "Prego"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [26]=>
+  object(stdClass)#65 (9) {
+    ["idnumber"]=>
+    string(9) "894360925"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "drafid1"
+    ["firstname"]=>
+    string(5) "David"
+    ["lastname"]=>
+    string(6) "Rafidi"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [27]=>
+  object(stdClass)#66 (9) {
+    ["idnumber"]=>
+    string(9) "899959576"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "drhode6"
+    ["firstname"]=>
+    string(5) "David"
+    ["lastname"]=>
+    string(6) "Rhodes"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [28]=>
+  object(stdClass)#67 (9) {
+    ["idnumber"]=>
+    string(9) "890048399"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "dsmi242"
+    ["firstname"]=>
+    string(6) "Dustin"
+    ["lastname"]=>
+    string(5) "Smith"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [29]=>
+  object(stdClass)#68 (9) {
+    ["idnumber"]=>
+    string(9) "896675863"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "efurni1"
+    ["firstname"]=>
+    string(4) "Eric"
+    ["lastname"]=>
+    string(7) "Furniss"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [30]=>
+  object(stdClass)#69 (9) {
+    ["idnumber"]=>
+    string(9) "896539496"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "ejenk16"
+    ["firstname"]=>
+    string(4) "Eron"
+    ["lastname"]=>
+    string(7) "Jenkins"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [31]=>
+  object(stdClass)#44 (9) {
+    ["idnumber"]=>
+    string(9) "894140504"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "elewi37"
+    ["firstname"]=>
+    string(9) "Elizabeth"
+    ["lastname"]=>
+    string(5) "Lewis"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [32]=>
+  object(stdClass)#43 (9) {
+    ["idnumber"]=>
+    string(9) "890704704"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "eortiz6"
+    ["firstname"]=>
+    string(7) "Emerida"
+    ["lastname"]=>
+    string(5) "Ortiz"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [33]=>
+  object(stdClass)#42 (9) {
+    ["idnumber"]=>
+    string(9) "891889411"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "fryan3"
+    ["firstname"]=>
+    string(4) "Ryan"
+    ["lastname"]=>
+    string(6) "Flores"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [34]=>
+  object(stdClass)#41 (9) {
+    ["idnumber"]=>
+    string(9) "898993797"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "gmart33"
+    ["firstname"]=>
+    string(4) "Gina"
+    ["lastname"]=>
+    string(7) "Martiny"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [35]=>
+  object(stdClass)#40 (9) {
+    ["idnumber"]=>
+    string(9) "892049069"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "goreil1"
+    ["firstname"]=>
+    string(6) "Gerard"
+    ["lastname"]=>
+    string(8) "O'Reilly"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [36]=>
+  object(stdClass)#39 (9) {
+    ["idnumber"]=>
+    string(9) "899623725"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "hbridg3"
+    ["firstname"]=>
+    string(5) "Henry"
+    ["lastname"]=>
+    string(7) "Bridges"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [37]=>
+  object(stdClass)#38 (9) {
+    ["idnumber"]=>
+    string(9) "899130102"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "imalov1"
+    ["firstname"]=>
+    string(3) "Ian"
+    ["lastname"]=>
+    string(7) "Malovos"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [38]=>
+  object(stdClass)#37 (9) {
+    ["idnumber"]=>
+    string(9) "896404612"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jangli2"
+    ["firstname"]=>
+    string(8) "Jennifer"
+    ["lastname"]=>
+    string(6) "Anglin"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [39]=>
+  object(stdClass)#36 (9) {
+    ["idnumber"]=>
+    string(9) "898587444"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jatter1"
+    ["firstname"]=>
+    string(5) "JaVon"
+    ["lastname"]=>
+    string(10) "Atterberry"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [40]=>
+  object(stdClass)#35 (9) {
+    ["idnumber"]=>
+    string(9) "898668513"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jauste3"
+    ["firstname"]=>
+    string(4) "John"
+    ["lastname"]=>
+    string(6) "Auster"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [41]=>
+  object(stdClass)#34 (9) {
+    ["idnumber"]=>
+    string(9) "896087257"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jbeck31"
+    ["firstname"]=>
+    string(5) "James"
+    ["lastname"]=>
+    string(4) "Beck"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [42]=>
+  object(stdClass)#33 (9) {
+    ["idnumber"]=>
+    string(9) "898991752"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jcahil4"
+    ["firstname"]=>
+    string(4) "John"
+    ["lastname"]=>
+    string(6) "Cahill"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [43]=>
+  object(stdClass)#32 (9) {
+    ["idnumber"]=>
+    string(9) "893594445"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jcaus18"
+    ["firstname"]=>
+    string(5) "Jared"
+    ["lastname"]=>
+    string(6) "Causey"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [44]=>
+  object(stdClass)#31 (9) {
+    ["idnumber"]=>
+    string(9) "895541517"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jchigh1"
+    ["firstname"]=>
+    string(6) "Joseph"
+    ["lastname"]=>
+    string(10) "Chighizola"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [45]=>
+  object(stdClass)#30 (9) {
+    ["idnumber"]=>
+    string(9) "894897681"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "jcrum4"
+    ["firstname"]=>
+    string(5) "James"
+    ["lastname"]=>
+    string(4) "Crum"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [46]=>
+  object(stdClass)#29 (9) {
+    ["idnumber"]=>
+    string(9) "899046640"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "jgoux2"
+    ["firstname"]=>
+    string(3) "Jon"
+    ["lastname"]=>
+    string(4) "Goux"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [47]=>
+  object(stdClass)#28 (9) {
+    ["idnumber"]=>
+    string(9) "899046640"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "jgoux2"
+    ["firstname"]=>
+    string(3) "Jon"
+    ["lastname"]=>
+    string(4) "Goux"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [48]=>
+  object(stdClass)#27 (9) {
+    ["idnumber"]=>
+    string(9) "897935795"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jhalle3"
+    ["firstname"]=>
+    string(6) "Jordan"
+    ["lastname"]=>
+    string(6) "Haller"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [49]=>
+  object(stdClass)#22 (9) {
+    ["idnumber"]=>
+    string(9) "894721142"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jharda6"
+    ["firstname"]=>
+    string(5) "James"
+    ["lastname"]=>
+    string(7) "Hardage"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [50]=>
+  object(stdClass)#24 (9) {
+    ["idnumber"]=>
+    string(9) "894929079"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jhurle5"
+    ["firstname"]=>
+    string(5) "Jacob"
+    ["lastname"]=>
+    string(6) "Hurley"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [51]=>
+  object(stdClass)#25 (9) {
+    ["idnumber"]=>
+    string(9) "893603299"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jlacom8"
+    ["firstname"]=>
+    string(6) "Jaimie"
+    ["lastname"]=>
+    string(7) "Lacombe"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [52]=>
+  object(stdClass)#26 (9) {
+    ["idnumber"]=>
+    string(9) "893310984"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jlew151"
+    ["firstname"]=>
+    string(7) "Jessica"
+    ["lastname"]=>
+    string(5) "Lewis"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [53]=>
+  object(stdClass)#19 (9) {
+    ["idnumber"]=>
+    string(9) "890596738"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "jlynn6"
+    ["firstname"]=>
+    string(4) "John"
+    ["lastname"]=>
+    string(4) "Lynn"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [54]=>
+  object(stdClass)#311 (9) {
+    ["idnumber"]=>
+    string(9) "892082644"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jmark14"
+    ["firstname"]=>
+    string(5) "Jaron"
+    ["lastname"]=>
+    string(5) "Marks"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [55]=>
+  object(stdClass)#312 (9) {
+    ["idnumber"]=>
+    string(9) "890449879"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jmeye52"
+    ["firstname"]=>
+    string(4) "John"
+    ["lastname"]=>
+    string(6) "Meyers"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [56]=>
+  object(stdClass)#313 (9) {
+    ["idnumber"]=>
+    string(9) "894903873"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jmitc97"
+    ["firstname"]=>
+    string(5) "Jason"
+    ["lastname"]=>
+    string(8) "Mitchell"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [57]=>
+  object(stdClass)#314 (9) {
+    ["idnumber"]=>
+    string(9) "899573239"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "jtabar1"
+    ["firstname"]=>
+    string(4) "Jose"
+    ["lastname"]=>
+    string(7) "Tabares"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [58]=>
+  object(stdClass)#315 (9) {
+    ["idnumber"]=>
+    string(9) "895094429"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "kbrya16"
+    ["firstname"]=>
+    string(7) "Kathryn"
+    ["lastname"]=>
+    string(5) "Bryan"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [59]=>
+  object(stdClass)#316 (9) {
+    ["idnumber"]=>
+    string(9) "899353804"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "kcambr6"
+    ["firstname"]=>
+    string(5) "Kevin"
+    ["lastname"]=>
+    string(6) "Cambre"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [60]=>
+  object(stdClass)#317 (9) {
+    ["idnumber"]=>
+    string(9) "892844059"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "kflet14"
+    ["firstname"]=>
+    string(7) "Kristin"
+    ["lastname"]=>
+    string(8) "Fletcher"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [61]=>
+  object(stdClass)#319 (9) {
+    ["idnumber"]=>
+    string(9) "892546268"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "klawr15"
+    ["firstname"]=>
+    string(8) "Kathleen"
+    ["lastname"]=>
+    string(5) "Smith"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [62]=>
+  object(stdClass)#320 (9) {
+    ["idnumber"]=>
+    string(9) "897942637"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "kmarco4"
+    ["firstname"]=>
+    string(3) "Ken"
+    ["lastname"]=>
+    string(7) "Marcomb"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [63]=>
+  object(stdClass)#321 (9) {
+    ["idnumber"]=>
+    string(9) "899187219"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "kyoun61"
+    ["firstname"]=>
+    string(4) "Kyle"
+    ["lastname"]=>
+    string(5) "Young"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [64]=>
+  object(stdClass)#322 (9) {
+    ["idnumber"]=>
+    string(9) "897280717"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lkell25"
+    ["firstname"]=>
+    string(5) "Kelly"
+    ["lastname"]=>
+    string(8) "Lohmeyer"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [65]=>
+  object(stdClass)#323 (9) {
+    ["idnumber"]=>
+    string(9) "893947445"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lmelde2"
+    ["firstname"]=>
+    string(6) "Luther"
+    ["lastname"]=>
+    string(6) "Melder"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [66]=>
+  object(stdClass)#324 (9) {
+    ["idnumber"]=>
+    string(9) "892149429"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lnewma6"
+    ["firstname"]=>
+    string(5) "Lance"
+    ["lastname"]=>
+    string(4) "Hill"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [67]=>
+  object(stdClass)#325 (9) {
+    ["idnumber"]=>
+    string(9) "897056044"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lshort2"
+    ["firstname"]=>
+    string(7) "Lindsey"
+    ["lastname"]=>
+    string(5) "Short"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [68]=>
+  object(stdClass)#326 (9) {
+    ["idnumber"]=>
+    string(9) "894320657"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lville3"
+    ["firstname"]=>
+    string(8) "Lawrence"
+    ["lastname"]=>
+    string(9) "Villermin"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [69]=>
+  object(stdClass)#327 (9) {
+    ["idnumber"]=>
+    string(9) "893289163"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "lwoffo1"
+    ["firstname"]=>
+    string(5) "Lydia"
+    ["lastname"]=>
+    string(7) "Wofford"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [70]=>
+  object(stdClass)#328 (9) {
+    ["idnumber"]=>
+    string(9) "897046531"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mbesna2"
+    ["firstname"]=>
+    string(7) "Matthew"
+    ["lastname"]=>
+    string(7) "Besnard"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [71]=>
+  object(stdClass)#329 (9) {
+    ["idnumber"]=>
+    string(9) "896948868"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mburkh4"
+    ["firstname"]=>
+    string(4) "Mary"
+    ["lastname"]=>
+    string(10) "Burkhalter"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [72]=>
+  object(stdClass)#330 (9) {
+    ["idnumber"]=>
+    string(9) "894339568"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mbynum2"
+    ["firstname"]=>
+    string(7) "Matthew"
+    ["lastname"]=>
+    string(5) "Bynum"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [73]=>
+  object(stdClass)#331 (9) {
+    ["idnumber"]=>
+    string(9) "894339568"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mbynum2"
+    ["firstname"]=>
+    string(7) "Matthew"
+    ["lastname"]=>
+    string(5) "Bynum"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [74]=>
+  object(stdClass)#332 (9) {
+    ["idnumber"]=>
+    string(9) "897656041"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mhanes2"
+    ["firstname"]=>
+    string(7) "Melissa"
+    ["lastname"]=>
+    string(10) "Hanesworth"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [75]=>
+  object(stdClass)#333 (9) {
+    ["idnumber"]=>
+    string(9) "897656041"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mhanes2"
+    ["firstname"]=>
+    string(7) "Melissa"
+    ["lastname"]=>
+    string(10) "Hanesworth"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [76]=>
+  object(stdClass)#334 (9) {
+    ["idnumber"]=>
+    string(9) "899989031"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mlunin1"
+    ["firstname"]=>
+    string(7) "Michael"
+    ["lastname"]=>
+    string(6) "Luning"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [77]=>
+  object(stdClass)#335 (9) {
+    ["idnumber"]=>
+    string(9) "894548531"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "mmaber1"
+    ["firstname"]=>
+    string(4) "Matt"
+    ["lastname"]=>
+    string(7) "Maberry"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [78]=>
+  object(stdClass)#336 (9) {
+    ["idnumber"]=>
+    string(9) "892962108"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "msteen3"
+    ["firstname"]=>
+    string(8) "Mitchell"
+    ["lastname"]=>
+    string(5) "Steen"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [79]=>
+  object(stdClass)#337 (9) {
+    ["idnumber"]=>
+    string(9) "894896331"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "nlebl35"
+    ["firstname"]=>
+    string(6) "Nathan"
+    ["lastname"]=>
+    string(7) "LeBlanc"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [80]=>
+  object(stdClass)#338 (9) {
+    ["idnumber"]=>
+    string(9) "899013317"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "nlowma1"
+    ["firstname"]=>
+    string(8) "Nicholas"
+    ["lastname"]=>
+    string(6) "Lowman"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [81]=>
+  object(stdClass)#339 (9) {
+    ["idnumber"]=>
+    string(9) "893515033"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "nromer7"
+    ["firstname"]=>
+    string(7) "Nicolas"
+    ["lastname"]=>
+    string(6) "Romero"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [82]=>
+  object(stdClass)#340 (9) {
+    ["idnumber"]=>
+    string(9) "891163657"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "nroper2"
+    ["firstname"]=>
+    string(6) "Nicole"
+    ["lastname"]=>
+    string(5) "Roper"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [83]=>
+  object(stdClass)#341 (9) {
+    ["idnumber"]=>
+    string(9) "896534588"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "nspano2"
+    ["firstname"]=>
+    string(8) "Nickolas"
+    ["lastname"]=>
+    string(5) "Spano"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [84]=>
+  object(stdClass)#342 (9) {
+    ["idnumber"]=>
+    string(9) "890466325"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "pbenit2"
+    ["firstname"]=>
+    string(7) "Patrick"
+    ["lastname"]=>
+    string(7) "Benitez"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [85]=>
+  object(stdClass)#343 (9) {
+    ["idnumber"]=>
+    string(9) "890466325"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "pbenit2"
+    ["firstname"]=>
+    string(7) "Patrick"
+    ["lastname"]=>
+    string(7) "Benitez"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [86]=>
+  object(stdClass)#191 (9) {
+    ["idnumber"]=>
+    string(9) "896726870"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "pbowma5"
+    ["firstname"]=>
+    string(7) "Patrick"
+    ["lastname"]=>
+    string(6) "Bowman"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [87]=>
+  object(stdClass)#194 (9) {
+    ["idnumber"]=>
+    string(9) "895216404"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "ratkin8"
+    ["firstname"]=>
+    string(6) "Rachel"
+    ["lastname"]=>
+    string(8) "Atkinson"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [88]=>
+  object(stdClass)#344 (9) {
+    ["idnumber"]=>
+    string(9) "894768192"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rcupps2"
+    ["firstname"]=>
+    string(4) "Reed"
+    ["lastname"]=>
+    string(5) "Cupps"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [89]=>
+  object(stdClass)#347 (9) {
+    ["idnumber"]=>
+    string(9) "899513704"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rgomez9"
+    ["firstname"]=>
+    string(6) "Robert"
+    ["lastname"]=>
+    string(5) "Gomez"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [90]=>
+  object(stdClass)#345 (9) {
+    ["idnumber"]=>
+    string(9) "896485205"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rhoppe4"
+    ["firstname"]=>
+    string(7) "Richard"
+    ["lastname"]=>
+    string(6) "Hopper"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [91]=>
+  object(stdClass)#376 (9) {
+    ["idnumber"]=>
+    string(9) "896485205"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rhoppe4"
+    ["firstname"]=>
+    string(7) "Richard"
+    ["lastname"]=>
+    string(6) "Hopper"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [92]=>
+  object(stdClass)#351 (9) {
+    ["idnumber"]=>
+    string(9) "894511671"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rhutts1"
+    ["firstname"]=>
+    string(6) "Robert"
+    ["lastname"]=>
+    string(5) "Hutts"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [93]=>
+  object(stdClass)#377 (9) {
+    ["idnumber"]=>
+    string(9) "898680155"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rlemel2"
+    ["firstname"]=>
+    string(4) "Ryan"
+    ["lastname"]=>
+    string(7) "Lemelle"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [94]=>
+  object(stdClass)#378 (9) {
+    ["idnumber"]=>
+    string(9) "891725297"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rlivin5"
+    ["firstname"]=>
+    string(5) "Raimy"
+    ["lastname"]=>
+    string(6) "Living"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [95]=>
+  object(stdClass)#379 (9) {
+    ["idnumber"]=>
+    string(9) "894143532"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rmitc34"
+    ["firstname"]=>
+    string(6) "Ruffin"
+    ["lastname"]=>
+    string(8) "Mitchell"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [96]=>
+  object(stdClass)#380 (9) {
+    ["idnumber"]=>
+    string(9) "898960390"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(8) "russellw"
+    ["firstname"]=>
+    string(7) "Russell"
+    ["lastname"]=>
+    string(8) "Williams"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [97]=>
+  object(stdClass)#381 (9) {
+    ["idnumber"]=>
+    string(9) "890801205"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "rwhisn2"
+    ["firstname"]=>
+    string(7) "Richard"
+    ["lastname"]=>
+    string(8) "Whisnant"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [98]=>
+  object(stdClass)#382 (9) {
+    ["idnumber"]=>
+    string(9) "899254095"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "sande63"
+    ["firstname"]=>
+    string(9) "Stephanie"
+    ["lastname"]=>
+    string(8) "ANDERSON"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [99]=>
+  object(stdClass)#383 (9) {
+    ["idnumber"]=>
+    string(9) "896579357"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "smcca13"
+    ["firstname"]=>
+    string(5) "Scott"
+    ["lastname"]=>
+    string(7) "McCarty"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [100]=>
+  object(stdClass)#384 (9) {
+    ["idnumber"]=>
+    string(9) "894714335"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "smorea7"
+    ["firstname"]=>
+    string(9) "Stephanie"
+    ["lastname"]=>
+    string(6) "Moreau"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [101]=>
+  object(stdClass)#385 (9) {
+    ["idnumber"]=>
+    string(9) "897915319"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "ssinit2"
+    ["firstname"]=>
+    string(5) "Scott"
+    ["lastname"]=>
+    string(9) "Sinitiere"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [102]=>
+  object(stdClass)#386 (9) {
+    ["idnumber"]=>
+    string(9) "895774401"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "ssteib6"
+    ["firstname"]=>
+    string(5) "Sasha"
+    ["lastname"]=>
+    string(5) "Steib"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [103]=>
+  object(stdClass)#387 (9) {
+    ["idnumber"]=>
+    string(9) "894147479"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "sstein5"
+    ["firstname"]=>
+    string(8) "Samantha"
+    ["lastname"]=>
+    string(5) "Stein"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [104]=>
+  object(stdClass)#388 (9) {
+    ["idnumber"]=>
+    string(9) "891547268"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "tbrock3"
+    ["firstname"]=>
+    string(7) "Tetiana"
+    ["lastname"]=>
+    string(10) "Brockhoeft"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [105]=>
+  object(stdClass)#389 (9) {
+    ["idnumber"]=>
+    string(9) "890238560"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "tdaven3"
+    ["firstname"]=>
+    string(5) "Tonya"
+    ["lastname"]=>
+    string(7) "Miethke"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [106]=>
+  object(stdClass)#390 (9) {
+    ["idnumber"]=>
+    string(9) "896931172"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "tfrede6"
+    ["firstname"]=>
+    string(5) "Tyler"
+    ["lastname"]=>
+    string(9) "Frederick"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [107]=>
+  object(stdClass)#391 (9) {
+    ["idnumber"]=>
+    string(9) "892280965"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "tharve8"
+    ["firstname"]=>
+    string(5) "Tasha"
+    ["lastname"]=>
+    string(6) "Harvey"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [108]=>
+  object(stdClass)#392 (9) {
+    ["idnumber"]=>
+    string(9) "897786093"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "vpanep2"
+    ["firstname"]=>
+    string(7) "Vincent"
+    ["lastname"]=>
+    string(9) "Panepinto"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [109]=>
+  object(stdClass)#393 (9) {
+    ["idnumber"]=>
+    string(9) "897786093"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "vpanep2"
+    ["firstname"]=>
+    string(7) "Vincent"
+    ["lastname"]=>
+    string(9) "Panepinto"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [110]=>
+  object(stdClass)#394 (9) {
+    ["idnumber"]=>
+    string(9) "894339015"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "vrohlo1"
+    ["firstname"]=>
+    string(7) "Vincent"
+    ["lastname"]=>
+    string(7) "Rohloff"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [111]=>
+  object(stdClass)#395 (9) {
+    ["idnumber"]=>
+    string(9) "895678000"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "vvora2"
+    ["firstname"]=>
+    string(6) "Vishal"
+    ["lastname"]=>
+    string(4) "Vora"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [112]=>
+  object(stdClass)#396 (9) {
+    ["idnumber"]=>
+    string(9) "897763218"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "wblond1"
+    ["firstname"]=>
+    string(4) "Wade"
+    ["lastname"]=>
+    string(8) "Blondeau"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [113]=>
+  object(stdClass)#397 (9) {
+    ["idnumber"]=>
+    string(9) "899585892"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "wclay1"
+    ["firstname"]=>
+    string(7) "William"
+    ["lastname"]=>
+    string(4) "Clay"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [114]=>
+  object(stdClass)#398 (9) {
+    ["idnumber"]=>
+    string(9) "890378307"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(6) "wdede1"
+    ["firstname"]=>
+    string(7) "William"
+    ["lastname"]=>
+    string(4) "Dede"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [115]=>
+  object(stdClass)#399 (9) {
+    ["idnumber"]=>
+    string(9) "893099133"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "wtayl21"
+    ["firstname"]=>
+    string(7) "Whitney"
+    ["lastname"]=>
+    string(6) "Taylor"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [116]=>
+  object(stdClass)#400 (9) {
+    ["idnumber"]=>
+    string(9) "897987965"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "ysharm2"
+    ["firstname"]=>
+    string(7) "Yubaraj"
+    ["lastname"]=>
+    string(6) "Sharma"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [117]=>
+  object(stdClass)#401 (9) {
+    ["idnumber"]=>
+    string(9) "897027888"
+    ["credit_hours"]=>
+    string(4) "3.00"
+    ["username"]=>
+    string(7) "zphone1"
+    ["firstname"]=>
+    string(4) "Zack"
+    ["lastname"]=>
+    string(11) "Phonesavanh"
+    ["user_ferpa"]=>
+    int(0)
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+}

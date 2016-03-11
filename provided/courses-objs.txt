@@ -1,0 +1,694 @@
+array(29) {
+  [0]=>
+  object(stdClass)#166 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "UNDERSTAND FIN INFO"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#167 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [1]=>
+  object(stdClass)#173 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "OPERATIONS MANAGEMNT"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#91 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [2]=>
+  object(stdClass)#178 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(17) "LEGAL ENVIR BUS I"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#94 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [3]=>
+  object(stdClass)#86 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "NEGOT/PERS/INFLUENCE"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#95 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [4]=>
+  object(stdClass)#92 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["course_type"]=>
+    string(3) "SEM"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(16) "SEM NEW DEV BADM"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#97 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [5]=>
+  object(stdClass)#83 (7) {
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "HUM FCT BUS/IND C PR"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#99 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [6]=>
+  object(stdClass)#96 (7) {
+    ["department"]=>
+    string(2) "CM"
+    ["cou_number"]=>
+    string(4) "4100"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(1)
+    ["fullname"]=>
+    string(19) "CONST SCHED CST CTL"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#104 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [7]=>
+  object(stdClass)#98 (7) {
+    ["department"]=>
+    string(2) "CM"
+    ["cou_number"]=>
+    string(4) "4210"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(1)
+    ["fullname"]=>
+    string(16) "CONS CONTRACTING"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#102 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [8]=>
+  object(stdClass)#100 (7) {
+    ["department"]=>
+    string(2) "CM"
+    ["cou_number"]=>
+    string(4) "7220"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "BIM FOR CONSTRUCTION"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#108 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [9]=>
+  object(stdClass)#103 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "4249"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(1)
+    ["fullname"]=>
+    string(20) "UNDST/APPL RES IN ED"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#176 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [10]=>
+  object(stdClass)#101 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "4364"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(1)
+    ["fullname"]=>
+    string(20) "STUD AFFRS HIGHER ED"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#184 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [11]=>
+  object(stdClass)#177 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7401"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(17) "ADMIN OF SCH PERS"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#175 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [12]=>
+  object(stdClass)#183 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7404"
+    ["course_type"]=>
+    string(3) "CLI"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "INTERNSHIP IN ED ADM"
+    ["course_grade_type"]=>
+    string(2) "PF"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#170 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [13]=>
+  object(stdClass)#161 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7422"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "INTR SCH IMPR/ACT RS"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#172 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [14]=>
+  object(stdClass)#169 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7432"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "BST PRAC PRIN LDR I"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#186 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [15]=>
+  object(stdClass)#174 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7602"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "ORG/ADMIN HIGHER ED"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#188 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [16]=>
+  object(stdClass)#185 (7) {
+    ["department"]=>
+    string(4) "ELRC"
+    ["cou_number"]=>
+    string(4) "7607"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "FINANCE HIGHER EDUC"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#190 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [17]=>
+  object(stdClass)#187 (7) {
+    ["department"]=>
+    string(3) "HRE"
+    ["cou_number"]=>
+    string(4) "4579"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(1)
+    ["fullname"]=>
+    string(19) "TRAINING GLOBAL ORG"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#192 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [18]=>
+  object(stdClass)#189 (7) {
+    ["department"]=>
+    string(3) "HRE"
+    ["cou_number"]=>
+    string(4) "7901"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(14) "SCIEN METH HRE"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#194 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [19]=>
+  object(stdClass)#191 (7) {
+    ["department"]=>
+    string(3) "KIN"
+    ["cou_number"]=>
+    string(4) "7518"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "SOC ISSUES IN SPORT"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#196 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [20]=>
+  object(stdClass)#193 (7) {
+    ["department"]=>
+    string(3) "KIN"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "INTR TO RES METHODS"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#198 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [21]=>
+  object(stdClass)#195 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7005"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(19) "SOCIAL WORK PRACT I"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#200 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [22]=>
+  object(stdClass)#197 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7007"
+    ["course_type"]=>
+    string(3) "CLI"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "FOUND FIELD INTERN I"
+    ["course_grade_type"]=>
+    string(2) "PF"
+    ["sections"]=>
+    array(2) {
+      [0]=>
+      object(stdClass)#202 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+      [1]=>
+      object(stdClass)#199 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [23]=>
+  object(stdClass)#201 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7008"
+    ["course_type"]=>
+    string(3) "CLI"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(21) "FOUND FIELD INTERN II"
+    ["course_grade_type"]=>
+    string(2) "PF"
+    ["sections"]=>
+    array(2) {
+      [0]=>
+      object(stdClass)#205 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+      [1]=>
+      object(stdClass)#203 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [24]=>
+  object(stdClass)#204 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7009"
+    ["course_type"]=>
+    string(3) "RES"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(20) "SOCIAL WORK RESEARCH"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(2) {
+      [0]=>
+      object(stdClass)#208 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+      [1]=>
+      object(stdClass)#206 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [25]=>
+  object(stdClass)#207 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7502"
+    ["course_type"]=>
+    string(3) "CLI"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(18) "ADV FIELD INTERN I"
+    ["course_grade_type"]=>
+    string(2) "PF"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#211 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [26]=>
+  object(stdClass)#209 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7503"
+    ["course_type"]=>
+    string(3) "CLI"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(17) "ADV FLD INTERN II"
+    ["course_grade_type"]=>
+    string(2) "PF"
+    ["sections"]=>
+    array(1) {
+      [0]=>
+      object(stdClass)#213 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [27]=>
+  object(stdClass)#210 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7504"
+    ["course_type"]=>
+    string(3) "LEC"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(17) "ADV SOCIAL POLICY"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(2) {
+      [0]=>
+      object(stdClass)#215 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+      [1]=>
+      object(stdClass)#212 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+  [28]=>
+  object(stdClass)#214 (7) {
+    ["department"]=>
+    string(2) "SW"
+    ["cou_number"]=>
+    string(4) "7807"
+    ["course_type"]=>
+    string(3) "SEM"
+    ["course_first_year"]=>
+    int(0)
+    ["fullname"]=>
+    string(21) "SP TOP IN SOCIAL WORK"
+    ["course_grade_type"]=>
+    string(1) "L"
+    ["sections"]=>
+    array(2) {
+      [0]=>
+      object(stdClass)#218 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+      [1]=>
+      object(stdClass)#216 (1) {
+        ["sec_number"]=>
+        string(3) "001"
+      }
+    }
+  }
+}

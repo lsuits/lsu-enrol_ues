@@ -1,0 +1,116 @@
+array(6) {
+  [0]=>
+  object(stdClass)#204 (8) {
+    ["idnumber"]=>
+    string(9) "896733207"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(5) "Julie"
+    ["lastname"]=>
+    string(7) "Chenier"
+    ["username"]=>
+    string(6) "bachen"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7030"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [1]=>
+  object(stdClass)#211 (8) {
+    ["idnumber"]=>
+    string(9) "890964179"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(6) "Edward"
+    ["lastname"]=>
+    string(6) "Watson"
+    ["username"]=>
+    string(7) "ewatson"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7120"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [2]=>
+  object(stdClass)#210 (8) {
+    ["idnumber"]=>
+    string(9) "891437415"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(5) "James"
+    ["lastname"]=>
+    string(8) "Fargason"
+    ["username"]=>
+    string(8) "fargason"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7140"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [3]=>
+  object(stdClass)#212 (8) {
+    ["idnumber"]=>
+    string(9) "898983167"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(7) "Charles"
+    ["lastname"]=>
+    string(4) "Camp"
+    ["username"]=>
+    string(5) "ccamp"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7160"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [4]=>
+  object(stdClass)#206 (8) {
+    ["idnumber"]=>
+    string(9) "894464896"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(6) "Ye-Sho"
+    ["lastname"]=>
+    string(4) "Chen"
+    ["username"]=>
+    string(6) "qmchen"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7270"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+  [5]=>
+  object(stdClass)#202 (8) {
+    ["idnumber"]=>
+    string(9) "894433015"
+    ["primary_flag"]=>
+    int(1)
+    ["firstname"]=>
+    string(5) "James"
+    ["lastname"]=>
+    string(5) "Davis"
+    ["username"]=>
+    string(10) "jamesdavis"
+    ["department"]=>
+    string(4) "BADM"
+    ["cou_number"]=>
+    string(4) "7900"
+    ["sec_number"]=>
+    string(3) "001"
+  }
+}

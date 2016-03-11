@@ -1,0 +1,197 @@
+array(13) {
+  [0]=>
+  object(stdClass)#101 (6) {
+    ["year"]=>
+    int(2015)
+    ["name"]=>
+    string(11) "Second Fall"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1445835600)
+    ["grades_due"]=>
+    int(1451628000)
+  }
+  [1]=>
+  object(stdClass)#102 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(12) "First Spring"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1452492000)
+    ["grades_due"]=>
+    int(1458280800)
+  }
+  [2]=>
+  object(stdClass)#103 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(13) "Second Spring"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1457330400)
+    ["grades_due"]=>
+    int(1463115600)
+  }
+  [3]=>
+  object(stdClass)#104 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(12) "First Summer"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1462770000)
+    ["grades_due"]=>
+    int(1468558800)
+  }
+  [4]=>
+  object(stdClass)#100 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(13) "Second Summer"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1467608400)
+    ["grades_due"]=>
+    int(1473397200)
+  }
+  [5]=>
+  object(stdClass)#99 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(10) "First Fall"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1472446800)
+    ["grades_due"]=>
+    int(1478235600)
+  }
+  [6]=>
+  object(stdClass)#98 (6) {
+    ["year"]=>
+    int(2016)
+    ["name"]=>
+    string(11) "Second Fall"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1477285200)
+    ["grades_due"]=>
+    int(1483077600)
+  }
+  [7]=>
+  object(stdClass)#97 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(12) "First Spring"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1483941600)
+    ["grades_due"]=>
+    int(1489730400)
+  }
+  [8]=>
+  object(stdClass)#96 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(13) "Second Spring"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1488780000)
+    ["grades_due"]=>
+    int(1494565200)
+  }
+  [9]=>
+  object(stdClass)#95 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(12) "First Summer"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1494219600)
+    ["grades_due"]=>
+    int(1500008400)
+  }
+  [10]=>
+  object(stdClass)#83 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(13) "Second Summer"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1499058000)
+    ["grades_due"]=>
+    int(1504846800)
+  }
+  [11]=>
+  object(stdClass)#94 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(10) "First Fall"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1503896400)
+    ["grades_due"]=>
+    int(1509685200)
+  }
+  [12]=>
+  object(stdClass)#92 (6) {
+    ["year"]=>
+    int(2017)
+    ["name"]=>
+    string(11) "Second Fall"
+    ["campus"]=>
+    string(6) "ONLINE"
+    ["session_key"]=>
+    string(0) ""
+    ["classes_start"]=>
+    int(1508734800)
+    ["grades_due"]=>
+    int(1514527200)
+  }
+}
