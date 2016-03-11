@@ -4,7 +4,7 @@ namespace enrol_ues\event;
 
 defined('MOODLE_INTERNAL') || die();
 
-class ues_student_accepted extends \enrol_ues\event\ues_event_base {
+class ues_student_processed extends \enrol_ues\event\ues_event_base {
 
     /**
      * Initialize the event
