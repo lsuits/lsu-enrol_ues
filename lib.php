@@ -375,7 +375,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  stdClass[year, name, campus, session_key, classes_start] $providedSemesters
      * @return ues_semester[]
      *
-     * @throws EVENT-UES: ues_semester_process
+     * @throws EVENT-UES: ues_semester_processed
      */
     private function convertProvidedSemesters($providedSemesters) {
         
@@ -398,9 +398,12 @@ class enrol_ues_plugin extends enrol_plugin {
                     continue;
                 }
 
-                // Call event before potential insert, as to notify creation
-                // events_trigger_legacy('ues_semester_process', $ues_semester);
-                // @EVENT - ues_semester_process (unmonitored)
+                // trigger UES event
+                \enrol_ues\event\ues_semester_processed::create(array(
+                    'other' => array (
+                        'ues_semester_id' => $ues_semester->id
+                    )
+                ))->trigger();
 
                 // persist to {ues_semesters}
                 $ues_semester->save();
@@ -574,7 +577,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_semester  $ues_semester
      * @return ues_course[]
      *
-     * @throws EVENT-UES: ues_course_process
+     * @throws EVENT-UES: ues_course_processed
      */
     public function convertCourses($providedCourses, $ues_semester) {
         
@@ -591,9 +594,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = ues_course::upgrade_and_get($providedCourse, $params);
 
-                // Call event before potential insert, as to notify creation
-                // events_trigger_legacy('ues_course_process', $ues_course);
-                // @EVENT - ues_course_process (unmonitored)
+                // trigger UES event
+                \enrol_ues\event\ues_course_processed::create(array(
+                    'other' => array (
+                        'ues_course_id' => $ues_course->id
+                    )
+                ))->trigger();
 
                 $ues_course->save();
 
@@ -853,7 +859,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_section   $ues_section
      * @return null
      *
-     * @throws EVENT-UES: ues_section_process
+     * @throws EVENT-UES: ues_section_processed
      */
     private function processSectionEnrollment($ues_semester, $ues_course, $ues_section) {
         
@@ -892,22 +898,25 @@ class enrol_ues_plugin extends enrol_plugin {
                 $ues_section->status = ues::PROCESSED;
             }
 
-            // Allow outside interaction
-            // events_trigger_legacy('ues_section_process', $ues_section);
-            // @EVENT - ues_section_process
-            /**
-             * Refactor old events_trigger_legacy
-             */
-            global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                $ues_section = cps_ues_handler::ues_section_process($ues_section);
-            }
+            // @EVENT - ues_section_processed
+            $preferenceResponse = ues::handlePreferences('ues_section_processed', array(
+                'ues_section' => $ues_section
+            ));
+
+            // get UES section back from preference response
+            $ues_section = $preferenceResponse['ues_section'];
 
             // if this section's status has changed, save all changes
             if ($sectionPreviousStatus != $ues_section->status) {
                 $ues_section->save();
             }
+
+            // trigger UES event
+            $event = \enrol_ues\event\ues_section_processed::create(array(
+                'other' => array (
+                    'ues_section_id' => $ues_section->id
+                )
+            ))->trigger();
         }
     }
 
@@ -992,8 +1001,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_teacher[] | ues_student[]  $ues_users
      * @return null
      *
-     * @throws EVENT-UES: ues_teacher_release
-     * @throws EVENT-UES: ues_student_release
+     * @throws EVENT-UES: ues_teacher_released
+     * @throws EVENT-UES: ues_student_released
      */
     private function releaseUsers($user_type, $ues_users) {
 
@@ -1010,37 +1019,43 @@ class enrol_ues_plugin extends enrol_plugin {
             $ues_user->status = $status;
             $ues_user->save();
 
-            // Drop manifested sections for teacher POTENTIAL drops
-            if ($ues_user->status == ues::PENDING and $user_type == 'teacher') {
-                
-                $existing = ues_teacher::get_all(ues::where()
-                    ->status->in(ues::PROCESSED, ues::ENROLLED)
-                );
-
-                // No other primary, so we can safely flip the switch
-                if (empty($existing)) {
-                    ues_section::update(
-                        array('status' => ues::PENDING),
-                        array(
-                            'status' => ues::MANIFESTED,
-                            'id' => $ues_user->sectionid
-                        )
-                    );
-                }
-            }
-
-            global $CFG;
-            
+            // handle user preferences and fire event depending on user type
             if ($user_type === 'teacher') {
                 
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                // @EVENT - ues_teacher_released
+                // handle any potential preference manipulation
+                $preferenceResponse = ues::handlePreferences('ues_teacher_released', array(
+                    'ues_teacher' => $ues_user
+                ));
 
-                    // Specific release for instructor
-                    //events_trigger_legacy('ues_teacher_release', $ues_user);
-                    // @EVENT - ues_teacher_release
-                    // $ues_user = cps_ues_handler::ues_teacher_release($ues_user);
+                // get UES teacher back from preference response
+                $ues_user = $preferenceResponse['ues_teacher'];
+
+                // Drop manifested sections for teacher POTENTIAL drops
+                if ($ues_user->status == ues::PENDING) {
+
+                    $existing = ues_teacher::get_all(ues::where()
+                        ->status->in(ues::PROCESSED, ues::ENROLLED)
+                    );
+
+                    // No other primary, so we can safely flip the switch
+                    if (empty($existing)) {
+                        ues_section::update(
+                            array('status' => ues::PENDING),
+                            array(
+                                'status' => ues::MANIFESTED,
+                                'id' => $ues_user->sectionid
+                            )
+                        );
+                    }
                 }
+
+                // trigger UES event
+                $event = \enrol_ues\event\ues_teacher_released::create(array(
+                    'other' => array (
+                        'ues_user_id' => $ues_user->id
+                    )
+                ))->trigger();
 
             } else if($user_type === 'student') {
 
@@ -1050,7 +1065,6 @@ class enrol_ues_plugin extends enrol_plugin {
                         'ues_user_id' => $ues_user->id
                     )
                 ))->trigger();
-
             }
         }
     }
@@ -1113,8 +1127,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * an associative array of additional params, given a user as input
      * @return ues_teacher[] | ues_student[]  $remaining_ues_users
      *
-     * @throws EVENT-UES: ues_student_process
-     * @throws EVENT-UES: ues_teacher_process
+     * @throws EVENT-UES: ues_student_processed
+     * @throws EVENT-UES: ues_teacher_processed
      */
     private function addUsersToSectionFromList($user_type, $ues_section, $providedUsers, $current_ues_users = array(), $extra_params = null) {
         
@@ -1187,7 +1201,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     case 'student':
                         
                         // trigger UES event
-                        $event = \enrol_ues\event\ues_student_accepted::create(array(
+                        $event = \enrol_ues\event\ues_student_processed::create(array(
                             'other' => array (
                                 'ues_user_id' => $ues_user->id
                             )
@@ -1197,9 +1211,12 @@ class enrol_ues_plugin extends enrol_plugin {
 
                     case 'teacher':
                         
-                        if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
-                            cps_ues_handler::ues_teacher_process($ues_user);
-                        }
+                        // trigger UES event
+                        $event = \enrol_ues\event\ues_teacher_processed::create(array(
+                            'other' => array (
+                                'ues_user_id' => $ues_user->id
+                            )
+                        ))->trigger();
 
                         break;
                     
@@ -1310,8 +1327,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 throw new Exception(sprintf($error, $message, $curr, $persisted_user));
             }
 
-            // @EVENT - user_updated (unmonitored)
-            // events_trigger_legacy('user_updated', (object)$user);
+            // @EVENT - user_updated
+            // Handle potential CPS manipulation
+            $preferenceResponse = ues::handlePreferences('user_updated', array(
+                'moodle_user' => $user
+            ));
+
+            // get user back from preference response
+            $user = $preferenceResponse['moodle_user'];
         }
 
         // if the enrollment provider sets an initial password upon user creation, handle it now
@@ -1347,7 +1370,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_user  $candidate_user  the incoming UES user instance currently being evaluated at this point in the UES process.
      * @return boolean   $hasChanged
      *
-     * @throws EVENT-UES: preferred_name_legitimized
+     * @throws EVENT-UES: preferred_name_used
      */
     private function userHasChanged(ues_user $persisted_user, ues_user $candidate_user) {
         
@@ -1383,17 +1406,14 @@ class enrol_ues_plugin extends enrol_plugin {
                 
                 $DB->set_field('user', 'alternatename', NULL, array('id' => $previousUser->id));
                 
-                //events_trigger_legacy('preferred_name_legitimized', $candidate_user);
-                /*
-                 * Refactor events_trigger_legacy
-                 */
-                // @EVENT - preferred_name_legitimized
-                global $CFG;
-                
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                    cps_ues_handler::preferred_name_legitimized($candidate_user);
-                }
+                // @EVENT - preferred_name_used
+
+                // trigger UES event
+                $event = \enrol_ues\event\preferred_name_used::create(array(
+                    'other' => array (
+                        'ues_user_id' => $candidate_user->id
+                    )
+                ))->trigger();
             }
 
             $hasChanged = true;
@@ -1482,7 +1502,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 } else {
 
                     // get moodle course for this section
-                    $course = $ues_section->moodle();
+                    $moodleCourse = $ues_section->moodle();
 
                     // get UES course for this section
                     $ues_course = $ues_section->course();
@@ -1491,7 +1511,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     foreach (array('student', 'teacher') as $user_type) {
 
                         // get the moodle group for this course/section criteria
-                        $group = $this->manifestGroup($course, $ues_course, $ues_section);
+                        $group = $this->manifestGroup($moodleCourse, $ues_course, $ues_section);
 
                         // get all UES type users
                         $class = 'ues_' . $user_type;
@@ -1519,23 +1539,19 @@ class enrol_ues_plugin extends enrol_plugin {
                     $setting = ( ! empty($settings['creation_visible'])) ? $settings['creation_visible'] : false;
 
                     // @TODO - what is going on here?
-                    $course->visible = isset($setting->value) ? $setting->value : get_config('moodlecourse', 'visible');
+                    $moodleCourse->visible = isset($setting->value) ? $setting->value : get_config('moodlecourse', 'visible');
 
-                    $DB->update_record('course', $course);
+                    $DB->update_record('course', $moodleCourse);
 
-                    $this->log('Unloading ' . $course->idnumber);
+                    $this->log('Unloading ' . $moodleCourse->idnumber);
 
-                    //events_trigger_legacy('ues_course_severed', $course);
                     // @EVENT - ues_course_severed
-                    /**
-                     * Refactor events_trigger_legacy().
-                     */
-                    global $CFG;
-                    
-                    if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                        require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                        cps_ues_handler::ues_course_severed($course);
-                    }
+                    // trigger UES event
+                    \enrol_ues\event\ues_course_severed::create(array(
+                        'other' => array (
+                            'moodle_course_id' => $moodleCourse->id
+                        )
+                    ))->trigger();
 
                     $ues_section->idnumber = '';
                 }
@@ -1559,6 +1575,7 @@ class enrol_ues_plugin extends enrol_plugin {
         global $DB;
 
         // set query params for this group
+        // @TODO - should we be including in this group creation this data: idnumber, description, descriptionformat, enrolmentkey, picture, hidepicture (???)
         $group_params = array(
             'courseid' => $moodle_course->id,
             'name' => "{$ues_course->department} {$ues_course->cou_number} {$user_section->sec_number}"
@@ -1616,9 +1633,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_student[] | ues_teacher[]  $ues_users [description]
      * @return null
      *
-     * @throws EVENT-UES: ues_group_emptied
-     * @throws EVENT-UES: ues_student_unenroll
-     * @throws EVENT-UES: ues_teacher_unenroll
+     * @throws EVENT-UES: ues_student_unenrolled
+     * @throws EVENT-UES: ues_teacher_unenrolled
      * @throws EVENT-CORE: user_enrolment_deleted
      * @throws EVENT-CORE: group_member_added
      * @throws EVENT-CORE: group_deleted
@@ -1700,8 +1716,26 @@ class enrol_ues_plugin extends enrol_plugin {
                     'ues_user' => $ues_user
                 );
 
-                // @EVENT - ues_student_unenroll | ues_teacher_unenroll (unmonitored)
-                //events_trigger_legacy('ues_' . $ues_type . '_unenroll', $event_params);
+                // @EVENT - ues_student_unenrolled | ues_teacher_unenrolled
+                if ($ues_type == 'student') {
+                    
+                    // trigger UES event
+                    \enrol_ues\event\ues_student_enrolled::create(array(
+                        'other' => array (
+                            'ues_user_id' => $ues_user->id
+                        )
+                    ))->trigger();
+
+                } elseif ($ues_type == 'teacher') {
+                    
+                    // trigger UES event
+                    \enrol_ues\event\ues_teacher_enrolled::create(array(
+                        'other' => array (
+                            'ues_user_id' => $ues_user->id
+                        )
+                    ))->trigger();
+
+                }
             }
         }
 
@@ -1713,10 +1747,6 @@ class enrol_ues_plugin extends enrol_plugin {
             // Going ahead and delete as delete
             // @EVENT - \core\event\group_deleted
             groups_delete_group($group);
-
-            // @EVENT - ues_group_emptied (no-op)
-            // @see cps_ues_handler::ues_group_emptied()
-            // events_trigger_legacy('ues_group_emptied', $group);
         }
     }
 
@@ -1789,7 +1819,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * and the other has status ues::PENDING (meaning the old instructor,
      * marked for disenrollment), then we know a primary instructor swap is taking
      * place for the section, therefore, we trigger the
-     * @link https://github.com/lsuits/ues/wiki/Events ues_primary_change event.
+     * @link https://github.com/lsuits/ues/wiki/Events ues_primary_changed event.
      *
      * Once the event fires, subscribers, such as CPS, have the opportunity to take
      * action on the players in the instructor swap.
@@ -1805,7 +1835,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_section  $ues_section
      * @return boolean
      *
-     * @throws EVENT-UES: ues_primary_change
+     * @throws EVENT-UES: ues_primary_changed
      */
     private function manifestCourse($ues_semester, $ues_course, $ues_section) {
         
@@ -1852,24 +1882,23 @@ class enrol_ues_plugin extends enrol_plugin {
             // log this change
             $this->log(sprintf("Instructor change from %s to %s\n", $old->username, $new->username));
 
-            // fire an event to notify CPS
-            // @EVENT - ues_primary_change
-            $data = new stdClass;
-            $data->section = $ues_section;
-            $data->old_primary = $old_primary;
-            $data->new_primary = $new_primary;
-            
-            // events_trigger_legacy('ues_primary_change', $data);
-            /**
-             * Refactor events_trigger()
-             */
-            global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                $data = cps_ues_handler::ues_primary_change($data);
-            }
+            // @EVENT - ues_primary_changed
+            // handle potential CPS manipulation
+            $preferenceResponse = ues::handlePreferences('ues_primary_changed', array(
+                'ues_section' => $ues_section,
+                'old_primary' => $old_primary,
+                'new_primary' => $new_primary,
+            ));
 
-            $ues_section = $data->section;
+            // get UES section back from preference response
+            $ues_section = $preferenceResponse['ues_section'];
+
+            // trigger UES event
+            \enrol_ues\event\ues_primary_changed::create(array(
+                'other' => array (
+                    'ues_section_id' => $ues_section->id
+                )
+            ))->trigger();
         }
 
         // manifest this moodle course by creating or updateing it
@@ -1890,7 +1919,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  ues_section   $ues_section
      * @return {course}
      *
-     * @throws EVENT-UES: ues_course_create
+     * @throws EVENT-UES:  ues_course_created
      * @throws EVENT-CORE: course_created
      */
     private function handleCourseManifestation($ues_semester, $ues_course, $ues_section) {
@@ -1966,21 +1995,23 @@ class enrol_ues_plugin extends enrol_plugin {
                 $moodle_course->$key = get_config('moodlecourse', $key);
             }
 
-            // Actually needs to happen, before the create call
-            //events_trigger_legacy('ues_course_create', $moodle_course);
-            // @EVENT - ues_course_create
-            
-            /*
-             * Refactor events_trigger_legacy call
-             */
-            global $CFG;
-            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                $moodle_course = cps_ues_handler::ues_course_create($moodle_course);
-            }
+            // @EVENT - ues_course_created
+            // Handle potential CPS manipulation
+            $preferenceResponse = ues::handlePreferences('ues_course_created', array(
+                'moodle_course' => $moodle_course
+            ));
+
+            // get moodle course back from preference response
+            $moodle_course = $preferenceResponse['moodle_course'];
+
+            // trigger UES event
+            \enrol_ues\event\ues_course_created::create(array(
+                'other' => array (
+                    'moodle_course_id' => (! isset($moodle_course->id)) ? 0 : $moodle_course->id
+                )
+            ))->trigger();
 
             try {
-                
                 // @EVENT fired: \core\event\course_created
                 $moodle_course = create_course($moodle_course);
 
@@ -2120,8 +2151,8 @@ class enrol_ues_plugin extends enrol_plugin {
      *
      * @throws EVENT-CORE: user_enrolment_created
      * @throws EVENT-CORE: group_member_added
-     * @throws EVENT-UES: ues_teacher_enroll
-     * @throws EVENT-UES: ues_student_enroll
+     * @throws EVENT-UES: ues_teacher_enrolled
+     * @throws EVENT-UES: ues_student_enrolled
      */
     private function enrollUsers($group, $ues_users) {
         
@@ -2171,10 +2202,26 @@ class enrol_ues_plugin extends enrol_plugin {
                 'ues_user' => $ues_user
             );
 
-            // Unmonitored event.
-            // @EVENT - ues_student_enroll (unmonitored)
-            // @EVENT - ues_teacher_enroll (unmonitored)
-            //events_trigger_legacy('ues_' . $shortname . '_enroll', $event_params);
+            // @EVENT - ues_student_enrolled | ues_teacher_enrolled
+            if ($shortname == 'student') {
+                
+                // trigger UES event
+                \enrol_ues\event\ues_student_unenrolled::create(array(
+                    'other' => array (
+                        'ues_user_id' => $ues_user->id
+                    )
+                ))->trigger();
+
+            } elseif ($shortname == 'teacher') {
+                
+                // trigger UES event
+                \enrol_ues\event\ues_teacher_unenrolled::create(array(
+                    'other' => array (
+                        'ues_user_id' => $ues_user->id
+                    )
+                ))->trigger();
+
+            }
         }
     }
 

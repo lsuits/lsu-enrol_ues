@@ -456,7 +456,7 @@ abstract class ues {
      * @param  boolean        $forceSilence
      * @return ues_error[]
      * 
-     * @throws EVENT-UES: ues_section_process
+     * @throws EVENT-UES: ues_section_processed
      */
     public static function enrollUsersBySections($ues_sections, $forceSilence = true) {
         
@@ -478,19 +478,24 @@ abstract class ues {
             // set the status of this UES section to PROCESSED
             $ues_section->status = self::PROCESSED;
 
-            // Appropriate events needs to be adhered to
-            // @EVENT - ues_section_process
-            //events_trigger_legacy('ues_section_process', $ues_section);
-            /*
-             * Refactor legacy events
-             */
-            global $CFG;
-            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
-                $ues_section = cps_ues_handler::ues_section_process($ues_section);
-            }
+            // @EVENT - ues_section_processed
+            // handle any potential CPS data manipulation
+            $cpsResponse = self::handlePreferences('ues_section_processed', array(
+                'ues_section' => $ues_section
+            ));
+
+            // get UES section
+            $ues_section = $cpsResponse['ues_section'];
 
             // update the UES section
             $ues_section->save();
+
+            // trigger UES event
+            $event = \enrol_ues\event\ues_section_processed::create(array(
+                'other' => array (
+                    'ues_section_id' => $ues_section->id
+                )
+            ))->trigger();
         }
 
         // enroll users by manifesting all with PROCESSED status
@@ -680,8 +685,8 @@ abstract class ues {
      * @param  boolean       $verbose
      * @return null
      * 
-     * @throws EVENT-UES: ues_section_drop
-     * @throws EVENT-UES: ues_semester_drop
+     * @throws EVENT-UES: ues_section_dropped
+     * @throws EVENT-UES: ues_semester_dropped
      */
     public static function dropSemester($ues_semester, $verbose = false) {
         
@@ -708,14 +713,6 @@ abstract class ues {
                     'ues_section_id' => $ues_section->id
                 )
             ))->trigger();
-
-            // @EVENT - ues_section_drop
-            
-            global $CFG;
-            
-            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
-                cps_ues_handler::ues_section_drop($ues_section);
-            }
 
             // Optimize enrollment deletion
             foreach (array('ues_student', 'ues_teacher') as $ues_user_type) {
@@ -753,12 +750,6 @@ abstract class ues {
             )
         ))->trigger();
 
-        // @EVENT - ues_semester_drop
-        global $CFG;
-        if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            cps_ues_handler::ues_semester_drop($ues_semester);  // @TODO - this should be 'ues_semester_drop' if I'm not mistaken
-        }
-
         // delete UES semester
         ues_semester::delete($ues_semester->id);
 
@@ -791,5 +782,31 @@ abstract class ues {
         }
 
         return '';
+    }
+
+    /**
+     * Handles UES/CPS data interjection, if any, for the given event name and returns possibly mutated
+     *
+     * If CPS is not installed on this moodle instance, return the original data
+     * 
+     * @param  string  $eventName
+     * @param  array   $data
+     * @return array
+     */
+    public static function handlePreferences($eventName, $data) {
+
+        global $CFG;
+
+        // if CPS is not installed, take no action and return original data
+        if ( ! file_exists($CFG->dirroot . '/blocks/cps/classes/manipulator.php'))
+            return $data;
+
+        // require manipulator libs
+        require_once $CFG->dirroot . '/blocks/cps/classes/manipulator.php';
+
+        // dispatch and handle the event
+        $response = cps_manipulator::handle('enrol_ues', $eventName, $data);
+
+        return $response;
     }
 }
