@@ -27,6 +27,7 @@ ues::get_task_status_description => getTaskStatusDescription
 	- create_provider()
 	- provider_class()
 - changed list_plugins() to listAvailableProviders()
+- removed: `ues_course_settings_navigation` as an event
 
 ## v2.0.0
 

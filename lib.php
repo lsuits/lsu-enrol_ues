@@ -1489,7 +1489,6 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($ues_sections) {
 
             $this->log(' => Found ' . count($ues_sections) . ' pending sections that will be unenrolled.');
-            $this->log('');
 
             foreach ($ues_sections as $ues_section) {
                 
@@ -2550,8 +2549,9 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         $coursecontext = context_course::instance($COURSE->id);
-        $can_change = has_capability('moodle/course:update', $coursecontext);
-        if ($can_change) {
+        
+        // if this user can edit this course, add a link to the navigation area
+        if (has_capability('moodle/course:update', $coursecontext)) {
             if ($this->config('course_form_replace')) {
                 $url = new moodle_url(
                     '/enrol/ues/edit.php',
@@ -2561,20 +2561,31 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        // Allow outside interjection
-        $params = array($nodes, $instance);
+        // if UES reprocess is installed, and this user can reprocess this course, add a link to the navigation area
+        $uesReprocessInstalled = isPluginVersionIsInstalled('block_ues_reprocess', 2016022912);
 
-        /**
-         * Refactor events_trigger_legacy()
-         */
-        global $CFG;
-        if(file_exists($CFG->dirroot.'/blocks/ues_reprocess/eventslib.php')){
-            require_once $CFG->dirroot.'/blocks/ues_reprocess/eventslib.php';
-            ues_event_handler::ues_course_settings_navigation($params);
+        if ($uesReprocessInstalled) {
+
+            global $OUTPUT;
+
+            if (has_capability('block/ues_reprocess:canreprocess', $coursecontext)) {
+
+                $pluginname = get_string('reprocess', 'block_ues_reprocess');
+                
+                $whereThisCourse = array('id' => $instance->courseid, 'type' => 'course');
+
+                $reprocess_link = new navigation_node(array(
+                    'text' => $pluginname,
+                    'shorttext' => $pluginname,
+                    'icon' => new pix_icon('i/users', $pluginname),
+                    'key' => 'block_ues_reprocess',
+                    'action' => new moodle_url('/blocks/ues_reprocess/reprocess.php', $whereThisCourse)
+                ));
+
+                $nodes->parent->add_node($reprocess_link, 'manageinstances');
+            }
         }
-        //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
-
 }
 
 function enrol_ues_supports($feature) {
@@ -2585,4 +2596,31 @@ function enrol_ues_supports($feature) {
         default:
             return null;
     }
+}
+
+/**
+ * Checks to see that a specified version of a specified plugin is installed
+ *
+ * If a specified version is not installed, there will be no minimum version check.
+ * 
+ * @param  string  $pluginName       the moodle plugin name
+ * @param  int     $requiredVersion  moodle version number (ex: 2016022912)
+ * @return boolean
+ */
+function isPluginVersionIsInstalled($pluginName = '', $requiredVersion = false) {
+    
+    if ( ! $pluginName)
+        return false;
+
+    $pluginInfo = core_plugin_manager::instance()->get_plugin_info($pluginName);
+
+    if ( is_null($pluginInfo) && ! is_object($pluginInfo))
+        return false;
+
+    if ( ! $requiredVersion)
+        return true;
+
+    $requiredVersionInstalled = ($pluginInfo->versiondisk >= $requiredVersion) ? true : false;
+
+    return $requiredVersionInstalled;
 }
