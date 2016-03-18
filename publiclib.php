@@ -234,8 +234,7 @@ abstract class ues {
             $ues->log(' UES Enrollment completed');
             $ues->log('');
             $ues->log(' Errors encountered: ' . $ues->getErrorCount());
-            $ues->log('');
-            $ues->log(' Time elapsed: ' . microtime_diff($startTime, microtime()) . ' secs');
+            $ues->log(' Time elapsed:       ' . microtime_diff($startTime, microtime()) . ' secs');
             $ues->log('------------------------------------------------');
             
             $ues->handleAutomaticErrors(false); // @TODO - remove the 'false' for production, will send emails
