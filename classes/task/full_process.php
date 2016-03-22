@@ -35,7 +35,7 @@ class full_process extends \core\task\scheduled_task {
         // @TODO - is this require necessary?
         require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
         
-        ues::runFullEnrollment();
+        \ues::runFullEnrollment();
 
     }
 }
