@@ -2562,7 +2562,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         // if UES reprocess is installed, and this user can reprocess this course, add a link to the navigation area
-        $uesReprocessInstalled = isPluginVersionIsInstalled('block_ues_reprocess', 2016022912);
+        $uesReprocessInstalled = isPluginVersionInstalled('block_ues_reprocess', 2016022912);
 
         if ($uesReprocessInstalled) {
 
@@ -2607,7 +2607,7 @@ function enrol_ues_supports($feature) {
  * @param  int     $requiredVersion  moodle version number (ex: 2016022912)
  * @return boolean
  */
-function isPluginVersionIsInstalled($pluginName = '', $requiredVersion = false) {
+function isPluginVersionInstalled($pluginName = '', $requiredVersion = false) {
     
     if ( ! $pluginName)
         return false;
