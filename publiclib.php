@@ -432,7 +432,7 @@ abstract class ues {
         $ues = self::getPlugin();
 
         // force UES to become silent (if applicable)
-        $ues->is_silent = $forceSilence;
+        $ues->silence($forceSilence);
 
         // set the status of each UES section to PENDING
         foreach ($ues_sections as $ues_section) {
@@ -462,7 +462,7 @@ abstract class ues {
         $ues = self::getPlugin();
 
         // force UES to become silent (if applicable)
-        $ues->is_silent = $forceSilence;
+        $ues->silence($forceSilence);
 
         // iterate through all given UES sections
         foreach ($ues_sections as $ues_section) {
@@ -515,7 +515,7 @@ abstract class ues {
         $ues = self::getPlugin();
 
         // force UES to become silent (if applicable)
-        $ues->is_silent = $forceSilence;
+        $ues->silence($forceSilence);
 
         foreach ($ues_sections as $ues_section) {
             $ues->resetSectionUnenrollments($ues_section);
@@ -547,7 +547,7 @@ abstract class ues {
         }
 
         // force UES to become silent (if applicable)
-        $ues->is_silent = $forceSilence;
+        $ues->silence($forceSilence);
 
         // @TODO - Work on making department reprocessing code separate
         
@@ -605,7 +605,7 @@ abstract class ues {
         }
 
         // force UES to become silent (if applicable)
-        $ues->is_silent = $forceSilence;
+        $ues->silence($forceSilence);
 
         // process enrollment for each given section
         foreach ($ues_sections as $ues_section) {
