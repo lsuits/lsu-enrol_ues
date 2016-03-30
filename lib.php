@@ -2342,6 +2342,31 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     /**
+     * Getter for is_silent
+     * 
+     * @return boolean
+     */
+    public function isSilent() {
+        
+        return $this->is_silent;
+    }
+
+
+
+    /**
+     * Setter for is_silent
+     * 
+     * @param  boolean  $beSilent
+     * @return boolean
+     */
+    public function silence($beSilent = false) {
+        
+        $this->is_silent = $beSilent;
+
+        return true;
+    }
+
+    /**
      * Outputs a message to the console and adds it to message log
      * 
      * @param  string  $message
