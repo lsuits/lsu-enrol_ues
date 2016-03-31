@@ -443,7 +443,7 @@ abstract class ues {
         // unenroll users by flushing out all PENDING UES sections
         $ues->handlePendingSectionEnrollment($ues_sections);
 
-        return $ues->errors;
+        return $ues->fetchErrors();
     }
 
     /**
@@ -500,7 +500,7 @@ abstract class ues {
         // enroll users by manifesting all with PROCESSED status
         $ues->handleProcessedSectionEnrollment($ues_sections);
 
-        return $ues->errors;
+        return $ues->fetchErrors();
     }
 
     /**
@@ -521,7 +521,7 @@ abstract class ues {
             $ues->resetSectionUnenrollments($ues_section);
         }
 
-        return $ues->errors;
+        return $ues->fetchErrors();
     }
 
     /**
@@ -536,8 +536,8 @@ abstract class ues {
         
         $ues = self::getPlugin();
 
-        // if there are any UESU errors, stop this process
-        if ( ! $ues or $ues->errors) {
+        // if there are any UES errors, stop this process
+        if ( ! $ues or $ues->fetchErrors()) {
             return false;
         }
 
@@ -595,7 +595,7 @@ abstract class ues {
         $ues = self::getPlugin();
 
         // if there are any UESU errors, stop this process
-        if ( ! $ues or $ues->errors) {
+        if ( ! $ues or $ues->fetchErrors()) {
             return false;
         }
 
