@@ -2453,7 +2453,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * 
      * @return ues_error[]
      */
-    private function fetchErrors() {
+    public function fetchErrors() {
 
         // fetch all UES errors
         $ues_errors = ues_error::get_all();
