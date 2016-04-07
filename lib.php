@@ -398,12 +398,15 @@ class enrol_ues_plugin extends enrol_plugin {
                     continue;
                 }
 
+                // commenting this out for now, this event is not handled elsewhere
+                // note: if this event IS to be handled, we'll need to find a work around for $ues_semester->id as this object is not yet persisted and has no id!
+
                 // trigger UES event
-                \enrol_ues\event\ues_semester_processed::create(array(
-                    'other' => array (
-                        'ues_semester_id' => $ues_semester->id
-                    )
-                ))->trigger();
+                // \enrol_ues\event\ues_semester_processed::create(array(
+                //     'other' => array (
+                //         'ues_semester_id' => $ues_semester->id
+                //     )
+                // ))->trigger();
 
                 // persist to {ues_semesters}
                 $ues_semester->save();
@@ -594,12 +597,15 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $ues_course = ues_course::upgrade_and_get($providedCourse, $params);
 
+                // commenting this out for now, this event is not handled elsewhere
+                // note: if this event IS to be handled, we'll need to find a work around for $ues_course->id as this object is not yet persisted and has no id!
+
                 // trigger UES event
-                \enrol_ues\event\ues_course_processed::create(array(
-                    'other' => array (
-                        'ues_course_id' => $ues_course->id
-                    )
-                ))->trigger();
+                // \enrol_ues\event\ues_course_processed::create(array(
+                //     'other' => array (
+                //         'ues_course_id' => $ues_course->id
+                //     )
+                // ))->trigger();
 
                 $ues_course->save();
 
@@ -1435,12 +1441,16 @@ class enrol_ues_plugin extends enrol_plugin {
         // if any meta data has changed, mark the user as changed
         foreach ($candidate_meta as $field) {
             
-            if ( ! isset($persisted_user->{$field})) {
-                $hasChanged = true;
-            }
+            if ( property_exists($persisted_user, $field)) {
 
-            if ($persisted_user->{$field} != $candidate_user->{$field}) {
-                $hasChanged = true;
+                if ( ! isset($persisted_user->{$field})) {
+                    $hasChanged = true;
+                }
+
+                if ($persisted_user->{$field} != $candidate_user->{$field}) {
+                    $hasChanged = true;
+                }
+
             }
         }
         
