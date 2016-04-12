@@ -143,10 +143,8 @@ class enrol_ues_plugin extends enrol_plugin {
         // get scheduled task
         $task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
 
-        // do not run task if disabled
-        $disabled = $task->get_disabled();
-
-        if ($disabled and !$adhoc) {
+        // do not allow a task to run if it's been disabled unless it's being run adhoc
+        if ($task->get_disabled() and ! $adhoc) {
             return false;
         }
 
@@ -855,7 +853,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Drop manifested sections for teacher POTENTIAL drops
-            if ($user->status == ues::PENDING and $type == 'teacher') {
+            if (property_exists($user, 'status') and $user->status == ues::PENDING and $type == 'teacher') {
                 $existing = ues_teacher::get_all(ues::where()
                     ->status->in(ues::PROCESSED, ues::ENROLLED)
                 );
