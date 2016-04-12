@@ -853,7 +853,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }
 
             // Drop manifested sections for teacher POTENTIAL drops
-            if (property_exists($user, 'status') and $user->status == ues::PENDING and $type == 'teacher') {
+            if ($user->status == ues::PENDING and $type == 'teacher') {
                 $existing = ues_teacher::get_all(ues::where()
                     ->status->in(ues::PROCESSED, ues::ENROLLED)
                 );
