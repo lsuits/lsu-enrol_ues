@@ -28,7 +28,7 @@ class enrol_ues_plugin extends enrol_plugin {
      *
      * @var bool
      */
-    private $is_silent = false;
+    public $is_silent = false;
 
     /**
      * an instance of the ues enrollment provider.
