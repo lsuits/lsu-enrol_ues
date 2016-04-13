@@ -80,7 +80,7 @@ abstract class ues {
 
         $enrol->handle_pending_sections($sections);
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     // Note: this will cause manifestation (course creation if need be)
@@ -113,7 +113,7 @@ abstract class ues {
 
         $enrol->handle_processed_sections($sections);
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     public static function reset_unenrollments(array $sections, $silent = true) {
@@ -125,13 +125,13 @@ abstract class ues {
             $enrol->reset_unenrollments($section);
         }
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     public static function reprocess_department($semester, $department, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
-        if (!$enrol or $enrol->errors) {
+        if (!$enrol or $enrol->get_errors()) {
             return false;
         }
 
@@ -164,7 +164,7 @@ abstract class ues {
     public static function reprocess_sections($sections, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
-        if (!$enrol or $enrol->errors) {
+        if (!$enrol or $enrol->get_errors()) {
             return false;
         }
 

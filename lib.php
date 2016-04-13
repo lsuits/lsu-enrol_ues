@@ -87,8 +87,34 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         } catch (Exception $e) {
             $a = ues::translate_error($e);
-            $this->errors[] = ues::_s('provider_cron_problem', $a);
+
+            $this->add_error(ues::_s('provider_cron_problem', $a));
         }
+    }
+
+    /**
+     * Adds an error to the stack
+     *
+     * If an optional key is provided, the error will be added by that key
+     * 
+     * @param string  $error
+     * @param string  $key
+     */
+    public function add_error($error, $key = false) {
+        if ( ! $key) {
+            $this->errors[] = $error;
+        } else {
+            $this->errors[$key] = $error;
+        }
+    }
+
+    /**
+     * Gets the error stack
+     * 
+     * @return array
+     */
+    public function get_errors() {
+        return $this->errors;
     }
 
     /**
@@ -108,7 +134,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $start = microtime();
 
                 if (!$this->provider()->preprocess($this)) {
-                    $this->errors[] = 'Error during preprocess.';
+                    $this->add_error('Error during preprocess.');
                 }
 
                 $provider_name = $this->provider()->get_name();
@@ -120,7 +146,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $this->handle_enrollments();
 
                 if (!$this->provider()->postprocess($this)) {
-                    $this->errors[] = 'Error during postprocess.';
+                    $this->add_error('Error during postprocess.');
                 }
 
                 $end = microtime();
@@ -155,7 +181,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             global $CFG;
             $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
-            $this->errors[] = ues::_s('already_running', $url);
+            $this->add_error(ues::_s('already_running', $url));
 
             $this->email_reports();
 
@@ -171,7 +197,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             global $CFG;
             $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
-            $this->errors[] = ues::_s('within_grace_period', $url);
+            $this->add_error(ues::_s('within_grace_period', $url));
 
             $this->email_reports();
 
@@ -229,7 +255,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $default = get_config('moodlecourse', $field);
             if (isset($data[$field]) and $data[$field] != $default) {
-                $errors[$field] = ues::_s('bad_field');
+                $this->add_error(ues::_s('bad_field'), $field);
             }
         }
 
@@ -316,7 +342,7 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         if (count($errors) > $error_threshold) {
-            $this->errors[] = ues::_s('error_threshold_log');
+            $this->add_error(ues::_s('error_threshold_log'));
             return;
         }
 
@@ -337,8 +363,8 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        if (!empty($this->errors)) {
-            $error_text = implode("\n", $this->errors);
+        if (!empty($this->get_errors())) {
+            $error_text = implode("\n", $this->get_errors());
 
             foreach ($admins as $admin) {
                 email_to_user($admin, ues::_s('pluginname'),
@@ -404,7 +430,7 @@ class enrol_ues_plugin extends enrol_plugin {
             $message = ues::_s('could_not_enroll', $semester);
 
             $this->log($message);
-            $this->errors[] = $message;
+            $this->add_error($message);
         }
     }
 
@@ -473,7 +499,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             // Notify improper semester
             foreach ($failures as $failed_sem) {
-                $this->errors[] = ues::_s('failed_sem', $failed_sem);
+                $this->add_error(ues::_s('failed_sem', $failed_sem));
             }
 
             list($ignored, $valids) = $this->partition($other, $i);
@@ -499,7 +525,7 @@ class enrol_ues_plugin extends enrol_plugin {
             return array_filter($valids, $sems_in);
         } catch (Exception $e) {
 
-            $this->errors[] = $e->getMessage();
+            $this->add_error($e->getMessage());
             return array();
         }
     }
@@ -537,11 +563,11 @@ class enrol_ues_plugin extends enrol_plugin {
 
             return $process_courses;
         } catch (Exception $e) {
-            $this->errors[] = sprintf(
+            $this->add_error(sprintf(
                     'Unable to process courses for %s; Message was: %s',
                     $semester,
                     $e->getMessage()
-                    );
+                    ));
 
             // Queue up errors
             ues_error::courses($semester)->save();
@@ -609,7 +635,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     $e->getLine(),
                     $e->getTraceAsString()
                     );
-            $this->errors[] = sprintf('Failed to process %s:\n%s', $info, $message);
+            $this->add_error(sprintf('Failed to process %s:\n%s', $info, $message));
 
             ues_error::department($semester, $department)->save();
         }
@@ -714,7 +740,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $processed[] = $ues;
             } catch (Exception $e) {
-                $this->errors[] = $e->getMessage();
+                $this->add_error($e->getMessage());
             }
         }
 
@@ -784,7 +810,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $processed[] = $ues_course;
             } catch (Exception $e) {
-                $this->errors[] = $e->getMessage();
+                $this->add_error($e->getMessage());
             }
         }
 
@@ -815,7 +841,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $this->post_section_process($semester, $course, $section);
         } catch (Exception $e) {
-            $this->errors[] = $e->getMessage();
+            $this->add_error($e->getMessage());
 
             ues_error::section($section)->save();
         }
@@ -1260,7 +1286,7 @@ class enrol_ues_plugin extends enrol_plugin {
                         $to_action = $class::get_all($action_params);
                         $this->{$action . '_users'}($group, $to_action);
                     } catch (Exception $e) {
-                        $this->errors[] = ues::_s('error_no_group', $group);
+                        $this->add_error(ues::_s('error_no_group', $group));
                     }
                 }
             }
@@ -1514,7 +1540,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $this->add_instance($moodle_course);
             } catch (Exception $e) {
-                $this->errors[] = ues::_s('error_shortname', $moodle_course);
+                $this->add_error(ues::_s('error_shortname', $moodle_course));
 
                 $course_params = array('shortname' => $moodle_course->shortname);
                 $idnumber = $moodle_course->idnumber;
@@ -1523,7 +1549,7 @@ class enrol_ues_plugin extends enrol_plugin {
                 $moodle_course->idnumber = $idnumber;
 
                 if (!$DB->update_record('course', $moodle_course)) {
-                    $this->errors[] = 'Could not update course: ' . $moodle_course->idnumber;
+                    $this->add_error('Could not update course: ' . $moodle_course->idnumber);
                 }
             }
         }
