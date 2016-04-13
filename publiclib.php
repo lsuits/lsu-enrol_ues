@@ -104,7 +104,8 @@ abstract class ues {
              * Refactor legacy events
              */
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 $section = cps_ues_handler::ues_section_process($section);
             }
 
@@ -274,12 +275,15 @@ abstract class ues {
              */
             global $CFG;
             if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
                 ues_logs_event_handler::ues_section_drop($section);
             }
             if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 cps_ues_handler::ues_section_drop($section);
             }
             if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
+                require_once $CFG->dirroot.'/blocks/post_grades/events.php';
                 post_grades_handler::ues_section_drop($section);
             }
 
@@ -309,9 +313,11 @@ abstract class ues {
          */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+            require_once $basedir.'/blocks/cps/events/ues.php';
             cps_ues_handler::ues_section_drop($semester);
         }
         if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
+            require_once $basedir.'/blocks/post_grades/events.php';
             post_grades_handler::ues_section_drop($semester);
         }
 
