@@ -1792,9 +1792,9 @@ class enrol_ues_plugin extends enrol_plugin {
                  * Refactor events_trigger_legacy
                  */
                 global $CFG;
-                if($class === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                if($type === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
                     ues_logs_event_handler::ues_student_process($ues_type);
-                }elseif($class === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                }elseif($type === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
                     cps_ues_handler::ues_teacher_process($ues_type);
                 }
             }
