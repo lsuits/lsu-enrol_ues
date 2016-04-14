@@ -873,7 +873,7 @@ class enrol_ues_plugin extends enrol_plugin {
             }else if($type === 'student'){
                 if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
                     require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
-                    $user = ues_logs_event_handler::ues_student_release($user);
+                    ues_logs_event_handler::ues_student_release($user);
                 }
 
             }
