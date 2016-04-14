@@ -1793,8 +1793,10 @@ class enrol_ues_plugin extends enrol_plugin {
                  */
                 global $CFG;
                 if($type === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
                     ues_logs_event_handler::ues_student_process($ues_type);
                 }elseif($type === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                     cps_ues_handler::ues_teacher_process($ues_type);
                 }
             }
