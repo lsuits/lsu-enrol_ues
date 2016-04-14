@@ -1823,6 +1823,16 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $this->emaillog[] = $what;
     }
+
+    /**
+     * Is it possible to hide/show enrol instance via standard UI?
+     *
+     * @param stdClass $instance
+     * @return bool
+     */
+    public function can_hide_show_instance($instance) {
+        return is_siteadmin();
+    }
 }
 
 function enrol_ues_supports($feature) {
