@@ -33,7 +33,7 @@ class full_process extends \core\task\scheduled_task {
         global $CFG;
         require_once($CFG->dirroot . '/enrol/ues/lib.php');
         $ues = new \enrol_ues_plugin();
-        $ues->full_process();
+        $ues->run_enrollment_process();
 
     }
 }

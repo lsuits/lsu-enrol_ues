@@ -22,7 +22,7 @@ class full_process_adhoc extends \core\task\adhoc_task {
         global $CFG;
         require_once($CFG->dirroot . '/enrol/ues/lib.php');
         $ues = new \enrol_ues_plugin();
-        $ues->full_process(true);
+        $ues->run_enrollment_process(true);
 
     }
 }
