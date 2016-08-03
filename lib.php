@@ -196,13 +196,19 @@ class enrol_ues_plugin extends enrol_plugin {
     private function email_ues_startup_report_to_users($users, $start_time) {
         global $CFG;
 
+        $start_time_display = $this->format_start_time($start_time);
+
         // get email content from email log
-        $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time;
+        $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time_display;
 
         // send to each admin
         foreach ($users as $user) {
-            email_to_user($user, ues::_s('pluginname'), 'UES Enrollment Begun', $email_content);
+            email_to_user($user, ues::_s('pluginname'), sprintf('UES Enrollment Begun [%s]', $CFG->wwwroot), $email_content);
         }
+    }
+
+    private function format_start_time($start_time) {
+        return array_sum(explode(' ' , $start_time));
     }
 
     /**
@@ -232,13 +238,20 @@ class enrol_ues_plugin extends enrol_plugin {
      * Emails a UES log report (from emaillog) to given users
      * 
      * @param  array  $users  moodle users
+     * @param  string  $start_time  unix timestamp (in microseconds)
      * @return void
      */
-    private function email_ues_log_report_to_users($users) {
+    private function email_ues_log_report_to_users($users, $start_time) {
         global $CFG;
 
         // get email content from email log
         $email_content = implode("\n", $this->emaillog);
+
+        if ($start_time) {
+            $start_time_display = $this->format_start_time($start_time);
+
+            $email_content .= '<br><br>This process begun at: ' . $start_time_display;
+        }
 
         // send to each admin
         foreach ($users as $user) {
@@ -250,13 +263,20 @@ class enrol_ues_plugin extends enrol_plugin {
      * Emails a UES error report (from errors stack) to given users
      * 
      * @param  array  $users  moodle users
+     * @param  string  $start_time  unix timestamp (in microseconds)
      * @return void
      */
-    private function email_ues_error_report_to_users($users) {
+    private function email_ues_error_report_to_users($users, $start_time) {
         global $CFG;
 
         // get email content from error log
         $email_content = implode("\n", $this->get_errors());
+
+        if ($start_time) {
+            $start_time_display = $this->format_start_time($start_time);
+
+            $email_content .= '<br><br>This process begun at: ' . $start_time_display;
+        }
 
         // send to each admin
         foreach ($users as $user) {
