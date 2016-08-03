@@ -70,6 +70,9 @@ class enrol_ues_plugin extends enrol_plugin {
     public function run_enrollment_process($run_as_adhoc = false) {
         global $CFG;
 
+        // capture start time for later use
+        $start_time = microtime();
+
         // first, run a few top-level checks before processing enrollment
         try {
             // make sure task is NOT disabled (if not run adhoc)
@@ -109,22 +112,24 @@ class enrol_ues_plugin extends enrol_plugin {
             return false;
         }
 
-        // now, being using the provider to pull data and manifest enrollment
-        return $this->run_provider_enrollment($provider);
+        // now, begin using the provider to pull data and manifest enrollment
+        // note start time for reporting
+        return $this->run_provider_enrollment($provider, $start_time);
     }
 
     /**
      * Runs enrollment for a given UES provider
      * 
      * @param  enrollment_provider  $provider
+     * @param  string  $start_time  unix timestamp (in microseconds)
      * @return boolean  success
      */
-    public function run_provider_enrollment($provider) {
+    public function run_provider_enrollment($provider, $start_time) {
         // first, flag the process as "running"
         $this->setting('running', true);
 
-        // capture start time for later use
-        $start_time = microtime();
+        // send "startup" email
+        $this->email_startup_report($start_time);
 
         // begin log messages
         $this->log('------------------------------------------------');
@@ -163,9 +168,41 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->handle_automatic_errors();
 
         // email final report
-        $this->email_reports();
+        $this->email_reports(false, $start_time);
 
         return true;
+    }
+
+    /**
+     * Emails a UES "startup" report to moodle administrators
+     * 
+     * @param  array  $users  moodle users
+     * @return void
+     */
+    private function email_startup_report($start_time) {
+        // get all moodle admin users
+        $users = get_admins();
+
+        $this->email_ues_startup_report_to_users($users, $start_time);
+    }
+
+    /**
+     * Emails a UES startup report (notification of start time) to given users
+     * 
+     * @param  array  $users  moodle users
+     * @param  string  $start_time  unix timestamp (in microseconds)
+     * @return void
+     */
+    private function email_ues_startup_report_to_users($users, $start_time) {
+        global $CFG;
+
+        // get email content from email log
+        $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time;
+
+        // send to each admin
+        foreach ($users as $user) {
+            email_to_user($user, ues::_s('pluginname'), 'UES Enrollment Begun', $email_content);
+        }
     }
 
     /**
@@ -176,17 +213,18 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param  boolean  $report_errors_only
      * @return void
      */
-    public function email_reports($report_errors_only = false) {
+    public function email_reports($report_errors_only = false, $start_time = '') {
         // get all moodle admin users
         $users = get_admins();
 
         // determine whether or not we're sending an email log report to admins
         if ( ! $report_errors_only and $this->setting('email_report')) {
-            $this->email_ues_log_report_to_users($users);
+            $this->email_ues_log_report_to_users($users, $start_time);
         }
 
+        // determine whether or not there are errors to report
         if ($this->errors_exist()) {
-            $this->email_ues_error_report_to_users($users);
+            $this->email_ues_error_report_to_users($users, $start_time);
         }
     }
 
