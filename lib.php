@@ -250,7 +250,7 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($start_time) {
             $start_time_display = $this->format_start_time($start_time);
 
-            $email_content .= '<br><br>This process begun at: ' . $start_time_display;
+            $email_content .= "\n\nThis process begun at: " . $start_time_display;
         }
 
         // send to each admin
@@ -275,7 +275,7 @@ class enrol_ues_plugin extends enrol_plugin {
         if ($start_time) {
             $start_time_display = $this->format_start_time($start_time);
 
-            $email_content .= '<br><br>This process begun at: ' . $start_time_display;
+            $email_content .= "\n\nThis process begun at: " . $start_time_display;
         }
 
         // send to each admin
@@ -935,7 +935,7 @@ class enrol_ues_plugin extends enrol_plugin {
              * Refactor old events_trigger_legacy
              */
             global $CFG;
-            if(file_exists($CFG->dirroot.'/bloicks/cps/events/ues.php')){
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
                 require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 $section = cps_ues_handler::ues_section_process($section);
             }

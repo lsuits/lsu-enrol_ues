@@ -313,11 +313,11 @@ abstract class ues {
          */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            require_once $basedir.'/blocks/cps/events/ues.php';
+            require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
             cps_ues_handler::ues_semester_drop($semester);
         }
         if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            require_once $basedir.'/blocks/post_grades/events.php';
+            require_once $CFG->dirroot.'/blocks/post_grades/events.php';
             post_grades_handler::ues_semester_drop($semester);
         }
 
