@@ -71,7 +71,7 @@ class enrol_ues_plugin extends enrol_plugin {
         global $CFG;
 
         // capture start time for later use
-        $start_time = microtime();
+        $start_time = microtime(true);
 
         // first, run a few top-level checks before processing enrollment
         try {
@@ -121,7 +121,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Runs enrollment for a given UES provider
      * 
      * @param  enrollment_provider  $provider
-     * @param  string  $start_time  unix timestamp (in microseconds)
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return boolean  success
      */
     public function run_provider_enrollment($provider, $start_time) {
@@ -157,7 +157,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // end log messages
         $this->log('------------------------------------------------');
-        $this->log('UES enrollment took: ' . $this->get_time_elapsed_during_enrollment($start_time) . ' secs');
+        $this->log('UES enrollment took: ' . $this->get_time_elapsed_during_enrollment($start_time));
         $this->log('------------------------------------------------');
 
         // flag the process as no longer "running"
@@ -176,7 +176,7 @@ class enrol_ues_plugin extends enrol_plugin {
     /**
      * Emails a UES "startup" report to moodle administrators
      * 
-     * @param  array  $users  moodle users
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
     private function email_startup_report($start_time) {
@@ -190,13 +190,13 @@ class enrol_ues_plugin extends enrol_plugin {
      * Emails a UES startup report (notification of start time) to given users
      * 
      * @param  array  $users  moodle users
-     * @param  string  $start_time  unix timestamp (in microseconds)
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
     private function email_ues_startup_report_to_users($users, $start_time) {
         global $CFG;
 
-        $start_time_display = $this->format_start_time($start_time);
+        $start_time_display = $this->format_time_display($start_time);
 
         // get email content from email log
         $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time_display;
@@ -207,16 +207,13 @@ class enrol_ues_plugin extends enrol_plugin {
         }
     }
 
-    private function format_start_time($start_time) {
-        return array_sum(explode(' ' , $start_time));
-    }
-
     /**
      * Finds and emails moodle administrators enrollment reports
      *
      * Optionally, skips the default log report and send errors only
      * 
      * @param  boolean  $report_errors_only
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
     public function email_reports($report_errors_only = false, $start_time = '') {
@@ -238,7 +235,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Emails a UES log report (from emaillog) to given users
      * 
      * @param  array  $users  moodle users
-     * @param  string  $start_time  unix timestamp (in microseconds)
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
     private function email_ues_log_report_to_users($users, $start_time) {
@@ -248,7 +245,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $email_content = implode("\n", $this->emaillog);
 
         if ($start_time) {
-            $start_time_display = $this->format_start_time($start_time);
+            $start_time_display = $this->format_time_display($start_time);
 
             $email_content .= "\n\nThis process begun at: " . $start_time_display;
         }
@@ -263,7 +260,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Emails a UES error report (from errors stack) to given users
      * 
      * @param  array  $users  moodle users
-     * @param  string  $start_time  unix timestamp (in microseconds)
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
     private function email_ues_error_report_to_users($users, $start_time) {
@@ -273,7 +270,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $email_content = implode("\n", $this->get_errors());
 
         if ($start_time) {
-            $start_time_display = $this->format_start_time($start_time);
+            $start_time_display = $this->format_time_display($start_time);
 
             $email_content .= "\n\nThis process begun at: " . $start_time_display;
         }
@@ -291,6 +288,42 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     private function errors_exist() {
         return (empty($this->get_errors())) ? false : true;
+    }
+
+    /**
+     * Formats a Unix time for display
+     * 
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return string
+     */
+    private function format_time_display($time) {
+        $dFormat = "l jS F, Y - H:i:s";
+        $mSecs = $time - floor($time);
+        $mSecs = substr($mSecs, 1);
+
+        $formatted = sprintf('%s%s', date($dFormat), $mSecs);
+
+        return $formatted;
+    }
+
+    /**
+     * Calculates amount of time (in seconds) that has elapsed since a given start time
+     * 
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return string  time difference in seconds
+     */
+    private function get_time_elapsed_during_enrollment($start_time) {
+        // Get the difference between start and end in microseconds, as a float value
+        $diff = microtime(true) - $start_time;
+
+        // Break the difference into seconds and microseconds
+        $sec = intval($diff);
+        $micro = $diff - $sec;
+
+        // Format the result as you want it - will contain something like "00:00:02.452"
+        $time_elapsed = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+
+        return $time_elapsed;
     }
 
     /**
@@ -1912,20 +1945,6 @@ class enrol_ues_plugin extends enrol_plugin {
         $task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
 
         return $task;
-    }
-
-    /**
-     * Calculates amount of time (in seconds) that has elapsed since a given start time
-     * 
-     * @param  string  $start_time  unix timestamp (in microseconds)
-     * @return string  time difference in seconds
-     */
-    private function get_time_elapsed_during_enrollment($start_time) {
-        $end_time = microtime();
-
-        $time_elapsed = microtime_diff($start_time, $end_time);
-
-        return $time_elapsed;
     }
 
     ///// Moodle enrol plugin stuff below...
