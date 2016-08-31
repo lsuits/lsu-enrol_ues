@@ -10,24 +10,25 @@ require_once dirname(__FILE__) . '/publiclib.php';
 class enrol_ues_plugin extends enrol_plugin {
 
     /**
-     * Typical errorlog for cron run
-     * @todo remove 'var' keyword; make private.
+     * Typical error log
+     *
      * @var array
      */
-    var $errors = array();
+    private $errors = array();
 
     /**
-     * Typical email log for cron runs
-     * @todo remove 'var' keyword; make private
+     * Typical email log
+     *
      * @var array
      */
-    var $emaillog = array();
+    private $emaillog = array();
 
     /**
-     * @todo remove the 'var' keyword, replace with 'private'
-     * @var bool admin config setting
+     * admin config setting
+     *
+     * @var bool
      */
-    var $is_silent = false;
+    public $is_silent = false;
 
     /**
      * an instance of the ues enrollment provider.
@@ -53,43 +54,276 @@ class enrol_ues_plugin extends enrol_plugin {
     public function __construct() {
         global $CFG;
 
-        $lib = ues::base('classes/dao');//@todo: remove this; not used;
-
         ues::require_daos();
         require_once $CFG->dirroot . '/group/lib.php';
         require_once $CFG->dirroot . '/course/lib.php';
     }
 
     /**
-     * Try to initialize the provider.
+     * Master method for kicking off UES enrollment
      *
-     * Tries to create and initialize the provider.
-     * Tests whether provider supports departmental or section lookups.
-     * @throws Exception if provider cannot be created of if provider supports
-     * neither section nor department lookups.
+     * First checks a few top-level requirements to run, and then passes on to a secondary method for handling the process
+     * 
+     * @param  boolean $run_as_adhoc  whether or not the task has been run "ad-hoc" or "scheduled" (default)
+     * @return boolean
      */
-    public function init() {
-        $this->_loaded = true;
+    public function run_enrollment_process($run_as_adhoc = false) {
+        global $CFG;
 
+        // capture start time for later use
+        $start_time = microtime(true);
+
+        // first, run a few top-level checks before processing enrollment
         try {
-            $this->_provider = ues::create_provider();
-
-            if (empty($this->_provider)) {
-                throw new Exception('enrollment_unsupported');
+            // make sure task is NOT disabled (if not run adhoc)
+            if ( ! $run_as_adhoc and ! $this->task_is_enabled()) {
+                // TODO: make a real lang string for this...
+                throw new UesInitException('This scheduled task has been disabled.');
+            }
+            
+            // make sure UES is NOT running
+            if ($this->is_running()) {
+                throw new UesInitException(ues::_s('already_running', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues'));
+            }
+            
+            // make sure UES is not within grace period threshold
+            if ($this->is_within_graceperiod()) {
+                throw new UesInitException(ues::_s('within_grace_period', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues'));
             }
 
-            $works = (
-                $this->_provider->supports_section_lookups() or
-                $this->_provider->supports_department_lookups()
-            );
+            // attempt to fetch the configured "enrollment provider"
+            $provider = $this->provider();
 
-            if ($works === false) {
-                throw new Exception('enrollment_unsupported');
+            // make sure we have a provider loaded before we proceed any further
+            if ( ! $provider) {
+                // TODO: make a real lang string for this...
+                throw new UesInitException('Could not load the enrollment provider.');
             }
-        } catch (Exception $e) {
-            $a = ues::translate_error($e);
-            $this->errors[] = ues::_s('provider_cron_problem', $a);
+
+        // catch any initial errors here before attempting to run
+        } catch (UesInitException $e) {
+            // add the error to the stack
+            $this->add_error($e->getMessage());
+            
+            // email the error report, reporting errors only
+            $this->email_reports(true);
+
+            // leave the process
+            return false;
         }
+
+        // now, begin using the provider to pull data and manifest enrollment
+        // note start time for reporting
+        return $this->run_provider_enrollment($provider, $start_time);
+    }
+
+    /**
+     * Runs enrollment for a given UES provider
+     * 
+     * @param  enrollment_provider  $provider
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return boolean  success
+     */
+    public function run_provider_enrollment($provider, $start_time) {
+        // first, flag the process as "running"
+        $this->setting('running', true);
+
+        // send "startup" email
+        this->email_startup_report($start_time);
+
+        // begin log messages
+        $this->log('------------------------------------------------');
+        $this->log(ues::_s('pluginname'));
+        $this->log('------------------------------------------------');
+
+        // handle any provider preprocesses
+        if ( ! $provider->preprocess($this)) {
+            $this->add_error('Error during preprocess.');
+        }
+
+        // pull provider data
+        $this->log('Pulling information from ' . $provider->get_name());
+        $this->process_all();
+        $this->log('------------------------------------------------');
+
+        // manifest provider data
+        $this->log('Begin manifestation ...');
+        $this->handle_enrollments();
+
+        // handle any provider postprocesses
+        if ( ! $provider->postprocess($this)) {
+            $this->add_error('Error during postprocess.');
+        }
+
+        // end log messages
+        $this->log('------------------------------------------------');
+        $this->log('UES enrollment took: ' . $this->get_time_elapsed_during_enrollment($start_time));
+        $this->log('------------------------------------------------');
+
+        // flag the process as no longer "running"
+        $this->setting('running', false);
+
+        // handle any errors automatically per threshold settings
+        // TODO: this causes a blank email to be sent even if everything ran OK
+        $this->handle_automatic_errors();
+
+        // email final report
+        $this->email_reports(false, $start_time);
+
+        return true;
+    }
+
+    /**
+     * Emails a UES "startup" report to moodle administrators
+     * 
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return void
+     */
+    private function email_startup_report($start_time) {
+        // get all moodle admin users
+        $users = get_admins();
+
+        $this->email_ues_startup_report_to_users($users, $start_time);
+    }
+
+    /**
+     * Emails a UES startup report (notification of start time) to given users
+     * 
+     * @param  array  $users  moodle users
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return void
+     */
+    private function email_ues_startup_report_to_users($users, $start_time) {
+        global $CFG;
+
+        $start_time_display = $this->format_time_display($start_time);
+
+        // get email content from email log
+        $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time_display;
+
+        // send to each admin
+        foreach ($users as $user) {
+            email_to_user($user, ues::_s('pluginname'), sprintf('UES Enrollment Begun [%s]', $CFG->wwwroot), $email_content);
+        }
+    }
+
+    /**
+     * Finds and emails moodle administrators enrollment reports
+     *
+     * Optionally, skips the default log report and send errors only
+     * 
+     * @param  boolean  $report_errors_only
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return void
+     */
+    public function email_reports($report_errors_only = false, $start_time = '') {
+        // get all moodle admin users
+        $users = get_admins();
+
+        // determine whether or not we're sending an email log report to admins
+        if ( ! $report_errors_only and $this->setting('email_report')) {
+            $this->email_ues_log_report_to_users($users, $start_time);
+        }
+
+        // determine whether or not there are errors to report
+        if ($this->errors_exist()) {
+            $this->email_ues_error_report_to_users($users, $start_time);
+        }
+    }
+
+    /**
+     * Emails a UES log report (from emaillog) to given users
+     * 
+     * @param  array  $users  moodle users
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return void
+     */
+    private function email_ues_log_report_to_users($users, $start_time) {
+        global $CFG;
+
+        // get email content from email log
+        $email_content = implode("\n", $this->emaillog);
+
+        if ($start_time) {
+            $start_time_display = $this->format_time_display($start_time);
+
+            $email_content .= "\n\nThis process begun at: " . $start_time_display;
+        }
+
+        // send to each admin
+        foreach ($users as $user) {
+            email_to_user($user, ues::_s('pluginname'), sprintf('UES Log [%s]', $CFG->wwwroot), $email_content);
+        }
+    }
+
+    /**
+     * Emails a UES error report (from errors stack) to given users
+     * 
+     * @param  array  $users  moodle users
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return void
+     */
+    private function email_ues_error_report_to_users($users, $start_time) {
+        global $CFG;
+
+        // get email content from error log
+        $email_content = implode("\n", $this->get_errors());
+
+        if ($start_time) {
+            $start_time_display = $this->format_time_display($start_time);
+
+            $email_content .= "\n\nThis process begun at: " . $start_time_display;
+        }
+
+        // send to each admin
+        foreach ($users as $user) {
+            email_to_user($user, ues::_s('pluginname'), sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $email_content);
+        }
+    }
+
+    /**
+     * Determines whether or not there are any saved errors at this point
+     * 
+     * @return bool
+     */
+    private function errors_exist() {
+        return (empty($this->get_errors())) ? false : true;
+    }
+
+    /**
+     * Formats a Unix time for display
+     * 
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return string
+     */
+    private function format_time_display($time) {
+        $dFormat = "l jS F, Y - H:i:s";
+        $mSecs = $time - floor($time);
+        $mSecs = substr($mSecs, 1);
+
+        $formatted = sprintf('%s%s', date($dFormat), $mSecs);
+
+        return $formatted;
+    }
+
+    /**
+     * Calculates amount of time (in seconds) that has elapsed since a given start time
+     * 
+     * @param  float  $start_time  the current time in seconds since the Unix epoch
+     * @return string  time difference in seconds
+     */
+    private function get_time_elapsed_during_enrollment($start_time) {
+        // Get the difference between start and end in microseconds, as a float value
+        $diff = microtime(true) - $start_time;
+
+        // Break the difference into seconds and microseconds
+        $sec = intval($diff);
+        $micro = $diff - $sec;
+
+        // Format the result as you want it - will contain something like "00:00:02.452"
+        $time_elapsed = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+
+        return $time_elapsed;
     }
 
     /**
@@ -108,6 +342,39 @@ class enrol_ues_plugin extends enrol_plugin {
         return $this->_provider;
     }
 
+    /**
+     * Try to initialize the provider.
+     *
+     * Tries to create and initialize the provider.
+     * Tests whether provider supports departmental or section lookups.
+     * @throws Exception if provider cannot be created of if provider supports
+     * neither section nor department lookups.
+     */
+    public function init() {
+        try {
+            $this->_provider = ues::create_provider();
+
+            if (empty($this->_provider)) {
+                throw new Exception('enrollment_unsupported');
+            }
+
+            $works = (
+                $this->_provider->supports_section_lookups() or
+                $this->_provider->supports_department_lookups()
+            );
+
+            if ($works === false) {
+                throw new Exception('enrollment_unsupported');
+            }
+        } catch (Exception $e) {
+            $a = ues::translate_error($e);
+
+            $this->add_error(ues::_s('provider_cron_problem', $a));
+        }
+
+        $this->_loaded = true;
+    }
+
     public function course_updated($inserted, $course, $data) {
         // UES is the one to create the course
         if ($inserted) {
@@ -116,133 +383,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
         // Delete extension handler
         events_trigger_legacy('ues_course_updated', array($course, $data)); // @CHAD
-    }
-
-    public function course_edit_validation($instance, array $data, $context) {
-        $errors = array();
-        if (is_null($instance)) {
-            return $errors;
-        }
-
-        $system = context_system::instance();
-        $can_change = has_capability('moodle/course:update', $system);
-
-        $restricted = explode(',', $this->setting('course_restricted_fields'));
-
-        foreach ($restricted as $field) {
-            if ($can_change) {
-                continue;
-            }
-
-            $default = get_config('moodlecourse', $field);
-            if (isset($data[$field]) and $data[$field] != $default) {
-                $errors[$field] = ues::_s('bad_field');
-            }
-        }
-
-        // Delegate extension validation to extensions
-        $event = new stdClass;
-        $event->instance = $instance;
-        $event->data = $data;
-        $event->context = $context;
-        $event->errors = $errors;
-
-        events_trigger_legacy('ues_course_edit_validation', $event); // @CHAD
-
-        return $event->errors;
-    }
-
-    /**
-     * 
-     * @param type $instance
-     * @param MoodleQuickForm $form
-     * @param type $data
-     * @param type $context
-     * @return type
-     */
-    public function course_edit_form($instance, MoodleQuickForm $form, $data, $context) {
-        if (is_null($instance)) {
-            return;
-        }
-
-        // Allow extension interjection
-        $event = new stdClass;
-        $event->instance = $instance;
-        $event->form = $form;
-        $event->data = $data;
-        $event->context = $context;
-
-        events_trigger_legacy('ues_course_edit_form', $event); // @CHAD
-    }
-
-    public function add_course_navigation($nodes, stdClass $instance) {
-        global $COURSE;
-        // Only interfere with UES courses
-        if (is_null($instance)) {
-            return;
-        }
-
-        $coursecontext = context_course::instance($COURSE->id);
-        $can_change = has_capability('moodle/course:update', $coursecontext);
-        if ($can_change) {
-            if ($this->setting('course_form_replace')) {
-                $url = new moodle_url(
-                    '/enrol/ues/edit.php',
-                    array('id' => $instance->courseid)
-                );
-                $nodes->parent->parent->get('editsettings')->action = $url;
-            }
-	}
-
-        // Allow outside interjection
-        $params = array($nodes, $instance);
-        events_trigger_legacy('ues_course_settings_navigation', $params); // @CHAD
-    }
-
-    public function is_cron_required() {
-
-        $automatic = $this->setting('cron_run');
-
-        $running = (bool)$this->setting('running');
-
-        if ($automatic) {
-
-            $this->handle_automatic_errors();
-
-            $current_hour = (int)date('H');
-
-            $acceptable_hour = (int)$this->setting('cron_hour');
-
-            $right_time = ($current_hour == $acceptable_hour);
-
-            // Grace period from last started job
-            $starttime = (int)$this->setting('starttime');
-            $grace_period = (int)$this->setting('grace_period');
-
-            $ran_more_than_hour_ago = (time() - $starttime) > $grace_period;
-
-            $is_late = ($running and $ran_more_than_hour_ago);
-
-            $is_supposed_to_run = ($right_time and parent::is_cron_required());
-
-            if ($is_late and $is_supposed_to_run) {
-
-                global $CFG;
-                $url = $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues';
-                $this->errors[] = ues::_s('already_running', $url);
-
-                $this->email_reports();
-                return false;
-            }
-
-            return (
-                $right_time and
-                parent::is_cron_required() and
-                !$running
-            );
-        }
-
-        return !$running;
     }
 
     private function handle_automatic_errors() {
@@ -264,89 +404,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
         ues::reprocess_errors($errors, true);
     }
-
-    public function cron() {
-        $this->setting('running', true);
-
-        $this->setting('starttime', time());
-        if ($this->provider()) {
-            $this->log('------------------------------------------------');
-            $this->log(ues::_s('pluginname'));
-            $this->log('------------------------------------------------');
-
-            $start = microtime();
-
-            $this->full_process();
-
-            $end = microtime();
-
-            $how_long = microtime_diff($start, $end);
-
-            $this->log('------------------------------------------------');
-            $this->log('UES enrollment took: ' . $how_long . ' secs');
-            $this->log('------------------------------------------------');
-        }
-
-        $this->email_reports();
-
-        $this->setting('running', false);
-    }
-
-    public function email_reports() {
-        global $CFG;
-
-        $admins = get_admins();
-
-        if ($this->setting('email_report') and !empty($this->emaillog)) {
-            $email_text = implode("\n", $this->emaillog);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('UES Log [%s]', $CFG->wwwroot), $email_text);
-            }
-        }
-
-        if (!empty($this->errors)) {
-            $error_text = implode("\n", $this->errors);
-
-            foreach ($admins as $admin) {
-                email_to_user($admin, ues::_s('pluginname'),
-                    sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $error_text);
-            }
-        }
-    }
-
-    public function setting($key, $value = null) {
-        if ($value !== null) {
-            return set_config($key, $value, 'enrol_ues');
-        } else {
-            return get_config('enrol_ues', $key);
-        }
-    }
-
-    /**
-     * top-level fn called by cron
-     * executes pre-process, process and post-process phases
-     */
-    public function full_process() {
-
-        if (!$this->provider()->preprocess($this)) {
-            $this->errors[] = 'Error during preprocess.';
-        }
-
-        $provider_name = $this->provider()->get_name();
-        $this->log('Pulling information from ' . $provider_name);
-        $this->process_all();
-        $this->log('------------------------------------------------');
-
-        $this->log('Begin manifestation ...');
-        $this->handle_enrollments();
-
-        if (!$this->provider()->postprocess($this)) {
-            $this->errors[] = 'Error during postprocess.';
-        }
-    }
-
 
     public function handle_enrollments() {
         // will be unenrolled
@@ -1277,7 +1334,6 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private function unenroll_users($group, $users) {
         global $DB;
-        
 
         $instance = $this->get_instance($group->courseid);
 
@@ -1717,6 +1773,184 @@ class enrol_ues_plugin extends enrol_plugin {
 
         $this->emaillog[] = $what;
     }
+
+    /**
+     * Is it possible to hide/show enrol instance via standard UI?
+     *
+     * @param stdClass $instance
+     * @return bool
+     */
+    public function can_hide_show_instance($instance) {
+        return is_siteadmin();
+    }
+
+    public function setting($key, $value = null) {
+        if ($value !== null) {
+            return set_config($key, $value, 'enrol_ues');
+        } else {
+            return get_config('enrol_ues', $key);
+        }
+    }
+
+    /**
+     * Adds an error to the stack
+     *
+     * If an optional key is provided, the error will be added by that key
+     * 
+     * @param string  $error
+     * @param string  $key
+     */
+    public function add_error($error, $key = false) {
+        if ( ! $key) {
+            $this->errors[] = $error;
+        } else {
+            $this->errors[$key] = $error;
+        }
+    }
+
+    /**
+     * Gets the error stack
+     * 
+     * @return array
+     */
+    public function get_errors() {
+        return $this->errors;
+    }
+
+    /**
+     * Determines whether or not this enrollment plugin's scheduled task is enabled
+     * 
+     * @return bool
+     */
+    private function task_is_enabled() {
+        $task = $this->get_scheduled_task();
+
+        return ! $task->get_disabled();
+    }
+
+    /**
+     * Determines whether or not this enrollment plugin is currently running
+     * 
+     * @return bool
+     */
+    private function is_running() {
+        return (bool)$this->setting('running');
+    }
+
+    /**
+     * Determines whether or not this enrollment plugin is within it's "grace period" threshold setting
+     * 
+     * @return bool
+     */
+    private function is_within_graceperiod() {
+        $task = $this->get_scheduled_task();
+
+        // get the "last run" timestamp
+        $last_run = (int)$task->get_last_run_time();
+
+        // get the "grace period" setting
+        $grace_period = (int)$this->setting('grace_period');
+
+        // calculate the time elapsed since last run
+        $time_elapsed_since_run = time() - $last_run;
+
+        // determine whether or not we are in the "grace period"
+        return ($time_elapsed_since_run < $grace_period) ? true : false;
+    }
+
+    /**
+     * Fetches the moodle "scheduled task" object
+     * 
+     * @return \core\task\scheduled_task
+     */
+    private function get_scheduled_task() {
+        $task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
+
+        return $task;
+    }
+
+    ///// Moodle enrol plugin stuff below...
+    
+    public function course_edit_validation($instance, array $data, $context) {
+        $errors = array();
+        if (is_null($instance)) {
+            return $errors;
+        }
+
+        $system = context_system::instance();
+        $can_change = has_capability('moodle/course:update', $system);
+
+        $restricted = explode(',', $this->setting('course_restricted_fields'));
+
+        foreach ($restricted as $field) {
+            if ($can_change) {
+                continue;
+            }
+
+            $default = get_config('moodlecourse', $field);
+            if (isset($data[$field]) and $data[$field] != $default) {
+                $errors[$field] = ues::_s('bad_field');
+            }
+        }
+
+        // Delegate extension validation to extensions
+        $event = new stdClass;
+        $event->instance = $instance;
+        $event->data = $data;
+        $event->context = $context;
+        $event->errors = $errors;
+
+        events_trigger_legacy('ues_course_edit_validation', $event); // @CHAD
+
+        return $event->errors;
+    }
+
+    /**
+     * 
+     * @param type $instance
+     * @param MoodleQuickForm $form
+     * @param type $data
+     * @param type $context
+     * @return type
+     */
+    public function course_edit_form($instance, MoodleQuickForm $form, $data, $context) {
+        if (is_null($instance)) {
+            return;
+        }
+
+        // Allow extension interjection
+        $event = new stdClass;
+        $event->instance = $instance;
+        $event->form = $form;
+        $event->data = $data;
+        $event->context = $context;
+
+        events_trigger_legacy('ues_course_edit_form', $event); // @CHAD
+    }
+
+    public function add_course_navigation($nodes, stdClass $instance) {
+        global $COURSE;
+        // Only interfere with UES courses
+        if (is_null($instance)) {
+            return;
+        }
+
+        $coursecontext = context_course::instance($COURSE->id);
+        $can_change = has_capability('moodle/course:update', $coursecontext);
+        if ($can_change) {
+            if ($this->setting('course_form_replace')) {
+                $url = new moodle_url(
+                    '/enrol/ues/edit.php',
+                    array('id' => $instance->courseid)
+                );
+                $nodes->parent->parent->get('editsettings')->action = $url;
+            }
+       }
+
+        // Allow outside interjection
+        $params = array($nodes, $instance);
+        events_trigger_legacy('ues_course_settings_navigation', $params); // @CHAD
+    }
 }
 
 function enrol_ues_supports($feature) {
@@ -1728,3 +1962,5 @@ function enrol_ues_supports($feature) {
             return null;
     }
 }
+
+class UesInitException extends Exception {}

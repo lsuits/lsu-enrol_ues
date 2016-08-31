@@ -374,4 +374,26 @@ abstract class ues {
 
         return $a;
     }
+
+    public static function get_task_status_description() {
+
+        $scheduled_task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
+
+        if ($scheduled_task) {
+
+            $disabled = $scheduled_task->get_disabled();
+            $last_time = $scheduled_task->get_last_run_time();
+            $next_time = $scheduled_task->get_next_scheduled_time();
+            $time_format = '%A, %e %B %G, %l:%M %p';
+
+            $details = new stdClass();
+            $details->status = (!$disabled) ? ues::_s('run_adhoc_status_enabled') : ues::_s('run_adhoc_status_disabled');
+            $details->last = ues::_s('run_adhoc_last_run_time', date_format_string($last_time, $time_format, usertimezone()));
+            $details->next = ues::_s('run_adhoc_next_run_time', date_format_string($next_time, $time_format, usertimezone()));
+
+            return ues::_s('run_adhoc_scheduled_task_details', $details);
+        }
+
+        return false;
+    }
 }
