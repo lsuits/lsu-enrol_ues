@@ -129,7 +129,7 @@ class enrol_ues_plugin extends enrol_plugin {
         $this->setting('running', true);
 
         // send "startup" email
-        this->email_startup_report($start_time);
+        $this->email_startup_report($start_time);
 
         // begin log messages
         $this->log('------------------------------------------------');
