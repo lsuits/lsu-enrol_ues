@@ -80,7 +80,7 @@ abstract class ues {
 
         $enrol->handle_pending_sections($sections);
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     // Note: this will cause manifestation (course creation if need be)
@@ -104,7 +104,8 @@ abstract class ues {
              * Refactor legacy events
              */
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 $section = cps_ues_handler::ues_section_process($section);
             }
 
@@ -113,7 +114,7 @@ abstract class ues {
 
         $enrol->handle_processed_sections($sections);
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     public static function reset_unenrollments(array $sections, $silent = true) {
@@ -125,13 +126,13 @@ abstract class ues {
             $enrol->reset_unenrollments($section);
         }
 
-        return $enrol->errors;
+        return $enrol->get_errors();
     }
 
     public static function reprocess_department($semester, $department, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
-        if (!$enrol or $enrol->errors) {
+        if (!$enrol or $enrol->get_errors()) {
             return false;
         }
 
@@ -164,7 +165,7 @@ abstract class ues {
     public static function reprocess_sections($sections, $silent = true) {
         $enrol = enrol_get_plugin('ues');
 
-        if (!$enrol or $enrol->errors) {
+        if (!$enrol or $enrol->get_errors()) {
             return false;
         }
 
@@ -274,12 +275,15 @@ abstract class ues {
              */
             global $CFG;
             if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
+                require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
                 ues_logs_event_handler::ues_section_drop($section);
             }
             if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
+                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 cps_ues_handler::ues_section_drop($section);
             }
             if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
+                require_once $CFG->dirroot.'/blocks/post_grades/events.php';
                 post_grades_handler::ues_section_drop($section);
             }
 
@@ -309,10 +313,12 @@ abstract class ues {
          */
         global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            cps_ues_handler::ues_section_drop($semester);
+            require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            cps_ues_handler::ues_semester_drop($semester);
         }
         if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            post_grades_handler::ues_section_drop($semester);
+            require_once $CFG->dirroot.'/blocks/post_grades/events.php';
+            post_grades_handler::ues_semester_drop($semester);
         }
 
         ues_semester::delete($semester->id);
@@ -424,5 +430,27 @@ abstract class ues {
             get_config('enrol_ues', 'enrollment_provider');
 
         return $a;
+    }
+
+    public static function get_task_status_description() {
+
+        $scheduled_task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
+
+        if ($scheduled_task) {
+
+            $disabled = $scheduled_task->get_disabled();
+            $last_time = $scheduled_task->get_last_run_time();
+            $next_time = $scheduled_task->get_next_scheduled_time();
+            $time_format = '%A, %e %B %G, %l:%M %p';
+
+            $details = new stdClass();
+            $details->status = (!$disabled) ? ues::_s('run_adhoc_status_enabled') : ues::_s('run_adhoc_status_disabled');
+            $details->last = ues::_s('run_adhoc_last_run_time', date_format_string($last_time, $time_format, usertimezone()));
+            $details->next = ues::_s('run_adhoc_next_run_time', date_format_string($next_time, $time_format, usertimezone()));
+
+            return ues::_s('run_adhoc_scheduled_task_details', $details);
+        }
+
+        return false;
     }
 }

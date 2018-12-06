@@ -4,7 +4,7 @@
  */
 require_once '../../config.php';
 require_once 'publiclib.php';
-
+set_time_limit(0);
 ues::require_daos();
 
 require_login();
