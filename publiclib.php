@@ -85,25 +85,17 @@ abstract class ues {
 
     // Note: this will cause manifestation (course creation if need be)
     public static function enroll_users(array $sections, $silent = true) {
+        global $CFG;
         $enrol = enrol_get_plugin('ues');
-
         $enrol->is_silent = $silent;
-
         foreach ($sections as $section) {
             foreach (array('teacher', 'student') as $type) {
                 $class = 'ues_' . $type;
-
                 $class::reset_status($section, self::PROCESSED);
             }
 
             $section->status = self::PROCESSED;
 
-            // Appropriate events needs to be adhered to
-            //events_trigger_legacy('ues_section_process', $section);
-            /*
-             * Refactor legacy events
-             */
-            global $CFG;
             if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
                 require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 $section = cps_ues_handler::ues_section_process($section);
@@ -113,7 +105,6 @@ abstract class ues {
         }
 
         $enrol->handle_processed_sections($sections);
-
         return $enrol->get_errors();
     }
 
@@ -255,33 +246,29 @@ abstract class ues {
     }
 
     public static function drop_semester($semester, $report = false) {
+        global $CFG;
         $log = function ($msg) use ($report) {
             if ($report) mtrace($msg);
         };
 
         $log('Commencing ' . $semester . " drop...\n");
-
         $count = 0;
+
         // Remove data from local tables
         foreach ($semester->sections() as $section) {
             $section_param = array('sectionid' => $section->id);
-
             $types = array('ues_student', 'ues_teacher');
 
-            // Triggered before db removal and enrollment drop
-            //events_trigger_legacy('ues_section_drop', $section);
-            /*
-             * Refactor legacy events call
-             */
-            global $CFG;
             if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
                 require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
                 ues_logs_event_handler::ues_section_drop($section);
             }
+
             if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
                 require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
                 cps_ues_handler::ues_section_drop($section);
             }
+
             if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
                 require_once $CFG->dirroot.'/blocks/post_grades/events.php';
                 post_grades_handler::ues_section_drop($section);
@@ -307,11 +294,6 @@ abstract class ues {
 
         $log('Dropped all ' . $count . " sections...\n");
 
-        //events_trigger_legacy('ues_semester_drop', $semester);
-        /*
-         * Refactor legacy events.
-         */
-        global $CFG;
         if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
             require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
             cps_ues_handler::ues_semester_drop($semester);
@@ -351,24 +333,20 @@ abstract class ues {
     public static function list_plugins() {
         global $CFG;
         $data = new stdClass;
-        // The plugins array should be allocated thusly:
-        // $data->plugins += array('plugin_name' => 'Plugin name');
         $data->plugins = array();
-
         $basedir = $CFG->dirroot.'/local/';
         foreach(scandir($basedir) as $file){
-
             if(file_exists($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'provider.php')){
                 require_once $basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'events.php';
                 $class = $file.'_enrollment_events';
                 $data = $class::ues_list_provider($data);
             }
         }
-        //events_trigger_legacy('ues_list_provider', $data);
         return $data->plugins;
     }
 
     public static function provider_class() {
+        global $CFG;
         $provider_name = get_config('enrol_ues', 'enrollment_provider');
 
         if (!$provider_name) {
@@ -383,39 +361,27 @@ abstract class ues {
 
         // Require library code
         self::require_libs();
-
         $data = new stdClass;
         $data->provider_class = "{$provider_name}_enrollment_provider";
-
-        // Handlers should provide the correct provider class and
-        // libs so it can be instantiated
-        //events_trigger_legacy("ues_load_{$provider_name}_provider", $data);
-        /*
-         * Refactor legacy events
-         */
-        global $CFG;
         $basedir = $CFG->dirroot.'/local/'.$provider_name;
+
         if(file_exists($basedir.'/events.php')){
             require_once $basedir.'/events.php';
             $class = $provider_name.'_enrollment_events';
             $fn    = 'ues_load_'.$provider_name.'_provider';
             $class::$fn($data);
-
         }
         return $data->provider_class;
     }
 
     public static function create_provider() {
         $provider_class = self::provider_class();
-
         return $provider_class ? new $provider_class() : false;
     }
 
     public static function translate_error($e) {
         $provider_class = self::provider_class();
-
         $code = $e->getMessage();
-
         $a = new stdClass;
 
         if ($code == "enrollment_unsupported") {
