@@ -1,19 +1,41 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once dirname(__FILE__) . '/lib.php';
+/**
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once(dirname(__FILE__) . '/lib.php');
 
 class ues_semester extends ues_dao {
-    var $sections;
-    var $courses;
+    public $sections;
+    public $courses;
 
     public static function in_session($when = null) {
         if (empty($when)) {
             $when = time();
         }
 
-        $filters = ues::where()
-            ->classes_start->less_equal($when)
-            ->grades_due->greater_equal($when)->is(NULL);
+        $filters = ues::where()->classes_start->less_equal($when)->grades_due->greater_equal($when)->is(null);
 
         return self::get_all($filters, true);
     }
@@ -40,7 +62,7 @@ class ues_semester extends ues_dao {
         foreach ($sections as $section) {
             $semesterid = $section->semesterid;
 
-            // Work on different semesters
+            // Work on different semesters.
             if (isset($semesters[$semesterid])) {
                 continue;
             }
@@ -61,17 +83,17 @@ class ues_semester extends ues_dao {
 }
 
 class ues_course extends ues_dao {
-    var $sections;
-    var $teachers;
-    var $student;
+    public $sections;
+    public $teachers;
+    public $student;
 
     public static function get_departments($filter = null) {
         global $DB;
 
-        $safe_filter = $filter ? "WHERE department = '".addslashes($filter)."'":'';
+        $safefilter = $filter ? "WHERE department = '" . addslashes($filter) . "'" : '';
 
         $sql = "SELECT DISTINCT(department)
-                    FROM {enrol_ues_courses} $safe_filter ORDER BY department";
+                    FROM {enrol_ues_courses} $safefilter ORDER BY department";
 
         return array_keys($DB->get_records_sql($sql));
     }
@@ -91,7 +113,7 @@ class ues_course extends ues_dao {
     }
 
     public static function by_department($dept) {
-        return ues_course::get_all(array('department' => $dept), true);
+        return self::get_all(array('department' => $dept), true);
     }
 
     public static function merge_sections(array $sections, $semester = null) {
@@ -100,7 +122,7 @@ class ues_course extends ues_dao {
         foreach ($sections as $section) {
             $courseid = $section->courseid;
 
-            // Filter on semester
+            // Filter on semester.
             if ($semester and $section->semesterid != $semester->id) {
                 continue;
             }
@@ -117,11 +139,11 @@ class ues_course extends ues_dao {
         return $courses;
     }
 
-    public function teachers($semester = null, $is_primary = true) {
+    public function teachers($semester = null, $isprimary = true) {
         if (empty($this->teachers)) {
             $filters = $this->section_filters($semester);
 
-            if ($is_primary) {
+            if ($isprimary) {
                 $filters->primary_flag->equal(1);
             }
 
@@ -143,13 +165,13 @@ class ues_course extends ues_dao {
 
     public function sections($semester = null) {
         if (empty($this->sections)) {
-            $by_params = array('courseid' => $this->id);
+            $byparams = array('courseid' => $this->id);
 
             if ($semester) {
-                $by_params['semesterid'] = $semester->id;
+                $byparams['semesterid'] = $semester->id;
             }
 
-            $this->sections = ues_section::get_all($by_params);
+            $this->sections = ues_section::get_all($byparams);
         }
 
         return $this->sections;
@@ -162,38 +184,35 @@ class ues_course extends ues_dao {
     private function section_filters($semester = null) {
         $sectionids = array_keys($this->sections($semester));
 
-        $filters = ues::where()
-            ->sectionid->in($sectionids)
-            ->status->equal(ues::PROCESSED)->equal(ues::ENROLLED);
+        $filters = ues::where()->sectionid->in($sectionids)->status->equal(ues::PROCESSED)->equal(ues::ENROLLED);
 
         return $filters;
     }
 }
 
 class ues_section extends ues_dao {
-    var $semester;
-    var $course;
+    public $semester;
+    public $course;
 
-    var $moodle;
-    var $group;
+    public $moodle;
+    public $group;
 
-    var $primary;
-    var $teachers;
+    public $primary;
+    public $teachers;
 
-    var $students;
-    //important
+    public $students;
+
+    // This is very important!!!
     protected function qualified() {
-        return ues::where()
-            ->sectionid->equal($this->id)
-            ->status->in(ues::ENROLLED, ues::PROCESSED);
+        return ues::where()->sectionid->equal($this->id)->status->in(ues::ENROLLED, ues::PROCESSED);
     }
 
     public function primary() {
         if (empty($this->primary)) {
             $teachers = $this->teachers();
-
-            $primaries = function ($t) { return $t->primary_flag; };
-
+            $primaries = function ($t) {
+                return $t->primary_flag;
+            };
             $this->primary = current(array_filter($teachers, $primaries));
         }
 
@@ -240,8 +259,8 @@ class ues_section extends ues_dao {
         if (empty($this->moodle) and !empty($this->idnumber)) {
             global $DB;
 
-            $course_params = array('idnumber' => $this->idnumber);
-            $this->moodle = $DB->get_record('course', $course_params);
+            $courseparams = array('idnumber' => $this->idnumber);
+            $this->moodle = $DB->get_record('course', $courseparams);
         }
 
         return $this->moodle;
@@ -270,7 +289,7 @@ class ues_section extends ues_dao {
     public function is_manifested() {
         global $DB;
 
-        // Clearly it hasn't
+        // Clearly it hasn't been manifested.
         if (empty($this->idnumber)) {
             return false;
         }
@@ -298,7 +317,7 @@ class ues_section extends ues_dao {
             return array();
         }
 
-        $sections = ues_section::get_all(array('idnumber' => $course->idnumber));
+        $sections = self::get_all(array('idnumber' => $course->idnumber));
 
         if ($sections and $fill) {
             foreach ($sections as $section) {
@@ -328,16 +347,16 @@ class ues_section extends ues_dao {
 }
 
 abstract class user_handler extends ues_dao {
-    var $section;
-    var $user;
+    public $section;
+    public $user;
 
-    protected function qualified($by_status = null) {
+    protected function qualified($bystatus = null) {
         $filters = ues::where()->userid->equal($this->userid);
 
-        if (empty($by_status)) {
+        if (empty($bystatus)) {
             $filters->status->in(ues::ENROLLED, ues::PROCESSED);
         } else {
-            $filters->status->equal($by_status);
+            $filters->status->equal($bystatus);
         }
 
         return $filters;
@@ -346,10 +365,10 @@ abstract class user_handler extends ues_dao {
     public function sections_by_status($status) {
         $params = $this->qualified($status);
 
-        $by_status = self::call('get_all', $params);
+        $bystatus = self::call('get_all', $params);
 
         $sections = array();
-        foreach ($by_status as $state) {
+        foreach ($bystatus as $state) {
             $section = $state->section();
             $sections[$section->id] = $section;
         }
@@ -370,10 +389,10 @@ abstract class user_handler extends ues_dao {
     public function user() {
         if (empty($this->user)) {
 
-            $username_fields = user_picture::fields();
+            $usernamefields = user_picture::fields();
 
             $user = ues_user::get(array('id' => $this->userid), true,
-                "{$username_fields}, username, idnumber");
+                "{$usernamefields}, username, idnumber");
             $this->user = $user;
         }
 
@@ -395,19 +414,19 @@ abstract class user_handler extends ues_dao {
 }
 
 class ues_teacher extends user_handler {
-    var $sections;
+    public $sections;
 
-    public function sections($is_primary = false) {
+    public function sections($isprimary = false) {
         if (empty($this->sections)) {
             $qualified = $this->qualified();
 
-            if ($is_primary) {
+            if ($isprimary) {
                 $qualified->primary_flag->equal(1);
             }
 
-            $all_teaching = ues_teacher::get_all($qualified);
+            $allteaching = self::get_all($qualified);
             $sections = array();
-            foreach ($all_teaching as $teacher) {
+            foreach ($allteaching as $teacher) {
                 $section = $teacher->section();
                 $sections[$section->id] = $section;
             }
@@ -420,14 +439,14 @@ class ues_teacher extends user_handler {
 }
 
 class ues_student extends user_handler {
-    var $sections;
+    public $sections;
 
     public function sections() {
         if (empty($this->sections)) {
-            $all_students = ues_student::get_all($this->qualified());
+            $allstudents = self::get_all($this->qualified());
 
             $sections = array();
-            foreach ($all_students as $student) {
+            foreach ($allstudents as $student) {
                 $section = $student->section();
                 $sections[$section->id] = $section;
             }
@@ -451,9 +470,7 @@ class ues_user extends ues_dao {
             $userid = $USER->id;
         }
 
-        $filters = ues::where()
-            ->userid->equal($userid)
-            ->status->in(ues::PROCESSED, ues::ENROLLED);
+        $filters = ues::where()->userid->equal($userid)->status->in(ues::PROCESSED, ues::ENROLLED);
 
         return $filters;
     }

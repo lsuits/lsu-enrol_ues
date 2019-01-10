@@ -1,7 +1,29 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 interface ues_dao_dsl_words {
     public function like($value);
     public function starts_with($value);
@@ -37,23 +59,23 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
 
     protected $memoized;
 
-    abstract function create_field($field);
+    abstract public function create_field($field);
 
-    function __construct($field = null) {
+    public function __construct($field = null) {
         if ($field) {
             $this->plus($field);
         }
     }
 
-    public function getIterator() {
+    public function getiterator() {
         return new ArrayIterator($this->get());
     }
 
-    function is_empty() {
+    public function is_empty() {
         return empty($this->fields);
     }
 
-    function get() {
+    public function get() {
         if (empty($this->fields)) {
             throw new Exception("Intent to filter, but no fields specified");
         }
@@ -61,7 +83,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $this->fields;
     }
 
-    function join_sql($alias = null) {
+    public function join_sql($alias = null) {
         $joins = $alias ? $alias : '';;
         foreach ($this->joins as $alias => $statement) {
             $joins .= ", $statement $alias";
@@ -70,17 +92,17 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $joins;
     }
 
-    function __toString() {
+    public function __toString() {
         return $this->sql();
     }
 
-    function join($statement, $alias) {
+    public function join($statement, $alias) {
         $this->joins[$alias] = $statement;
         end($this->joins);
         return $this;
     }
 
-    function on($fieldkey, $joinfield, $alias = null) {
+    public function on($fieldkey, $joinfield, $alias = null) {
         if (empty($this->joins)) {
             throw new Exception('Cannot perform join without a join declaration.');
         }
@@ -89,7 +111,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $this->$fieldkey->raw('= ' . $alias . '.' . $joinfield);
     }
 
-    function sql($handler = null) {
+    public function sql($handler = null) {
         $transform = function($field) use ($handler) {
             list($key, $built) = $field->get();
 
@@ -105,7 +127,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return implode(' AND ', $transformed);
     }
 
-    function plus($field) {
+    public function plus($field) {
         if (!isset($this->fields[$field])) {
             $this->current = $this->create_field($field);
             $this->fields[$field] = $this->current;
@@ -116,8 +138,8 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $this;
     }
 
-    // Delegate dsl words to current
-    function __call($word, $args) {
+    // Delegate dsl words to current.
+    public function __call($word, $args) {
         if (!method_exists($this->current, $word)) {
             throw new Exception('Trying to build ' . $word . ' but field does not support it');
         }
@@ -126,7 +148,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
         return $this;
     }
 
-    function __get($name) {
+    public function __get($name) {
         if (!empty($this->memoized)) {
             $memoized = $this->memoized;
             unset($this->memoized);
@@ -142,7 +164,7 @@ abstract class ues_dao_filter_builder implements IteratorAggregate {
 }
 
 class ues_dao_filter extends ues_dao_filter_builder {
-    function create_field($field) {
+    public function create_field($field) {
         return new ues_dao_field($field);
     }
 }
@@ -152,36 +174,38 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
     protected $field;
     protected $aliased;
 
-    function __construct($field) {
+    public function __construct($field) {
         $this->field = $field;
         $this->aliased = preg_match('/\./', $field);
         $this->built = array();
     }
 
-    function key() {
+    public function key() {
         return $this->field;
     }
 
-    function is_aliased() {
+    public function is_aliased() {
         return $this->aliased;
     }
 
-    function get() {
-        if (empty($this->built))
+    public function get() {
+        if (empty($this->built)) {
             throw new Exception('Trying to build sql with empty field');
-
+        }
         return array($this->key(), $this->built);
     }
 
-    function sql($key = null) {
-        $use_field = $this->field;
+    public function sql($key = null) {
+        $usefield = $this->field;
 
         if ($key) {
-            $use_field = $key;
+            $usefield = $key;
         }
 
-        $to_process = function($b) use($key) { return $key . ' ' . $b; };
-        $processed = array_map($to_process, $this->built);
+        $toprocess = function($b) use($key) {
+            return $key . ' ' . $b;
+        };
+        $processed = array_map($toprocess, $this->built);
 
         return '(' . implode(' OR ', $processed) . ')';
     }
@@ -203,61 +227,61 @@ class ues_dao_field extends ues_dao_helpers implements ues_dao_dsl_words {
         return array_map(array($this, 'clean'), $values);
     }
 
-    function like($value) {
+    public function like($value) {
         return $this->add_to("LIKE '%".addslashes($value)."%'");
     }
 
-    function starts_with($value) {
+    public function starts_with($value) {
         return $this->add_to("LIKE '".addslashes($value)."%'");
     }
 
-    function ends_with($value) {
+    public function ends_with($value) {
         return $this->add_to("LIKE '%".addslashes($value)."'");
     }
 
-    function in() {
+    public function in() {
         $cleaned = $this->arg_handler(func_get_args());
         return $this->add_to('IN (' . implode(', ', $cleaned) . ')');
     }
 
-    function not_in() {
+    public function not_in() {
         $cleaned = $this->arg_handler(func_get_args());
         return $this->add_to('NOT IN (' . implode(', ', $cleaned) . ')');
     }
 
-    function equal($value) {
+    public function equal($value) {
         return $this->comparison('=', $value);
     }
 
-    function greater($value) {
+    public function greater($value) {
         return $this->comparison('>', $value);
     }
 
-    function less($value) {
+    public function less($value) {
         return $this->comparison('<', $value);
     }
 
-    function greater_equal($value) {
+    public function greater_equal($value) {
         return $this->comparison('>=', $value);
     }
 
-    function less_equal($value) {
+    public function less_equal($value) {
         return $this->comparison('<=', $value);
     }
 
-    function not_equal($value) {
+    public function not_equal($value) {
         return $this->comparison('<>', $value);
     }
 
-    function is($value) {
+    public function is($value) {
         return $this->comparison('is', $value);
     }
 
-    function is_not($value) {
+    public function is_not($value) {
         return $this->comparison('is not', $value);
     }
 
-    function raw($sql) {
+    public function raw($sql) {
         return $this->add_to($sql);
     }
 }

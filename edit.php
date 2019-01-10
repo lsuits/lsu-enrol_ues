@@ -1,30 +1,58 @@
 <?php
-/**
- * @package enrol_ues
- */
-require_once '../../config.php';
-require_once 'publiclib.php';
-require_once $CFG->dirroot . '/course/lib.php';
-require_once 'edit_form.php';
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+// Include the requirements.
+require_once('../../config.php');
+require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
+require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->dirroot . '/edit_form.php');
+
+// Grap the courseid.
 $courseid = required_param('id', PARAM_INT);
 
+// Set the course object from the courseid.
 $course = course_get_format($courseid)->get_course();
+
+// Get the course category.
 $category = $DB->get_record(
     'course_categories', array('id' => $course->category), '*', MUST_EXIST
 );
 
-
+// Set up the page.
 $PAGE->set_pagelayout('admin');
 $PAGE->set_url('/course/edit.php', array('id' => $courseid));
 
+// Ensure the user is logged in and has access to the course in question.
 require_login($course);
 
+// Set the context for the course in question.
 $context = context_course::instance($courseid);
 
+// Ensure the user can modify the course settings.
 require_capability('moodle/course:update', $context);
 
-// From course/edit.php
+// Stolen from course/edit.php.
 $editoroptions = array(
     'maxfiles' => EDITOR_UNLIMITED_FILES,
     'maxbytes' => $CFG->maxbytes,

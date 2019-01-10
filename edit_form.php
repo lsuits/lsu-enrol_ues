@@ -1,35 +1,62 @@
 <?php
-/**
- * @package enrol_ues
- */
-require_once $CFG->dirroot . '/course/edit_form.php';
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+// Get the requirements.
+require_once($CFG->dirroot . '/course/edit_form.php');
+
+/**
+ *
+ * Overrides the course form.
+ */
 class ues_course_edit_form extends course_edit_form {
-    function definition() {
+    public function definition() {
         global $USER, $DB;
         parent::definition();
 
         $m =& $this->_form;
 
         $restricted = get_config('enrol_ues', 'course_restricted_fields');
-        $restricted_fields = explode(',', $restricted);
+        $restrictedfields = explode(',', $restricted);
 
         $system = context_system::instance();
-        $can_change = has_capability('moodle/course:update', $system);
+        $canchange = has_capability('moodle/course:update', $system);
 
-        foreach ($restricted_fields as $field) {
-            if ($can_change) {
+        foreach ($restrictedfields as $field) {
+            if ($canchange) {
                 continue;
             }
             $m->removeElement($field);
         }
 
-        $disable_grouping = (
-            in_array('groupmode', $restricted_fields) and
-            in_array('groupmodeforce', $restricted_fields)
+        $disablegrouping = (
+            in_array('groupmode', $restrictedfields) and
+            in_array('groupmodeforce', $restrictedfields)
         );
 
-        if ($disable_grouping) {
+        if ($disablegrouping) {
             $m->hardFreeze('defaultgroupingid');
             $m->removeElement('groups');
         }

@@ -1,20 +1,49 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * UES base class.
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class ues_base {
-    /** Protected static helper function to maintain calling class static
-     * overrides
+
+    /**
+     * Protected static helper function to maintain calling class static overrides.
      */
     protected static function with_class($fun) {
         return $fun(get_called_class());
     }
 
     /**
-     * @TODO investigate whether reliance on this can be eliminated through the
-     * use of late static binding static::<fn> calls
-     * @url http://php.net/manual/en/language.oop5.late-static-bindings.php
+     * Protected static override function.
+     * @return call_user_func
      */
     protected static function call($fun, $params = array()) {
         return self::with_class(function ($class) use ($fun, $params) {
@@ -22,6 +51,11 @@ abstract class ues_base {
         });
     }
 
+    /**
+     * Protected static function to implode or pass $params
+     * @var $params
+     * @return array of imploded params
+     */
     protected static function strip_joins($params) {
         if (is_array($params)) {
             return array($params, isset($params['joins']) ?
@@ -31,6 +65,11 @@ abstract class ues_base {
         }
     }
 
+    /**
+     * Protected static function to implode or pass $params
+     * @var $params
+     * @return array of imploded params
+     */
     protected static function get_internal($params, $fields = '*', $trans = null) {
         return current(self::get_all_internal($params, '', $fields, 0, 0, $trans));
     }
@@ -43,8 +82,10 @@ abstract class ues_base {
         if (is_array($params)) {
             $res = $DB->get_records($tablename, $params, $sort, $fields, $offset, $limit);
         } else {
-            $o_fields = array_map(
-                function($field) { return 'original.' . $field; },
+            $ofields = array_map(
+                function($field) {
+                    return 'original.' . $field;
+                },
                 explode(',', $fields)
             );
 
@@ -55,7 +96,7 @@ abstract class ues_base {
 
             $order = !empty($sort) ? ' ORDER BY '. $sort : '';
 
-            $sql = 'SELECT '.implode(',', $o_fields). ' FROM {'.$tablename.'} '
+            $sql = 'SELECT '.implode(',', $ofields). ' FROM {'.$tablename.'} '
                 . $joins . ' WHERE '.$where . $order;
 
             $res = $DB->get_records_sql($sql, null, $offset, $limit);
@@ -88,16 +129,16 @@ abstract class ues_base {
 
         $tablename = self::call('tablename');
 
-        $to_delete = self::count($params);
+        $todelete = self::count($params);
 
-        if ($trans and $to_delete) {
+        if ($trans and $todelete) {
             $trans($tablename);
         }
 
         if (is_array($params)) {
             return $DB->delete_records($tablename, $params);
         } else {
-            // DELETE SQL standard does not support joins, neither do we
+            // DELETE SQL standard does not support joins, neither do we.
             $sql = 'DELETE FROM {'.$tablename.'}  WHERE ' . $params->sql();
 
             return $DB->execute($sql);
@@ -128,44 +169,46 @@ abstract class ues_base {
 
         list($map, $trans) = self::update_helpers();
 
-        list($set_params, $set_keys) = $trans('set', $fields);
+        list($setparams, $setkeys) = $trans('set', $fields);
 
-        $set = implode(' ,', $set_keys);
+        $set = implode(' ,', $setkeys);
 
         $sql = 'UPDATE {' . self::call('tablename') .'} SET ' . $set;
 
         if ($params and is_array($params)) {
-            $where_keys = array_keys($params);
-            $where_params = array_map($map, $where_keys, $where_keys);
+            $wherekeys = array_keys($params);
+            $whereparams = array_map($map, $wherekeys, $wherekeys);
 
-            $where = implode(' AND ', $where_params);
+            $where = implode(' AND ', $whereparams);
 
             $sql .= ' WHERE ' . $where;
 
-            $set_params += $params;
-        } else if($params) {
+            $setparams += $params;
+        } else if ($params) {
             $sql .= ' WHERE ' . $params->sql();
         }
 
-        return $DB->execute($sql, $set_params);
+        return $DB->execute($sql, $setparams);
     }
 
     private static function update_helpers() {
-        $map = function ($key, $field) { return "$key = :$field"; };
+        $map = function ($key, $field) {
+            return "$key = :$field";
+        };
 
-        $trans = function ($new_key, $fields) use ($map) {
+        $trans = function ($newkey, $fields) use ($map) {
             $oldkeys = array_keys($fields);
 
-            $newnames = function ($field) use ($new_key) {
-                return "{$new_key}_{$field}";
+            $newnames = function ($field) use ($newkey) {
+                return "{$newkey}_{$field}";
             };
 
             $newkeys = array_map($newnames, $oldkeys);
 
             $params = array_map($map, $oldkeys, $newkeys);
 
-            $new_params = array_combine($newkeys, array_values($fields));
-            return array($new_params, $params);
+            $newparams = array_combine($newkeys, array_values($fields));
+            return array($newparams, $params);
         };
 
         return array($map, $trans);
@@ -187,23 +230,25 @@ abstract class ues_base {
     }
 
     /**
-     * 
+     *
      * @param object $db_object
      * @return ues_base
      */
-    public static function upgrade($db_object) {
-        return self::with_class(function ($class) use ($db_object) {
+    public static function upgrade($dbobject) {
+        return self::with_class(function ($class) use ($dbobject) {
 
-            $fields = $db_object ? get_object_vars($db_object) : array();
+            $fields = $dbobject ? get_object_vars($dbobject) : array();
 
-            // Children can handle their own instantiation
+            // Children can handle their own instantiation.
             $self = new $class($fields);
 
             return $self->fill_params($fields);
         });
     }
 
-    /** Instance based interaction */
+    /**
+     * Instance based interaction.
+     */
     public function fill_params(array $params = array()) {
         if (!empty($params)) {
             foreach ($params as $field => $value) {

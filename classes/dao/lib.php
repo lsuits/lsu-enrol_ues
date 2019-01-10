@@ -1,24 +1,38 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 interface meta_information {
     public function save_meta($meta);
-
     public function fill_meta();
-
     public static function meta_fields($fields);
-
     public static function get_meta($parentid);
-
     public static function get_meta_names();
-
     public static function metatablename($alias = '');
-
     public static function delete_meta($params);
-
     public static function delete_all_meta($params);
-
     public static function update_meta($params);
 }
 
@@ -55,7 +69,7 @@ abstract class ues_dao extends ues_base implements meta_information {
 
     private static function meta_sql_builder($params) {
 
-        $meta_fields = self::call('meta_fields', $params);
+        $metafields = self::call('meta_fields', $params);
 
         $tablename = self::call('tablename');
 
@@ -66,7 +80,7 @@ abstract class ues_dao extends ues_base implements meta_information {
         $tables = array('{'.$tablename.'} z');
         $filters = array('z.id = a.'.$name.'id');
 
-        foreach ($meta_fields as $i => $key) {
+        foreach ($metafields as $i => $key) {
             $letter = $alpha[$i];
             $tables[] = self::call('metatablename', $letter);
             $filters[] = $letter.'.name' . " = '" . $key ."'";
@@ -118,18 +132,20 @@ abstract class ues_dao extends ues_base implements meta_information {
             return $object;
         };
 
-        $contains_meta = self::call('params_contains_meta', $params);
+        $containsmeta = self::call('params_contains_meta', $params);
 
-        if ($contains_meta) {
-            $z_fields = array_map(function($field) { return 'z.' . $field; },
-                explode(',', $fields));
+        if ($containsmeta) {
+            $zfields = array_map(function($field) {
+                return 'z.' . $field;
+            },
+            explode(',', $fields));
 
             list($send, $joins) = self::strip_joins($params);
             list($tables, $filters) = self::meta_sql_builder($send);
 
             $order = empty($sort) ? '' : ' ORDER BY ' . $sort;
 
-            $sql = "SELECT ". implode(',', $z_fields) . ' FROM ' .
+            $sql = "SELECT ". implode(',', $zfields) . ' FROM ' .
                 $tables . $joins . ' WHERE ' . $filters . $order;
 
             $res = $DB->get_records_sql($sql, array(), $offset, $limit);
@@ -148,7 +164,7 @@ abstract class ues_dao extends ues_base implements meta_information {
 
     /**
      * @param array | ues_dao_filter_builder $params
-     * 
+     *
      */
     public static function count($params = array()) {
         global $DB;
@@ -179,10 +195,10 @@ abstract class ues_dao extends ues_base implements meta_information {
     }
 
     /**
-     * 
      * @param type $object
      * @param type $params
      * @return ues_dao
+     *
      */
     public static function upgrade_and_get($object, $params) {
         return self::with_class(function ($class) use ($object, $params) {
@@ -229,28 +245,28 @@ abstract class ues_dao extends ues_base implements meta_information {
     public static function delete_meta($params = array()) {
         global $DB;
 
-        $meta_fields = self::call('meta_fields', $params);
+        $metafields = self::call('meta_fields', $params);
 
-        $query_params = array();
-        if ($meta_fields) {
-            foreach ($meta_fields as $field) {
-                $query_params['name'] = $field;
-                $query_params['value'] = $params[$field];
+        $queryparams = array();
+        if ($metafields) {
+            foreach ($metafields as $field) {
+                $queryparams['name'] = $field;
+                $queryparams['value'] = $params[$field];
                 unset($params[$field]);
             }
         }
 
-        $meta_table = self::call('metatablename');
+        $metatable = self::call('metatablename');
 
-        return $DB->delete_records($meta_table, $params + $query_params);
+        return $DB->delete_records($metatable, $params + $queryiparams);
     }
 
     public static function delete_all_meta($params = array()) {
         global $DB;
 
-        $to_delete = $DB->get_records(self::call('tablename'), $params);
+        $todelete = $DB->get_records(self::call('tablename'), $params);
 
-        $ids = implode(',', array_keys($to_delete));
+        $ids = implode(',', array_keys($todelete));
 
         return $DB->delete_records_select(self::call('metatablename'), null,
             self::call('get_name').'id in ('.$ids.')');
@@ -259,18 +275,18 @@ abstract class ues_dao extends ues_base implements meta_information {
     public static function update_meta($params = array()) {
         global $DB;
 
-        $meta_fields = self::call('meta_fields', $params);
+        $metafields = self::call('meta_fields', $params);
 
-        if (empty($meta_fields)) {
+        if (empty($metafields)) {
             return true;
         }
 
-        $field = current($meta_fields);
+        $field = current($metafields);
         $query = array('name' => $field, 'value' => $params[$field]);
 
-        $meta_table = self::call('metatablename');
+        $metatable = self::call('metatablename');
 
-        $sql = 'UPDATE {'. $meta_table .'} SET value = :value WHERE name = :name';
+        $sql = 'UPDATE {'. $metatable .'} SET value = :value WHERE name = :name';
 
         return $DB->execute($sql, $query);
     }
@@ -297,7 +313,9 @@ abstract class ues_dao extends ues_base implements meta_information {
             return $saved;
         }
 
-        $fun = function ($e) use ($fields) { return $fields[$e]; };
+        $fun = function ($e) use ($fields) {
+            return $fields[$e];
+        };
 
         $meta = array_combine($extra, array_map($fun, $extra));
 
@@ -314,19 +332,18 @@ abstract class ues_dao extends ues_base implements meta_information {
         $metatable = self::call('metatablename');
         $parentref = self::call('get_name');
 
-        // Update Pre-existing changes
+        // Update Pre-existing changes.
         foreach ($dbs as $db) {
-            // Exists and changed, then write
+            // Exists and changed, then write.
             if (isset($meta[$db->name]) and $db->value != $meta[$db->name]) {
                 $db->value = $meta[$db->name];
-
                 $DB->update_record($metatable, $db);
             }
 
             unset($meta[$db->name]);
         }
 
-        // Persist other changes
+        // Persist other changes.
         foreach ($meta as $name => $value) {
             $m = new stdClass;
 
@@ -358,7 +375,9 @@ abstract class ues_dao extends ues_base implements meta_information {
         $meta = array();
 
         foreach (array_keys($fields) as $field) {
-            if ($field == 'id') continue;
+            if ($field == 'id') {
+                continue;
+            }
 
             if (preg_match('/^'.$name.'_/', $field)) {
                 $meta[] = $field;

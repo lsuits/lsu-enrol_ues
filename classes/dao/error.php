@@ -1,7 +1,29 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 interface ues_error_types {
     const COURSE = 'course';
     const DEPARTMENT = 'department';
@@ -10,9 +32,9 @@ interface ues_error_types {
 }
 
 class ues_error extends ues_external implements ues_error_types {
-    var $name;
-    var $params;
-    var $timestamp;
+    public $name;
+    public $params;
+    public $timestamp;
 
     public static function courses($semester) {
         return self::make(self::COURSE, array('semesterid' => self::id($semester)));
@@ -80,31 +102,31 @@ class ues_error extends ues_external implements ues_error_types {
                 global $CFG;
                 $handler = $params['handler'];
 
-                // Safely attempt to run user code; keep error on failure;
+                // Safely attempt to run user code, but keep error on failure.
                 try {
-                    $full_path = $CFG->dirroot . $handler->file;
+                    $fullpath = $CFG->dirroot . $handler->file;
 
-                    if (isset($handler->file) and file_exists($full_path)) {
-                        require_once $full_path;
-                        $enrollment->log('Requiring ' . $full_path);
+                    if (isset($handler->file) and file_exists($fullpath)) {
+                        require_once($fullpath);
+                        $enrollment->log('Requiring ' . $fullpath);
                     }
 
                     if (isset($handler->function) and is_callable($handler->function)) {
-                        $local_params = array($enrollment, $params['params']);
+                        $localparams = array($enrollment, $params['params']);
 
                         $format = is_array($handler->function) ?
                             $handler->function[1] . ' on ' . $handler->function[0] :
                             $handler->function;
 
                         $enrollment->log('Calling function ' . $format);
-                        call_user_func_array($handler->function, $local_params);
+                        call_user_func_array($handler->function, $localparams);
                     }
                 } catch (Exception $e) {
                     return false;
                 }
                 break;
             default:
-                // Don't handle it
+                // Don't handle it.
                 return false;
         }
 
