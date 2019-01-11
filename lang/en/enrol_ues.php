@@ -1,4 +1,28 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'UES Enrollment';
 $string['pluginname_desc'] = 'The UES (Universal Enrollment Service) module is a pluggable enrollment system that adheres to common university criterion including Semesters, Courses, Sections tied to coures, and teacher and student enrollment tied to Sections.<br><br>UES will load any enrollment provider that handles the `ues_list_provider`. A fully defined provider will show up in the dropdown below.<br><br>UES is a scheduled task within Moodle and can be managed by going to: Site Administration > Server > Scheduled Tasks';
@@ -147,7 +171,7 @@ __Problem__: {$a->problem}
 This will cause the enrollment plugin to abort in cron. Please address
 these errors.
 
-__Note to Developers__: Consider using the `adv_settings` for server side
+__Note to Developers__: Consider using the "adv_settings" for server side
 validation of settings.';
 
 $string['no_provider'] = 'No Enrollment Provider selected.';

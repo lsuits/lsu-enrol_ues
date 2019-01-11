@@ -1,11 +1,30 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
 
-require_once dirname(__FILE__) . '/publiclib.php';
+defined('MOODLE_INTERNAL') || die();
+
+require_once(dirname(__FILE__) . '/publiclib.php');
 
 class enrol_ues_plugin extends enrol_plugin {
 
@@ -28,7 +47,7 @@ class enrol_ues_plugin extends enrol_plugin {
      *
      * @var bool
      */
-    public $is_silent = false;
+    public $issilent = false;
 
     /**
      * an instance of the ues enrollment provider.
@@ -55,155 +74,157 @@ class enrol_ues_plugin extends enrol_plugin {
         global $CFG;
 
         ues::require_daos();
-        require_once $CFG->dirroot . '/group/lib.php';
-        require_once $CFG->dirroot . '/course/lib.php';
+        require_once($CFG->dirroot . '/group/lib.php');
+        require_once($CFG->dirroot . '/course/lib.php');
     }
 
     /**
      * Master method for kicking off UES enrollment
-     *
      * First checks a few top-level requirements to run, and then passes on to a secondary method for handling the process
-     * 
+     *
      * @param  boolean $run_as_adhoc  whether or not the task has been run "ad-hoc" or "scheduled" (default)
      * @return boolean
      */
-    public function run_enrollment_process($run_as_adhoc = false) {
+    public function run_enrollment_process($runasadhoc = false) {
         global $CFG;
 
-        // capture start time for later use
-        $start_time = microtime(true);
+        // Capture start time for later use.
+        $starttime = microtime(true);
 
-        // first, run a few top-level checks before processing enrollment
+        // First, run a few top-level checks before processing enrollment.
         try {
-            // make sure task is NOT disabled (if not run adhoc)
-            if ( ! $run_as_adhoc and ! $this->task_is_enabled()) {
-                // TODO: make a real lang string for this...
+            // Make sure task is NOT disabled (if not run adhoc).
+            if (!$runasadhoc and ! $this->task_is_enabled()) {
+                // TODO: Make a real lang string for this.
                 throw new UesInitException('This scheduled task has been disabled.');
             }
-            
-            // make sure UES is NOT running
+
+            // Make sure UES is NOT running.
             if ($this->is_running()) {
-                throw new UesInitException(ues::_s('already_running', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues'));
-            }
-            
-            // make sure UES is not within grace period threshold
-            if ($this->is_within_graceperiod()) {
-                throw new UesInitException(ues::_s('within_grace_period', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues'));
+                throw new UesInitException(
+                    ues::_s('already_running', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues')
+                );
             }
 
-            // attempt to fetch the configured "enrollment provider"
+            // Make sure UES is not within grace period threshold.
+            if ($this->is_within_graceperiod()) {
+                throw new UesInitException(
+                    ues::_s('within_grace_period', $CFG->wwwroot . '/admin/settings.php?section=enrolsettingsues')
+                );
+            }
+
+            // Attempt to fetch the configured enrollment provider.
             $provider = $this->provider();
 
-            // make sure we have a provider loaded before we proceed any further
-            if ( ! $provider) {
-                // TODO: make a real lang string for this...
+            // Make sure we have a provider loaded before we proceed any further.
+            if (!$provider) {
+                // TODO: Make a real lang string for this.
                 throw new UesInitException('Could not load the enrollment provider.');
             }
 
-        // catch any initial errors here before attempting to run
+            // Catch any initial errors here before attempting to run.
         } catch (UesInitException $e) {
-            // add the error to the stack
+            // Add the error to the stack.
             $this->add_error($e->getMessage());
-            
-            // email the error report, reporting errors only
+
+            // Email the error report, reporting errors only.
             $this->email_reports(true);
 
-            // leave the process
+            // Leave the process.
             return false;
         }
 
-        // now, begin using the provider to pull data and manifest enrollment
-        // note start time for reporting
-        return $this->run_provider_enrollment($provider, $start_time);
+         // Now, begin using the provider to pull data and manifest enrollment.
+         // Note start time for reporting.
+        return $this->run_provider_enrollment($provider, $starttime);
     }
 
     /**
      * Runs enrollment for a given UES provider
-     * 
+     *
      * @param  enrollment_provider  $provider
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return boolean  success
      */
-    public function run_provider_enrollment($provider, $start_time) {
-        // first, flag the process as "running"
+    public function run_provider_enrollment($provider, $starttime) {
+        // First, flag the process as running.
         $this->setting('running', true);
 
-        // send "startup" email
-        $this->email_startup_report($start_time);
+        // Send startup email.
+        $this->email_startup_report($starttime);
 
-        // begin log messages
+        // Begin log messages.
         $this->log('------------------------------------------------');
         $this->log(ues::_s('pluginname'));
         $this->log('------------------------------------------------');
 
-        // handle any provider preprocesses
-        if ( ! $provider->preprocess($this)) {
+        // Handle any provider preprocesses.
+        if (!$provider->preprocess($this)) {
             $this->add_error('Error during preprocess.');
         }
 
-        // pull provider data
+        // Pull provider data.
         $this->log('Pulling information from ' . $provider->get_name());
         $this->process_all();
         $this->log('------------------------------------------------');
 
-        // manifest provider data
+        // Manifest provider data.
         $this->log('Begin manifestation ...');
         $this->handle_enrollments();
 
-        // handle any provider postprocesses
-        if ( ! $provider->postprocess($this)) {
+        // Handle any provider postprocesses.
+        if (!$provider->postprocess($this)) {
             $this->add_error('Error during postprocess.');
         }
 
-        // end log messages
+        // End log messages.
         $this->log('------------------------------------------------');
-        $this->log('UES enrollment took: ' . $this->get_time_elapsed_during_enrollment($start_time));
+        $this->log('UES enrollment took: ' . $this->get_time_elapsed_during_enrollment($starttime));
         $this->log('------------------------------------------------');
 
-        // flag the process as no longer "running"
+        // Flag the process as no longer running.
         $this->setting('running', false);
 
-        // handle any errors automatically per threshold settings
-        // TODO: this causes a blank email to be sent even if everything ran OK
+        // Handle any errors automatically per threshold settings.
+        // TODO: This causes a blank email to be sent even if everything ran OK.
         $this->handle_automatic_errors();
 
-        // email final report
-        $this->email_reports(false, $start_time);
-
+        // Email final report.
+        $this->email_reports(false, $starttime);
         return true;
     }
 
     /**
      * Emails a UES "startup" report to moodle administrators
-     * 
+     *
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
-    private function email_startup_report($start_time) {
-        // get all moodle admin users
+    private function email_startup_report($starttime) {
+        // Get all moodle admin users.
         $users = get_admins();
-
-        $this->email_ues_startup_report_to_users($users, $start_time);
+        // Email these users the job has begun.
+        $this->email_ues_startup_report_to_users($users, $starttime);
     }
 
     /**
      * Emails a UES startup report (notification of start time) to given users
-     * 
+     *
      * @param  array  $users  moodle users
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
-    private function email_ues_startup_report_to_users($users, $start_time) {
+    private function email_ues_startup_report_to_users($users, $starttime) {
         global $CFG;
 
-        $start_time_display = $this->format_time_display($start_time);
+        $starttimedisplay = $this->format_time_display($starttime);
 
-        // get email content from email log
-        $email_content = 'This email is to let you know that UES Enrollment has begun at:' . $start_time_display;
+        // Get email content from email log.
+        $emailcontent = 'This email is to let you know that UES Enrollment has begun at:' . $starttimedisplay;
 
-        // send to each admin
+        // Send to each admin.
         foreach ($users as $user) {
-            email_to_user($user, ues::_s('pluginname'), sprintf('UES Enrollment Begun [%s]', $CFG->wwwroot), $email_content);
+            email_to_user($user, ues::_s('pluginname'), sprintf('UES Enrollment Begun [%s]', $CFG->wwwroot), $emailcontent);
         }
     }
 
@@ -211,79 +232,79 @@ class enrol_ues_plugin extends enrol_plugin {
      * Finds and emails moodle administrators enrollment reports
      *
      * Optionally, skips the default log report and send errors only
-     * 
+     *
      * @param  boolean  $report_errors_only
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
-    public function email_reports($report_errors_only = false, $start_time = '') {
-        // get all moodle admin users
+    public function email_reports($reporterrorsonly = false, $starttime = '') {
+        // Get all moodle admin users.
         $users = get_admins();
 
-        // determine whether or not we're sending an email log report to admins
-        if ( ! $report_errors_only and $this->setting('email_report')) {
-            $this->email_ues_log_report_to_users($users, $start_time);
+        // Determine whether or not we're sending an email log report to admins.
+        if (!$reporterrorsonly and $this->setting('email_report')) {
+            $this->email_ues_log_report_to_users($users, $starttime);
         }
 
-        // determine whether or not there are errors to report
+        // Determine whether or not there are errors to report.
         if ($this->errors_exist()) {
-            $this->email_ues_error_report_to_users($users, $start_time);
+            $this->email_ues_error_report_to_users($users, $starttime);
         }
     }
 
     /**
      * Emails a UES log report (from emaillog) to given users
-     * 
+     *
      * @param  array  $users  moodle users
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
-    private function email_ues_log_report_to_users($users, $start_time) {
+    private function email_ues_log_report_to_users($users, $starttime) {
         global $CFG;
 
-        // get email content from email log
-        $email_content = implode("\n", $this->emaillog);
+        // Get email content from email log.
+        $emailcontent = implode("\n", $this->emaillog);
 
-        if ($start_time) {
-            $start_time_display = $this->format_time_display($start_time);
+        if ($starttime) {
+            $starttimedisplay = $this->format_time_display($starttime);
 
-            $email_content .= "\n\nThis process begun at: " . $start_time_display;
+            $emailcontent .= "\n\nThis process began at: " . $starttimedisplay;
         }
 
-        // send to each admin
+        // Send to each admin.
         foreach ($users as $user) {
-            email_to_user($user, ues::_s('pluginname'), sprintf('UES Log [%s]', $CFG->wwwroot), $email_content);
+            email_to_user($user, ues::_s('pluginname'), sprintf('UES Log [%s]', $CFG->wwwroot), $emailcontent);
         }
     }
 
     /**
      * Emails a UES error report (from errors stack) to given users
-     * 
+     *
      * @param  array  $users  moodle users
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return void
      */
-    private function email_ues_error_report_to_users($users, $start_time) {
+    private function email_ues_error_report_to_users($users, $starttime) {
         global $CFG;
 
-        // get email content from error log
-        $email_content = implode("\n", $this->get_errors());
+        // Get email content from error log.
+        $emailcontent = implode("\n", $this->get_errors());
 
-        if ($start_time) {
-            $start_time_display = $this->format_time_display($start_time);
+        if ($starttime) {
+            $starttimedisplay = $this->format_time_display($starttime);
 
-            $email_content .= "\n\nThis process begun at: " . $start_time_display;
+            $emailcontent .= "\n\nThis process begun at: " . $starttimedisplay;
         }
 
-        // send to each admin
+        // Send to each admin.
         foreach ($users as $user) {
-            email_to_user($user, ues::_s('pluginname'), sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $email_content);
+            email_to_user($user, ues::_s('pluginname'), sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $emailcontent);
         }
     }
 
     /**
      * Determines whether or not there are any saved errors at this point
-     * 
+     *
      * @return bool
      */
     private function errors_exist() {
@@ -292,38 +313,38 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Formats a Unix time for display
-     * 
+     *
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return string
      */
     private function format_time_display($time) {
-        $dFormat = "l jS F, Y - H:i:s";
-        $mSecs = $time - floor($time);
-        $mSecs = substr($mSecs, 1);
+        $dformat = "l jS F, Y - H:i:s";
+        $msecs = $time - floor($time);
+        $msecs = substr($msecs, 1);
 
-        $formatted = sprintf('%s%s', date($dFormat), $mSecs);
+        $formatted = sprintf('%s%s', date($dformat), $msecs);
 
         return $formatted;
     }
 
     /**
      * Calculates amount of time (in seconds) that has elapsed since a given start time
-     * 
+     *
      * @param  float  $start_time  the current time in seconds since the Unix epoch
      * @return string  time difference in seconds
      */
-    private function get_time_elapsed_during_enrollment($start_time) {
-        // Get the difference between start and end in microseconds, as a float value
-        $diff = microtime(true) - $start_time;
+    private function get_time_elapsed_during_enrollment($starttime) {
+        // Get the difference between start and end in microseconds, as a float value.
+        $diff = microtime(true) - $starttime;
 
-        // Break the difference into seconds and microseconds
+        // Break the difference into seconds and microseconds.
         $sec = intval($diff);
         $micro = $diff - $sec;
 
-        // Format the result as you want it - will contain something like "00:00:02.452"
-        $time_elapsed = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+        // Format the result as you want it - will contain something like "00:00:02.452".
+        $timeelapsed = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
 
-        return $time_elapsed;
+        return $timeelapsed;
     }
 
     /**
@@ -376,30 +397,25 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function course_updated($inserted, $course, $data) {
-        // UES is the one to create the course
+        // UES is the one to create the course.
         if ($inserted) {
             return;
         }
-
-        // Delete extension handler
-        // 2015-02-23 Not finding any handlers for this, there is no reason to
-        // refactor it to use either Events 2.
-        //events_trigger_legacy('ues_course_updated', array($course, $data));
     }
 
     private function handle_automatic_errors() {
         $errors = ues_error::get_all();
 
-        $error_threshold = $this->setting('error_threshold');
+        $errorthreshold = $this->setting('error_threshold');
 
         $running = (bool)$this->setting('running');
 
-        // Don't reprocess if the module is running
+        // Don't reprocess if the module is running.
         if ($running) {
             return;
         }
 
-        if (count($errors) > $error_threshold) {
+        if (count($errors) > $errorthreshold) {
             $this->add_error(ues::_s('error_threshold_log'));
             return;
         }
@@ -408,11 +424,11 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function handle_enrollments() {
-        // will be unenrolled
+        // Users will be unenrolled.
         $pending = ues_section::get_all(array('status' => ues::PENDING));
         $this->handle_pending_sections($pending);
 
-        // will be enrolled
+        // Users will be enrolled.
         $processed = ues_section::get_all(array('status' => ues::PROCESSED));
         $this->handle_processed_sections($processed);
     }
@@ -424,10 +440,9 @@ class enrol_ues_plugin extends enrol_plugin {
      */
     public function process_all() {
         $time = time();
+        $processedsemesters = $this->get_semesters($time);
 
-        $processed_semesters = $this->get_semesters($time);
-
-        foreach ($processed_semesters as $semester) {
+        foreach ($processedsemesters as $semester) {
             $this->process_semester($semester);
         }
     }
@@ -436,23 +451,23 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_semester[] $semester
      */
     public function process_semester($semester) {
-        $process_courses = $this->get_courses($semester);
+        $processcourses = $this->get_courses($semester);
 
-        if (empty($process_courses)) {
+        if (empty($processcourses)) {
             return;
         }
 
-        $set_by_department   = (bool) $this->setting('process_by_department');
+        $setbydepartment   = (bool) $this->setting('process_by_department');
 
-        $supports_department = $this->provider()->supports_department_lookups();
+        $supportsdepartment = $this->provider()->supports_department_lookups();
 
-        $supports_section    = $this->provider()->supports_section_lookups();
+        $supportssection    = $this->provider()->supports_section_lookups();
 
-        if ($set_by_department and $supports_department) {
-            $this->process_semester_by_department($semester, $process_courses);
-        } else if (!$set_by_department and $supports_section) {
-            $this->process_semester_by_section($semester, $process_courses);
-        } else{
+        if ($setbydepartment and $supportsdepartment) {
+            $this->process_semester_by_department($semester, $processcourses);
+        } else if (!$setbydepartment and $supportssection) {
+            $this->process_semester_by_section($semester, $processcourses);
+        } else {
             $message = ues::_s('could_not_enroll', $semester);
 
             $this->log($message);
@@ -468,15 +483,13 @@ class enrol_ues_plugin extends enrol_plugin {
         $departments = ues_course::flatten_departments($courses);
 
         foreach ($departments as $department => $courseids) {
-            $filters = ues::where()
-                ->semesterid->equal($semester->id)
-                ->courseid->in($courseids);
+            $filters = ues::where()->semesterid->equal($semester->id)->courseid->in($courseids);
 
-            //'current' means they already exist in the DB
-            $current_sections = ues_section::get_all($filters);
+            // Current means they already exist in the DB.
+            $currentsections = ues_section::get_all($filters);
 
             $this->process_enrollment_by_department(
-                $semester, $department, $current_sections
+                $semester, $department, $currentsections
             );
         }
     }
@@ -484,9 +497,9 @@ class enrol_ues_plugin extends enrol_plugin {
     private function process_semester_by_section($semester, $courses) {
         foreach ($courses as $course) {
             foreach ($course->sections as $section) {
-                $ues_section = ues_section::by_id($section->id);
+                $uessection = ues_section::by_id($section->id);
                 $this->process_enrollment(
-                    $semester, $course, $ues_section
+                    $semester, $course, $uessection
                 );
             }
         }
@@ -500,18 +513,18 @@ class enrol_ues_plugin extends enrol_plugin {
      *
      */
     public function get_semesters($time) {
-        $set_days = (int) $this->setting('sub_days');
-        $sub_days = 24 * $set_days * 60 * 60;
+        $setdays = (int) $this->setting('sub_days');
+        $subdays = 24 * $setdays * 60 * 60;
 
-        $now = ues::format_time($time - $sub_days);
+        $now = ues::format_time($time - $subdays);
 
         $this->log('Pulling Semesters for ' . $now . '...');
 
         try {
-            $semester_source = $this->provider()->semester_source();
-            $semesters = $semester_source->semesters($now);
+            $semestersource = $this->provider()->semester_source();
+            $semesters = $semestersource->semesters($now);
             $this->log('Processing ' . count($semesters) . " Semesters...\n");
-            $p_semesters = $this->process_semesters($semesters);
+            $psemesters = $this->process_semesters($semesters);
 
             $v = function($s) {
                 return !empty($s->grades_due);
@@ -521,34 +534,32 @@ class enrol_ues_plugin extends enrol_plugin {
                 return !empty($s->semester_ignore);
             };
 
-            list($other, $failures) = $this->partition($p_semesters, $v);
+            list($other, $failures) = $this->partition($psemesters, $v);
 
-            // Notify improper semester
-            foreach ($failures as $failed_sem) {
-                $this->add_error(ues::_s('failed_sem', $failed_sem));
+            // Notify improper semester.
+            foreach ($failures as $failedsem) {
+                $this->add_error(ues::_s('failed_sem', $failedsem));
             }
 
             list($ignored, $valids) = $this->partition($other, $i);
 
-            // Ignored sections with semesters will be unenrolled
-            foreach ($ignored as $ignored_sem) {
-                $where_manifested = ues::where()
-                    ->semesterid->equal($ignored_sem->id)
-                    ->status->equal(ues::MANIFESTED);
+            // Ignored sections with semesters will be unenrolled.
+            foreach ($ignored as $ignoredsem) {
+                $wheremanifested = ues::where()->semesterid->equal($ignoredsem->id)->status->equal(ues::MANIFESTED);
 
-                $to_drop = array('status' => ues::PENDING);
+                $todrop = array('status' => ues::PENDING);
 
-                // This (what? Pending status?) will be caught in regular process
-                ues_section::update($to_drop, $where_manifested);
+                // This will be caught in regular process.
+                ues_section::update($todrop, $wheremanifested);
             }
 
-            $sems_in = function ($sem) use ($time, $sub_days) {
-                $end_check = $time < $sem->grades_due;
+            $semsin = function ($sem) use ($time, $subdays) {
+                $endcheck = $time < $sem->grades_due;
 
-                return ($sem->classes_start - $sub_days) < $time && $end_check;
+                return ($sem->classes_start - $subdays) < $time && $endcheck;
             };
 
-            return array_filter($valids, $sems_in);
+            return array_filter($valids, $semsin);
         } catch (Exception $e) {
 
             $this->add_error($e->getMessage());
@@ -585,9 +596,9 @@ class enrol_ues_plugin extends enrol_plugin {
             $courses = $this->provider()->course_source()->courses($semester);
 
             $this->log('Processing ' . count($courses) . " Courses...\n");
-            $process_courses = $this->process_courses($semester, $courses);
+            $processcourses = $this->process_courses($semester, $courses);
 
-            return $process_courses;
+            return $processcourses;
         } catch (Exception $e) {
             $this->add_error(sprintf(
                     'Unable to process courses for %s; Message was: %s',
@@ -595,7 +606,7 @@ class enrol_ues_plugin extends enrol_plugin {
                     $e->getMessage()
                     ));
 
-            // Queue up errors
+            // Queue up errors.
             ues_error::courses($semester)->save();
 
             return array();
@@ -610,43 +621,43 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param string $department department to process
      * @param ues_section[] $current_sections current UES records for the department/semester combination
      */
-    public function process_enrollment_by_department($semester, $department, $current_sections) {
+    public function process_enrollment_by_department($semester, $department, $currentsections) {
         try {
 
-            $teacher_source = $this->provider()->teacher_department_source();
-            $student_source = $this->provider()->student_department_source();
+            $teachersource = $this->provider()->teacher_department_source();
+            $studentsource = $this->provider()->student_department_source();
 
-            $teachers = $teacher_source->teachers($semester, $department);
-            $students = $student_source->students($semester, $department);
+            $teachers = $teachersource->teachers($semester, $department);
+            $students = $studentsource->students($semester, $department);
 
             $sectionids = ues_section::ids_by_course_department($semester, $department);
 
             $filter = ues::where('sectionid')->in($sectionids);
-            $current_teachers = ues_teacher::get_all($filter);
-            $current_students = ues_student::get_all($filter);
+            $currentteachers = ues_teacher::get_all($filter);
+            $currentstudents = ues_student::get_all($filter);
 
-            $ids_param    = ues::where('id')->in($sectionids);
-            $all_sections = ues_section::get_all($ids_param);
+            $idsparam    = ues::where('id')->in($sectionids);
+            $allsections = ues_section::get_all($idsparam);
 
-            $this->process_teachers_by_department($semester, $department, $teachers, $current_teachers);
-            $this->process_students_by_department($semester, $department, $students, $current_students);
+            $this->process_teachers_by_department($semester, $department, $teachers, $currentteachers);
+            $this->process_students_by_department($semester, $department, $students, $currentstudents);
 
-            unset($current_teachers);
-            unset($current_students);
+            unset($currentteachers);
+            unset($currentstudents);
 
-            foreach ($current_sections as $section) {
+            foreach ($currentsections as $section) {
                 $course = $section->course();
                 // Set status to ues::PROCESSED.
                 $this->post_section_process($semester, $course, $section);
 
-                unset($all_sections[$section->id]);
+                unset($allsections[$section->id]);
             }
 
             // Drop remaining sections.
-            if (!empty($all_sections)) {
+            if (!empty($allsections)) {
                 ues_section::update(
                     array('status' => ues::PENDING),
-                    ues::where('id')->in(array_keys($all_sections))
+                    ues::where('id')->in(array_keys($allsections))
                 );
             }
 
@@ -674,8 +685,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param object[] $teachers
      * @param ues_teacher[] $current_teachers
      */
-    public function process_teachers_by_department($semester, $department, $teachers, $current_teachers) {
-        $this->fill_roles_by_department('teacher', $semester, $department, $teachers, $current_teachers);
+    public function process_teachers_by_department($semester, $department, $teachers, $currentteachers) {
+        $this->fill_roles_by_department('teacher', $semester, $department, $teachers, $currentteachers);
     }
 
     /**
@@ -685,8 +696,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param object[] $students
      * @param ues_student[] $current_students
      */
-    public function process_students_by_department($semester, $department, $students, $current_students) {
-        $this->fill_roles_by_department('student', $semester, $department, $students, $current_students);
+    public function process_students_by_department($semester, $department, $students, $currentstudents) {
+        $this->fill_roles_by_department('student', $semester, $department, $students, $currentstudents);
     }
 
     /**
@@ -699,35 +710,35 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param object[] $pulled_users incoming users from the provider
      * @param ues_teacher[] | ues_student[] $current_users all UES users for this semester
      */
-    private function fill_roles_by_department($type, $semester, $department, $pulled_users, $current_users) {
-        foreach ($pulled_users as $user) {
-            $course_params = array(
+    private function fill_roles_by_department($type, $semester, $department, $pulledusers, $currentusers) {
+        foreach ($pulledusers as $user) {
+            $courseparams = array(
                 'department' => $department,
                 'cou_number' => $user->cou_number
             );
 
-            $course = ues_course::get($course_params);
+            $course = ues_course::get($courseparams);
 
             if (empty($course)) {
                 continue;
             }
 
-            $section_params = array(
+            $sectionparams = array(
                 'semesterid' => $semester->id,
                 'courseid'   => $course->id,
                 'sec_number' => $user->sec_number
             );
 
-            $section = ues_section::get($section_params);
+            $section = ues_section::get($sectionparams);
 
             if (empty($section)) {
                 continue;
             }
-            $this->{'process_'.$type.'s'}($section, array($user), $current_users);
+            $this->{'process_'.$type.'s'}($section, array($user), $currentusers);
 
         }
 
-        $this->release($type, $current_users);
+        $this->release($type, $currentusers);
     }
 
     /**
@@ -747,21 +758,17 @@ class enrol_ues_plugin extends enrol_plugin {
                     'session_key' => $semester->session_key
                 );
 
-                //convert obj to full-fledged ues_semester
+                // Convert the obj to full-fledged ues semester.
                 $ues = ues_semester::upgrade_and_get($semester, $params);
 
                 if (empty($ues->classes_start)) {
                     continue;
                 }
 
-                // Call event before potential insert, as to notify creation
-                // Unmonitored event.
-                //events_trigger_legacy('ues_semester_process', $ues);
-
-                //persist to {ues_semesters}
+                // Persist to Database table ues_semesters.
                 $ues->save();
 
-                // Fill in metadata from {enrol_ues_semestermeta}
+                // Fill in metadata from the table enrol_ues_semestermeta.
                 $ues->fill_meta();
 
                 $processed[] = $ues;
@@ -794,37 +801,34 @@ class enrol_ues_plugin extends enrol_plugin {
                     'cou_number' => $course->cou_number
                 );
 
-                $ues_course = ues_course::upgrade_and_get($course, $params);
+                $uescourse = ues_course::upgrade_and_get($course, $params);
 
-                // Unmonitored event.
-                //events_trigger_legacy('ues_course_process', $ues_course);
+                $uescourse->save();
 
-                $ues_course->save();
-
-                $processed_sections = array();
-                foreach ($ues_course->sections as $section) {
+                $processedsections = array();
+                foreach ($uescourse->sections as $section) {
                     $params = array(
-                        'courseid'   => $ues_course->id,
+                        'courseid'   => $uescourse->id,
                         'semesterid' => $semester->id,
                         'sec_number' => $section->sec_number
                     );
 
-                    $ues_section = ues_section::upgrade_and_get($section, $params);
+                    $uessection = ues_section::upgrade_and_get($section, $params);
 
                     /*
                      * If the section does not already exist
                      * in {enrol_ues_sections}, insert it,
                      * marking its status as PENDING.
                      */
-                    if (empty($ues_section->id)) {
-                        $ues_section->courseid   = $ues_course->id;
-                        $ues_section->semesterid = $semester->id;
-                        $ues_section->status     = ues::PENDING;
+                    if (empty($uessection->id)) {
+                        $uessection->courseid   = $uescourse->id;
+                        $uessection->semesterid = $semester->id;
+                        $uessection->status     = ues::PENDING;
 
-                        $ues_section->save();
+                        $uessection->save();
                     }
 
-                    $processed_sections[] = $ues_section;
+                    $processedsections[] = $uessection;
                 }
 
                 /*
@@ -832,9 +836,9 @@ class enrol_ues_plugin extends enrol_plugin {
                  * the fully instantiated, and now persisted,
                  * ues_section objects.
                  */
-                $ues_course->sections = $processed_sections;
+                $uescourse->sections = $processedsections;
 
-                $processed[] = $ues_course;
+                $processed[] = $uescourse;
             } catch (Exception $e) {
                 $this->add_error($e->getMessage());
             }
@@ -847,23 +851,23 @@ class enrol_ues_plugin extends enrol_plugin {
      * Could be used to process a single course upon request
      */
     public function process_enrollment($semester, $course, $section) {
-        $teacher_source = $this->provider()->teacher_source();
+        $teachersource = $this->provider()->teacher_source();
 
-        $student_source = $this->provider()->student_source();
+        $studentsource = $this->provider()->student_source();
 
         try {
-            $teachers = $teacher_source->teachers($semester, $course, $section);
-            $students = $student_source->students($semester, $course, $section);
+            $teachers = $teachersource->teachers($semester, $course, $section);
+            $students = $studentsource->students($semester, $course, $section);
 
             $filter = array('sectionid' => $section->id);
-            $current_teachers = ues_teacher::get_all($filter);
-            $current_students = ues_student::get_all($filter);
+            $currentteachers = ues_teacher::get_all($filter);
+            $currentstudents = ues_student::get_all($filter);
 
-            $this->process_teachers($section, $teachers, $current_teachers);
-            $this->process_students($section, $students, $current_students);
+            $this->process_teachers($section, $teachers, $currentteachers);
+            $this->process_students($section, $students, $currentstudents);
 
-            $this->release('teacher', $current_teachers);
-            $this->release('student', $current_students);
+            $this->release('teacher', $currentteachers);
+            $this->release('student', $currentstudents);
 
             $this->post_section_process($semester, $course, $section);
         } catch (Exception $e) {
@@ -876,41 +880,37 @@ class enrol_ues_plugin extends enrol_plugin {
     private function release($type, $users) {
 
         foreach ($users as $user) {
-            // No reason to release a second time
+            // No reason to release a second time.
             if ($user->status == ues::UNENROLLED) {
                 continue;
             }
 
-            // Maybe the course hasn't been created... clear the pending flag
+            // Maybe the course hasn't been created... clear the pending flag.
             $status = $user->status == ues::PENDING ? ues::UNENROLLED : ues::PENDING;
 
             $user->status = $status;
             $user->save();
 
             global $CFG;
-            if($type === 'teacher'){
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            if ($type === 'teacher') {
+                if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                    require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
 
-                    // Specific release for instructor
-                    //events_trigger_legacy('ues_teacher_release', $user);
+                    // Specific release for instructor.
                     $user = cps_ues_handler::ues_teacher_release($user);
                 }
-            }else if($type === 'student'){
-                if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
+            } else if ($type === 'student') {
+                if (file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
+                    require_once($CFG->dirroot.'/blocks/ues_logs/eventslib.php');
                     ues_logs_event_handler::ues_student_release($user);
                 }
-
             }
 
-            // Drop manifested sections for teacher POTENTIAL drops
+            // Drop manifested sections for teacher POTENTIAL drops.
             if ($user->status == ues::PENDING and $type == 'teacher') {
-                $existing = ues_teacher::get_all(ues::where()
-                    ->status->in(ues::PROCESSED, ues::ENROLLED)
-                );
+                $existing = ues_teacher::get_all(ues::where()->status->in(ues::PROCESSED, ues::ENROLLED));
 
-                // No other primary, so we can safely flip the switch
+                // No other primary, so we can safely flip the switch.
                 if (empty($existing)) {
                     ues_section::update(
                         array('status' => ues::PENDING),
@@ -925,63 +925,53 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     private function post_section_process($semester, $course, $section) {
-        // Process section only if teachers can be processed
-        // Take into consideration outside forces manipulating
-        // processed numbers through event handlers
-        $by_processed = ues::where()
-            ->status->in(ues::PROCESSED, ues::ENROLLED)
-            ->sectionid->equal($section->id);
+        // Process section only if teachers can be processed.
+        // Take into consideration outside forces manipulating.
+        // Processed numbers through event handlers.
+        $byprocessed = ues::where()->status->in(ues::PROCESSED, ues::ENROLLED)->sectionid->equal($section->id);
 
-        $processed_teachers = ues_teacher::count($by_processed);
+        $processedteachers = ues_teacher::count($byprocessed);
 
-        // A section _can_ be processed only if they have a teacher
-        // Further, this has to happen for a section to be queued
-        // for enrollment
-        if (!empty($processed_teachers)) {
-            // Full section
+        // A section _can_ be processed only if they have a teacher.
+        // Further, this has to happen for a section to be queued for enrollment.
+        if (!empty($processedteachers)) {
+            // Full section.
             $section->semester = $semester;
             $section->course = $course;
 
-            $previous_status = $section->status;
+            $previousstatus = $section->status;
 
             $count = function ($type) use ($section) {
-                $enrollment = ues::where()
-                    ->sectionid->equal($section->id)
-                    ->status->in(ues::PROCESSED, ues::PENDING);
+                $enrollment = ues::where()->sectionid->equal($section->id)->status->in(ues::PROCESSED, ues::PENDING);
 
                 $class = 'ues_'.$type;
 
                 return $class::count($enrollment);
             };
 
-            $will_enroll = ($count('teacher') or $count('student'));
+            $willenroll = ($count('teacher') or $count('student'));
 
-            if ($will_enroll) {
-                // Make sure the teacher will be enrolled
+            if ($willenroll) {
+                // Make sure the teacher will be enrolled.
                 ues_teacher::reset_status($section, ues::PROCESSED, ues::ENROLLED);
                 $section->status = ues::PROCESSED;
             }
 
-            // Allow outside interaction
-            // events_trigger_legacy('ues_section_process', $section);
-            /**
-             * Refactor old events_trigger_legacy
-             */
+            // Allow outside interaction.
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                 $section = cps_ues_handler::ues_section_process($section);
             }
 
-
-            if ($previous_status != $section->status) {
+            if ($previousstatus != $section->status) {
                 $section->save();
             }
         }
     }
 
-    public function process_teachers($section, $users, &$current_users) {
-        return $this->fill_role('teacher', $section, $users, $current_users, function($user) {
+    public function process_teachers($section, $users, &$currentusers) {
+        return $this->fill_role('teacher', $section, $users, $currentusers, function($user) {
             return array('primary_flag' => $user->primary_flag);
         });
     }
@@ -998,23 +988,23 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param (ues_student | ues_teacher)[] $current_users
      * @return void
      */
-    public function process_students($section, $users, &$current_users) {
-        return $this->fill_role('student', $section, $users, $current_users);
+    public function process_students($section, $users, &$currentusers) {
+        return $this->fill_role('student', $section, $users, $currentusers);
     }
 
-    // Allow public API to reset unenrollments
+    // Allow public API to reset unenrollments.
     public function reset_unenrollments($section) {
         $course = $section->moodle();
 
-        // Nothing to do
+        // Nothing to do.
         if (empty($course)) {
             return;
         }
 
-        $ues_course = $section->course();
+        $uescourse = $section->course();
 
         foreach (array('student', 'teacher') as $type) {
-            $group = $this->manifest_group($course, $ues_course, $section);
+            $group = $this->manifest_group($course, $uescourse, $section);
 
             $class = 'ues_' . $type;
 
@@ -1057,28 +1047,24 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $course = $section->moodle();
 
-                $ues_course = $section->course();
+                $uescourse = $section->course();
 
                 foreach (array('student', 'teacher') as $type) {
 
-                    $group = $this->manifest_group($course, $ues_course, $section);
+                    $group = $this->manifest_group($course, $uescourse, $section);
 
                     $class = 'ues_' . $type;
 
-                    $params = ues::where()
-                        ->sectionid->equal($section->id)
-                        ->status->in(ues::ENROLLED, ues::UNENROLLED);
+                    $params = ues::where()->sectionid->equal($section->id)->status->in(ues::ENROLLED, ues::UNENROLLED);
 
                     $users = $class::get_all($params);
                     $this->unenroll_users($group, $users);
                 }
 
-                // set course visibility according to user preferences (block_cps)
-                $setting_params = ues::where()
-                    ->userid->equal($USER->id)
-                    ->name->starts_with('creation_');
+                // Set course visibility according to user preferences (block_cps).
+                $settingparams = ues::where()->userid->equal($USER->id)->name->starts_with('creation_');
 
-                $settings        = cps_setting::get_to_name($setting_params);
+                $settings        = cps_setting::get_to_name($settingparams);
                 $setting         = !empty($settings['creation_visible']) ? $settings['creation_visible'] : false;
 
                 $course->visible = isset($setting->value) ? $setting->value : get_config('moodlecourse', 'visible');
@@ -1087,13 +1073,10 @@ class enrol_ues_plugin extends enrol_plugin {
 
                 $this->log('Unloading ' . $course->idnumber);
 
-                //events_trigger_legacy('ues_course_severed', $course);
-                /**
-                 * Refactor events_trigger_legacy().
-                 */
+                // Refactor events_trigger_legacy().
                 global $CFG;
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                    require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                     cps_ues_handler::ues_course_severed($course);
                 }
 
@@ -1150,10 +1133,10 @@ class enrol_ues_plugin extends enrol_plugin {
             return $in->enrol == 'ues';
         });
 
-        // Cannot enrol without an instance
+        // Cannot enrol without an instance.
         if (empty($attempt)) {
-            $course_params = array('id' => $courseid);
-            $course = $DB->get_record('course', $course_params);
+            $courseparams = array('id' => $courseid);
+            $course = $DB->get_record('course', $courseparams);
 
             $id = $this->add_instance($course);
 
@@ -1166,8 +1149,8 @@ class enrol_ues_plugin extends enrol_plugin {
     public function manifest_category($course) {
         global $DB;
 
-        $cat_params = array('name' => $course->department);
-        $category = $DB->get_record('course_categories', $cat_params);
+        $catparams = array('name' => $course->department);
+        $category = $DB->get_record('course_categories', $catparams);
 
         if (!$category) {
             $category = new stdClass;
@@ -1212,72 +1195,69 @@ class enrol_ues_plugin extends enrol_plugin {
      * @return boolean
      */
     private function manifestation($semester, $course, $section) {
-        // Check for instructor changes
-        $teacher_params = array(
+        // Check for instructor changes.
+        $teacherparams = array(
             'sectionid' => $section->id,
             'primary_flag' => 1
         );
 
-        $new_primary = ues_teacher::get($teacher_params + array(
+        $newprimary = ues_teacher::get($teacherparams + array(
             'status' => ues::PROCESSED
         ));
 
-        $old_primary = ues_teacher::get($teacher_params + array(
+        $oldprimary = ues_teacher::get($teacherparams + array(
             'status' => ues::PENDING
         ));
 
-        //if there's no old primary, check to see if there's an old non-primary
-        if(!$old_primary){
-            $old_primary = ues_teacher::get(array(
+        // If there's no old primary, check to see if there's an old non-primary.
+        if (!$oldprimary) {
+            $oldprimary = ues_teacher::get(array(
                 'sectionid'    => $section->id,
                 'status'       => ues::PENDING,
                 'primary_flag' => 0
             ));
 
-            // if this is the same user getting a promotion, no need to unenroll the course...
-            if($old_primary){
-                $old_primary = $old_primary->userid == $new_primary->userid ? false : $old_primary;
+            // Ff this is the same user getting a promotion, no need to unenroll the course.
+            if ($oldprimary) {
+                $oldprimary = $oldprimary->userid == $newprimary->userid ? false : $oldprimary;
             }
         }
 
-
-        // Campuses may want to handle primary instructor changes differently
-        if ($new_primary and $old_primary) {
+        // Campuses may want to handle primary instructor changes differently.
+        if ($newprimary and $oldprimary) {
 
             global $DB;
-            $new = $DB->get_record('user',array('id'=>$new_primary->userid));
-            $old = $DB->get_record('user',array('id'=>$old_primary->userid));
+            $new = $DB->get_record('user', array('id' => $newprimary->userid));
+            $old = $DB->get_record('user', array('id' => $oldprimary->userid));
             $this->log(sprintf("instructor change from %s to %s\n", $old->username, $new->username));
 
             $data = new stdClass;
             $data->section = $section;
-            $data->old_primary = $old_primary;
-            $data->new_primary = $new_primary;
-            // events_trigger_legacy('ues_primary_change', $data);
-            /**
-             * Refactor events_trigger()
-             */
+            $data->old_primary = $oldprimary;
+            $data->new_primary = $newprimary;
+
+             // Refactor events_trigger().
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                 $data = cps_ues_handler::ues_primary_change($data);
             }
 
             $section = $data->section;
         }
 
-        // For certain we are working with a real course
+        // For certain we are working with a real course.
         try {
-            // @quickfix 1/13/17 - if this fails, let's throw an exception, log, and then continue
-            $moodle_course = $this->manifest_course($semester, $course, $section);
+            // Quick fix 1/13/17 - if this fails, let's throw an exception, log, and then continue.
+            $moodlecourse = $this->manifest_course($semester, $course, $section);
         } catch (Exception $e) {
             $this->log($e->getMessage());
 
-            // was not successful, so return false (?)
+            // Was not successful, so return false (?).
             return false;
         }
-        
-        $this->manifest_course_enrollment($moodle_course, $course, $section);
+
+        $this->manifest_course_enrollment($moodlecourse, $course, $section);
 
         return true;
     }
@@ -1292,24 +1272,24 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_course $course object from {enrol_ues_courses}
      * @param ues_section $section object from {enrol_ues_sections}
      */
-    private function manifest_course_enrollment($moodle_course, $course, $section) {
-        $group = $this->manifest_group($moodle_course, $course, $section);
+    private function manifest_course_enrollment($moodlecourse, $course, $section) {
+        $group = $this->manifest_group($moodlecourse, $course, $section);
 
-        $general_params = array('sectionid' => $section->id);
+        $generalparams = array('sectionid' => $section->id);
 
         $actions = array(
             ues::PROCESSED => 'enroll',
             ues::PENDING => 'unenroll'
         );
 
-        $unenroll_count = $enroll_count = 0;
+        $unenrollcount = $enrollcount = 0;
 
         foreach (array('teacher', 'student') as $type) {
             $class = 'ues_' . $type;
 
             foreach ($actions as $status => $action) {
-                $action_params = $general_params + array('status' => $status);
-                ${$action . '_count'} = $class::count($action_params);
+                $actionparams = $generalparams + array('status' => $status);
+                ${$action . '_count'} = $class::count($actionparams);
 
                 if (${$action . '_count'}) {
                     // This will only happen if there are no more
@@ -1317,8 +1297,8 @@ class enrol_ues_plugin extends enrol_plugin {
                     // We should log it as a potential error and continue.
                     try {
 
-                        $to_action = $class::get_all($action_params);
-                        $this->{$action . '_users'}($group, $to_action);
+                        $toaction = $class::get_all($actionparams);
+                        $this->{$action . '_users'}($group, $toaction);
                     } catch (Exception $e) {
                         $this->add_error(ues::_s('error_no_group', $group));
                     }
@@ -1326,17 +1306,17 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        if ($unenroll_count or $enroll_count) {
-            $this->log('Manifesting enrollment for: ' . $moodle_course->idnumber .
+        if ($unenrollcount or $enrollcount) {
+            $this->log('Manifesting enrollment for: ' . $moodlecourse->idnumber .
             ' ' . $section->sec_number);
 
             $out = '';
-            if ($unenroll_count) {
-                $out .= 'Unenrolled ' . $unenroll_count . ' users; ';
+            if ($unenrollcount) {
+                $out .= 'Unenrolled ' . $unenrollcount . ' users; ';
             }
 
-            if ($enroll_count) {
-                $out .= 'Enrolled ' . $enroll_count . ' users';
+            if ($enrollcount) {
+                $out .= 'Enrolled ' . $enrollcount . ' users';
             }
 
             $this->log($out);
@@ -1346,16 +1326,16 @@ class enrol_ues_plugin extends enrol_plugin {
     private function enroll_users($group, $users) {
         $instance = $this->get_instance($group->courseid);
 
-        // Pull this setting once
+        // Pull this setting once.
         $recover = $this->setting('recover_grades');
 
-        // Require check once
+        // Require check once.
         if ($recover and !function_exists('grade_recover_history_grades')) {
             global $CFG;
-            require_once $CFG->libdir . '/gradelib.php';
+            require_once($CFG->libdir . '/gradelib.php');
         }
 
-        $recover_grades_for = function($user) use ($recover, $instance) {
+        $recovergradesfor = function($user) use ($recover, $instance) {
             if ($recover) {
                 grade_recover_history_grades($user->userid, $instance->courseid);
             }
@@ -1369,24 +1349,20 @@ class enrol_ues_plugin extends enrol_plugin {
 
             groups_add_member($group->id, $user->userid);
 
-            $recover_grades_for($user);
+            $recovergradesfor($user);
 
             $user->status = ues::ENROLLED;
             $user->save();
 
-            $event_params = array(
+            $eventparams = array(
                 'group' => $group,
                 'ues_user' => $user
             );
-
-            // Unmonitored event.
-            //events_trigger_legacy('ues_' . $shortname . '_enroll', $event_params);
         }
     }
 
     private function unenroll_users($group, $users) {
         global $DB;
-
 
         $instance = $this->get_instance($group->courseid);
 
@@ -1399,7 +1375,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
             $roleid = $this->setting($shortname . '_role');
 
-            // Ignore pending statuses for users who have no role assignment
+            // Ignore pending statuses for users who have no role assignment.
             $context = context_course::instance($course->id);
             if (!is_enrolled($context, $user->userid)) {
                 continue;
@@ -1407,68 +1383,59 @@ class enrol_ues_plugin extends enrol_plugin {
 
             groups_remove_member($group->id, $user->userid);
 
-            // Don't mark those meat to be unenrolled to processed
-            $prev_status = $user->status;
+            // Don't mark those meat to be unenrolled to processed.
+            $prevstatus = $user->status;
 
-            $to_status = (
+            $tostatus = (
                 $user->status == ues::PENDING or
                 $user->status == ues::UNENROLLED
             ) ?
                 ues::UNENROLLED :
                 ues::PROCESSED;
 
-            $user->status = $to_status;
+            $user->status = $tostatus;
             $user->save();
 
             $sections = $user->sections_by_status(ues::ENROLLED);
 
-            $is_enrolled = false;
-            $same_section = false;
-            $suspend_enrollment = get_config('enrol_ues', 'suspend_enrollment');
+            $isenrolled = false;
+            $samesection = false;
+            $suspendenrollment = get_config('enrol_ues', 'suspend_enrollment');
 
             foreach ($sections as $section) {
                 if ($section->idnumber == $course->idnumber) {
-                    $is_enrolled = true;
+                    $isenrolled = true;
                 }
 
-                // This user is enroll as another role in the same section
+                // This user is enrolled as another role in the same section.
                 if ($section->id == $user->sectionid) {
-                    $same_section = true;
+                    $samesection = true;
                 }
             }
 
-            // This user is enrolled as another role (teacher) in the same
-            // section so keep groups alive
-            if (!$is_enrolled) {
-                if ($suspend_enrollment == 0) {
+            // This user is enrolled as another role (teacher) in the same section so keep groups alive.
+            if (!$isenrolled) {
+                if ($suspendenrollment == 0) {
                     $this->unenrol_user($instance, $user->userid, $roleid);
                 } else {
                     $this->update_user_enrol($instance, $user->userid, ENROL_USER_SUSPENDED);
-                } 
-            } else if ($same_section) {
+                }
+            } else if ($samesection) {
                 groups_add_member($group->id, $user->userid);
             }
 
-            if ($to_status != $prev_status and $to_status == ues::UNENROLLED) {
-                $event_params = array(
+            if ($tostatus != $prevstatus and $tostatus == ues::UNENROLLED) {
+                $eventparams = array(
                     'group' => $group,
                     'ues_user' => $user
                 );
-
-                // Unmonitored event.
-                //events_trigger_legacy('ues_' . $shortname . '_unenroll', $event_params);
             }
-
         }
 
-        $count_params = array('groupid' => $group->id);
-        if (!$DB->count_records('groups_members', $count_params)) {
-            // Going ahead and delete as delete
+        $countparams = array('groupid' => $group->id);
+        if (!$DB->count_records('groups_members', $countparams)) {
+            // Going ahead and delete.
             groups_delete_group($group->id);
-
-            // No-op event.
-            // @see cps_ues_handler::ues_group_emptied()
-            // events_trigger_legacy('ues_group_emptied', $group);
         }
     }
 
@@ -1480,16 +1447,16 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param ues_section $section object from {enrol_ues_sections}
      * @return stdClass object from {groups}
      */
-    private function manifest_group($moodle_course, $course, $section) {
+    private function manifest_group($moodlecourse, $course, $section) {
         global $DB;
 
-        $group_params = array(
-            'courseid' => $moodle_course->id,
+        $groupparams = array(
+            'courseid' => $moodlecourse->id,
             'name' => "{$course->department} {$course->cou_number} {$section->sec_number}"
         );
 
-        if (!$group = $DB->get_record('groups', $group_params)) {
-            $group = (object) $group_params;
+        if (!$group = $DB->get_record('groups', $groupparams)) {
+            $group = (object) $groupparams;
             $group->id = groups_create_group($group);
         }
 
@@ -1498,44 +1465,44 @@ class enrol_ues_plugin extends enrol_plugin {
 
     private function manifest_course($semester, $course, $section) {
         global $DB;
-        $primary_teacher = $section->primary();
+        $primaryteacher = $section->primary();
 
-        if (!$primary_teacher) {
+        if (!$primaryteacher) {
 
-            $primary_teacher = current($section->teachers()); //arbitrary ? send email notice
+            $primaryteacher = current($section->teachers());
 
-            // @quickfix 1/13/17 - if there is still no primary teacher at this point,
-            // let's throw an exception to the parent manifestation method (which will log)
-            if ( ! $primary_teacher) {
+            // Quick fix 1/13/17 - if there is still no primary teacher at this point
+            // let's throw an exception to the parent manifestation method (which will log).
+            if (!$primaryteacher) {
                 throw new Exception('Cannot find primary teacher for section id: ' . $section->id);
 
                 return;
             }
         }
 
-        $assumed_idnumber = $semester->year . $semester->name .
+        $assumedidnumber = $semester->year . $semester->name .
             $course->department . $semester->session_key . $course->cou_number .
-            $primary_teacher->userid;
+            $primaryteacher->userid;
 
-        // Take into consideration of outside forces manipulating idnumbers
-        // Therefore we must check the section's idnumber before creating one
-        // Possibility the course was deleted externally
+        // Take into consideration of outside forces manipulating idnumbers.
+        // Therefore we must check the section's idnumber before creating one.
+        // Possibility the course was deleted externally.
 
-        $idnumber = !empty($section->idnumber) ? $section->idnumber : $assumed_idnumber;
+        $idnumber = !empty($section->idnumber) ? $section->idnumber : $assumedidnumber;
 
-        $course_params = array('idnumber' => $idnumber);
+        $courseparams = array('idnumber' => $idnumber);
 
-        $moodle_course = $DB->get_record('course', $course_params);
+        $moodlecourse = $DB->get_record('course', $courseparams);
 
-        // Handle system creation defaults
+        // Handle system creation defaults.
         $settings = array(
-            'visible','format','lang','groupmode','groupmodeforce', 'hiddensections',
-            'newsitems','showgrades','showreports','maxbytes','enablecompletion',
-            'completionstartonenrol','numsections', 'legacyfiles'
+            'visible', 'format', 'lang', 'groupmode', 'groupmodeforce', 'hiddensections',
+            'newsitems', 'showgrades', 'showreports', 'maxbytes', 'enablecompletion',
+            'completionstartonenrol', 'numsections', 'legacyfiles'
         );
 
-        if (!$moodle_course) {
-            $user = $primary_teacher->user();
+        if (!$moodlecourse) {
+            $user = $primaryteacher->user();
 
             $session = empty($semester->session_key) ? '' :
                 '(' . $semester->session_key . ') ';
@@ -1551,70 +1518,61 @@ class enrol_ues_plugin extends enrol_plugin {
             $a->fullname = fullname($user);
             $a->userid = $user->id;
 
-            $sn_pattern = $this->setting('course_shortname');
-            $fn_pattern = $this->setting('course_fullname');
+            $snpattern = $this->setting('course_shortname');
+            $fnpattern = $this->setting('course_fullname');
 
-            $shortname = ues::format_string($sn_pattern, $a);
-            $assumed_fullname = ues::format_string($fn_pattern, $a);
+            $shortname = ues::format_string($snpattern, $a);
+            $assumedfullname = ues::format_string($fnpattern, $a);
 
-            $moodle_course = new stdClass;
-            $moodle_course->idnumber = $idnumber;
-            $moodle_course->shortname = $shortname;
-            $moodle_course->fullname = $assumed_fullname;
-            $moodle_course->category = $category->id;
-            $moodle_course->summary = $course->fullname;
-            $moodle_course->startdate = $semester->classes_start;
+            $moodlecourse = new stdClass;
+            $moodlecourse->idnumber = $idnumber;
+            $moodlecourse->shortname = $shortname;
+            $moodlecourse->fullname = $assumedfullname;
+            $moodlecourse->category = $category->id;
+            $moodlecourse->summary = $course->fullname;
+            $moodlecourse->startdate = $semester->classes_start;
 
-            // Set system defaults
+            // Set system defaults.
             foreach ($settings as $key) {
-                $moodle_course->$key = get_config('moodlecourse', $key);
+                $moodlecourse->$key = get_config('moodlecourse', $key);
             }
 
-            // Actually needs to happen, before the create call
-            //events_trigger_legacy('ues_course_create', $moodle_course);
-            /*
-             * Refactor events_trigger_legacy call
-             */
+            // Refactor events_trigger_legacy call.
             global $CFG;
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                $moodle_course = cps_ues_handler::ues_course_create($moodle_course);
+            if (file_exists($CFG->dirroot . '/blocks/cps/events/ues.php')) {
+                require_once($CFG->dirroot . '/blocks/cps/events/ues.php');
+                $moodlecourse = cps_ues_handler::ues_course_create($moodlecourse);
             }
 
             try {
-                $moodle_course = create_course($moodle_course);
+                $moodlecourse = create_course($moodlecourse);
 
-                $this->add_instance($moodle_course);
+                $this->add_instance($moodlecourse);
             } catch (Exception $e) {
-                $this->add_error(ues::_s('error_shortname', $moodle_course));
+                $this->add_error(ues::_s('error_shortname', $moodlecourse));
 
-                $course_params = array('shortname' => $moodle_course->shortname);
-                $idnumber = $moodle_course->idnumber;
+                $courseparams = array('shortname' => $moodlecourse->shortname);
+                $idnumber = $moodlecourse->idnumber;
 
-                $moodle_course = $DB->get_record('course', $course_params);
-                $moodle_course->idnumber = $idnumber;
+                $moodlecourse = $DB->get_record('course', $courseparams);
+                $moodlecourse->idnumber = $idnumber;
 
-                if (!$DB->update_record('course', $moodle_course)) {
-                    $this->add_error('Could not update course: ' . $moodle_course->idnumber);
+                if (!$DB->update_record('course', $moodlecourse)) {
+                    $this->add_error('Could not update course: ' . $moodlecourse->idnumber);
                 }
             }
         }
 
         if (!$section->idnumber) {
-            $section->idnumber = $moodle_course->idnumber;
+            $section->idnumber = $moodlecourse->idnumber;
             $section->save();
         }
 
-        return $moodle_course;
+        return $moodlecourse;
     }
 
     /**
-     * Triggers an event, 'user_updated' which is consumed by block_cps
-     * and other. The badgeslib.php event handler uses a run-time type
-     * hint which caused problems for ues enrollment process_all()
-     * causes problems
      *
-     * @todo fix badgeslib issue
      * @global type $CFG
      * @param type $u
      *
@@ -1624,25 +1582,24 @@ class enrol_ues_plugin extends enrol_plugin {
     private function create_user($u) {
         $present = !empty($u->idnumber);
 
-        $by_idnumber = array('idnumber' => $u->idnumber);
+        $byidnumber = array('idnumber' => $u->idnumber);
 
-        $by_username = array('username' => $u->username);
+        $byusername = array('username' => $u->username);
 
-        $exact_params = $by_idnumber + $by_username;
+        $exactparams = $byidnumber + $byusername;
 
         $user = ues_user::upgrade($u);
 
-        if ($prev = ues_user::get($exact_params, true)) {
+        if ($prev = ues_user::get($exactparams, true)) {
             $user->id = $prev->id;
-        } else if ($present and $prev = ues_user::get($by_idnumber, true)) {
+        } else if ($present and $prev = ues_user::get($byidnumber, true)) {
             $user->id = $prev->id;
-            // Update email
+            // Update email.
             $user->email = $user->username . $this->setting('user_email');
-        } else if ($prev = ues_user::get($by_username, true)) {
+        } else if ($prev = ues_user::get($byusername, true)) {
             $user->id = $prev->id;
         } else {
             global $CFG;
-            //@todo take a close look here - watch primary flag
             $user->email = $user->username . $this->setting('user_email');
             $user->confirmed = $this->setting('user_confirm');
             $user->city = $this->setting('user_city');
@@ -1651,54 +1608,47 @@ class enrol_ues_plugin extends enrol_plugin {
             $user->firstaccess = time();
             $user->timecreated = $user->firstaccess;
             $user->auth = $this->setting('user_auth');
-            $user->mnethostid = $CFG->mnet_localhost_id; // always local user
+            $user->mnethostid = $CFG->mnet_localhost_id; // Always local user.
 
             $created = true;
         }
 
         if (!empty($created)) {
             $user->save();
-
-            //events_trigger_legacy('user_created', $user);
         } else if ($prev and $this->user_changed($prev, $user)) {
-            // Re-throw exception with more helpful information
+            // Re-throw exception with more helpful information.
             try {
                 $user->save();
             } catch (Exception $e) {
                 $rea = $e->getMessage();
 
-                $new_err = "%s | Current %s | Stored %s";
+                $newerr = "%s | Current %s | Stored %s";
                 $log = "(%s: '%s')";
 
                 $curr = sprintf($log, $user->username, $user->idnumber);
                 $prev = sprintf($log, $prev->username, $prev->idnumber);
 
-                throw new Exception(sprintf($new_err, $rea, $curr, $prev));
+                throw new Exception(sprintf($newerr, $rea, $curr, $prev));
             }
-
-            // Unmonitored event
-            // events_trigger_legacy('user_updated', (object)$user);
         }
 
         // If the provider supplies initial password information, set it now.
-        if(isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)){
+        if (isset($user->auth) and $user->auth === 'manual' and isset($user->init_password)) {
             $user->password = $user->init_password;
             update_internal_user_password($user, $user->init_password);
 
-            // let's not pass this any further.
+            // Let's not pass this any further.
             unset($user->init_password);
 
             // Need an instance of stdClass in the try stack.
-            $userX = (array) $user;
-            $userY = (object) $userX;
+            $userx = (array) $user;
+            $usery = (object) $userx;
 
             // Force user to change password on next login.
-            set_user_preference('auth_forcepasswordchange', 1, $userY);
+            set_user_preference('auth_forcepasswordchange', 1, $usery);
         }
-
         return $user;
     }
-
 
     /**
      *
@@ -1718,63 +1668,60 @@ class enrol_ues_plugin extends enrol_plugin {
         $namefields   = user_picture::fields();
         $sql          = "SELECT id, idnumber, $namefields FROM {user} WHERE id = :id";
 
-        // @TODO ues_user does not currently upgrade with the alt names.
-        $previoususer = $DB->get_record_sql($sql, array('id'=>$prev->id));
+        // The ues_user method does not currently upgrade with the alt names.
+        $previoususer = $DB->get_record_sql($sql, array('id' => $prev->id));
 
-        // Need to establish which users have preferred names.
+        // So we need to establish which users have preferred names.
         $haspreferredname            = !empty($previoususer->alternatename);
 
         // For users without preferred names, check that old and new firstnames match.
         // No need to take action, if true.
-        $reguser_firstnameunchanged  = !$haspreferredname && $previoususer->firstname == $current->firstname;
+        $reguserfirstnameunchanged  = !$haspreferredname && $previoususer->firstname == $current->firstname;
 
         // For users with preferred names, check that old altname matches incoming firstname.
         // No need to take action, if true.
-        $prefuser_firstnameunchanged = $haspreferredname && $previoususer->alternatename == $current->firstname;
+        $prefuserfirstnameunchanged = $haspreferredname && $previoususer->alternatename == $current->firstname;
 
         // Composition of the previous two variables. If either if false,
         // we need to take action and return 'true'.
-        $firstnameunchanged          = $reguser_firstnameunchanged || $prefuser_firstnameunchanged;
+        $firstnameunchanged          = $reguserfirstnameunchanged || $prefuserfirstnameunchanged;
 
         // We take action if last name has changed at all.
         $lastnameunchanged           = $previoususer->lastname == $current->lastname;
 
         // If there is change in either first or last, we are going to update the user DB record.
-        if(!$firstnameunchanged || !$lastnameunchanged){
+        if (!$firstnameunchanged || !$lastnameunchanged) {
             // When the first name of a user who has set a preferred
             // name changes, we reset the preference in CPS.
-            if(!$prefuser_firstnameunchanged){
-                $DB->set_field('user', 'alternatename', NULL, array('id'=>$previoususer->id));
+            if (!$prefuserfirstnameunchanged) {
+                $DB->set_field('user', 'alternatename', null, array('id' => $previoususer->id));
 
-                //events_trigger_legacy('preferred_name_legitimized', $current);
-                /*
-                 * Refactor events_trigger_legacy
-                 */
+                // Refactor events_trigger_legacy.
                 global $CFG;
-                if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+                if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                    require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                     cps_ues_handler::preferred_name_legitimized($current);
                 }
             }
             return true;
         }
 
-        if ($prev->idnumber != $current->idnumber){
+        if ($prev->idnumber != $current->idnumber) {
             return true;
         }
 
-        if ($prev->username != $current->username){
+        if ($prev->username != $current->username) {
             return true;
         }
 
-        $current_meta = $current->meta_fields(get_object_vars($current));
+        $currentmeta = $current->meta_fields(get_object_vars($current));
 
-        foreach ($current_meta as $field) {
-            if (!isset($prev->{$field})){
+        foreach ($currentmeta as $field) {
+            if (!isset($prev->{$field})) {
                 return true;
             }
 
-            if ($prev->{$field} != $current->{$field}){
+            if ($prev->{$field} != $current->{$field}) {
                 return true;
             }
         }
@@ -1790,60 +1737,57 @@ class enrol_ues_plugin extends enrol_plugin {
      * @param callback $extra_params function returning additional user parameters/fields
      * an associative array of additional params, given a user as input
      */
-    private function fill_role($type, $section, $users, &$current_users, $extra_params = null) {
+    private function fill_role($type, $section, $users, &$currentusers, $extraparams = null) {
         $class = 'ues_' . $type;
-        $already_enrolled = array(ues::ENROLLED, ues::PROCESSED);
+        $alreadyenrolled = array(ues::ENROLLED, ues::PROCESSED);
 
         foreach ($users as $user) {
-            $ues_user = $this->create_user($user);
+            $uesuser = $this->create_user($user);
 
             $params = array(
                 'sectionid' => $section->id,
-                'userid'    => $ues_user->id
+                'userid'    => $uesuser->id
             );
 
-            if ($extra_params) {
-                // teacher-specific; returns user's primary flag key => value
-                $params += $extra_params($ues_user);
+            if ($extraparams) {
+                // Teacher-specific; returns user's primary flag key => value.
+                $params += $extraparams($uesuser);
             }
 
-            $ues_type = $class::upgrade($ues_user);
+            $uestype = $class::upgrade($uesuser);
 
-            unset($ues_type->id);
+            unset($uestype->id);
             if ($prev = $class::get($params, true)) {
-                $ues_type->id = $prev->id;
-                unset($current_users[$prev->id]);
+                $uestype->id = $prev->id;
+                unset($currentusers[$prev->id]);
 
-                // Intentionally save meta fields before continuing
-                // Meta fields can change without enrollment changes
-                $fields = get_object_vars($ues_type);
-                if ($ues_type->params_contains_meta($fields)) {
-                    $ues_type->save();
+                // Intentionally save meta fields before continuing.
+                // Meta fields can change without enrollment changes.
+                $fields = get_object_vars($uestype);
+                if ($uestype->params_contains_meta($fields)) {
+                    $uestype->save();
                 }
 
-                if (in_array($prev->status, $already_enrolled)) {
+                if (in_array($prev->status, $alreadyenrolled)) {
                     continue;
                 }
             }
 
-            $ues_type->userid = $ues_user->id;
-            $ues_type->sectionid = $section->id;
-            $ues_type->status = ues::PROCESSED;
+            $uestype->userid = $uesuser->id;
+            $uestype->sectionid = $section->id;
+            $uestype->status = ues::PROCESSED;
 
-            $ues_type->save();
+            $uestype->save();
 
             if (empty($prev) or $prev->status == ues::UNENROLLED) {
-                // events_trigger_legacy($class . '_process', $ues_type);
-                /*
-                 * Refactor events_trigger_legacy
-                 */
+                // Refactor events_trigger_legacy.
                 global $CFG;
-                if($type === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                    require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
-                    ues_logs_event_handler::ues_student_process($ues_type);
-                }elseif($type === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                    require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
-                    cps_ues_handler::ues_teacher_process($ues_type);
+                if ($type === 'student' && file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
+                    require_once($CFG->dirroot.'/blocks/ues_logs/eventslib.php');
+                    ues_logs_event_handler::ues_student_process($uestype);
+                } else if ($type === 'teacher' && file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                    require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
+                    cps_ues_handler::ues_teacher_process($uestype);
                 }
             }
         }
@@ -1894,7 +1838,7 @@ class enrol_ues_plugin extends enrol_plugin {
      * Adds an error to the stack
      *
      * If an optional key is provided, the error will be added by that key
-     * 
+     *
      * @param string  $error
      * @param string  $key
      */
@@ -1908,7 +1852,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Gets the error stack
-     * 
+     *
      * @return array
      */
     public function get_errors() {
@@ -1917,7 +1861,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Determines whether or not this enrollment plugin's scheduled task is enabled
-     * 
+     *
      * @return bool
      */
     private function task_is_enabled() {
@@ -1928,7 +1872,7 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Determines whether or not this enrollment plugin is currently running
-     * 
+     *
      * @return bool
      */
     private function is_running() {
@@ -1937,28 +1881,28 @@ class enrol_ues_plugin extends enrol_plugin {
 
     /**
      * Determines whether or not this enrollment plugin is within it's "grace period" threshold setting
-     * 
+     *
      * @return bool
      */
     private function is_within_graceperiod() {
         $task = $this->get_scheduled_task();
 
-        // get the "last run" timestamp
-        $last_run = (int)$task->get_last_run_time();
+        // Get the "last run" timestamp.
+        $lastrun = (int)$task->get_last_run_time();
 
-        // get the "grace period" setting
-        $grace_period = (int)$this->setting('grace_period');
+        // Get the "grace period" setting.
+        $graceperiod = (int)$this->setting('grace_period');
 
-        // calculate the time elapsed since last run
-        $time_elapsed_since_run = time() - $last_run;
+        // Calculate the time elapsed since last run.
+        $timeelapsedsincerun = time() - $lastrun;
 
-        // determine whether or not we are in the "grace period"
-        return ($time_elapsed_since_run < $grace_period) ? true : false;
+        // Determine whether or not we are in the grace period.
+        return ($timeelapsedsincerun < $graceperiod) ? true : false;
     }
 
     /**
      * Fetches the moodle "scheduled task" object
-     * 
+     *
      * @return \core\task\scheduled_task
      */
     private function get_scheduled_task() {
@@ -1967,8 +1911,8 @@ class enrol_ues_plugin extends enrol_plugin {
         return $task;
     }
 
-    ///// Moodle enrol plugin stuff below...
 
+    // Moodle enrol plugin stuff below.
     public function course_edit_validation($instance, array $data, $context) {
         $errors = array();
         if (is_null($instance)) {
@@ -1976,12 +1920,12 @@ class enrol_ues_plugin extends enrol_plugin {
         }
 
         $system = context_system::instance();
-        $can_change = has_capability('moodle/course:update', $system);
+        $canchange = has_capability('moodle/course:update', $system);
 
         $restricted = explode(',', $this->setting('course_restricted_fields'));
 
         foreach ($restricted as $field) {
-            if ($can_change) {
+            if ($canchange) {
                 continue;
             }
 
@@ -1991,15 +1935,12 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        // Delegate extension validation to extensions
+        // Delegate extension validation to extensions.
         $event = new stdClass;
         $event->instance = $instance;
         $event->data = $data;
         $event->context = $context;
         $event->errors = $errors;
-
-        //Unmonitored event.
-        //events_trigger_legacy('ues_course_edit_validation', $event);
 
         return $event->errors;
     }
@@ -2017,27 +1958,24 @@ class enrol_ues_plugin extends enrol_plugin {
             return;
         }
 
-        // Allow extension interjection
+        // Allow extension interjection.
         $event = new stdClass;
         $event->instance = $instance;
         $event->form = $form;
         $event->data = $data;
         $event->context = $context;
-
-        //Unmonitored event.
-        //events_trigger_legacy('ues_course_edit_form', $event);
     }
 
     public function add_course_navigation($nodes, stdClass $instance) {
         global $COURSE;
-        // Only interfere with UES courses
+        // Only interfere with UES courses.
         if (is_null($instance)) {
             return;
         }
 
         $coursecontext = context_course::instance($COURSE->id);
-        $can_change = has_capability('moodle/course:update', $coursecontext);
-        if ($can_change) {
+        $canchange = has_capability('moodle/course:update', $coursecontext);
+        if ($canchange) {
             if ($this->setting('course_form_replace')) {
                 $url = new moodle_url(
                     '/enrol/ues/edit.php',
@@ -2047,18 +1985,15 @@ class enrol_ues_plugin extends enrol_plugin {
             }
         }
 
-        // Allow outside interjection
+        // Allow outside interjection.
         $params = array($nodes, $instance);
 
-        /**
-         * Refactor events_trigger_legacy()
-         */
+        // Refactor events_trigger_legacy().
         global $CFG;
-        if(file_exists($CFG->dirroot.'/blocks/ues_reprocess/eventslib.php')){
-            require_once $CFG->dirroot.'/blocks/ues_reprocess/eventslib.php';
+        if (file_exists($CFG->dirroot.'/blocks/ues_reprocess/eventslib.php')) {
+            require_once($CFG->dirroot.'/blocks/ues_reprocess/eventslib.php');
             ues_event_handler::ues_course_settings_navigation($params);
         }
-        //events_trigger_legacy('ues_course_settings_navigation', $params);
     }
 
     /**
@@ -2069,8 +2004,8 @@ class enrol_ues_plugin extends enrol_plugin {
      * @return boolean
      */
     public function run_clear_reprocess() {
-    global $DB;
-    $DB->delete_records('enrol_ues_sectionmeta', array('name'=>'section_reprocessed'));
+        global $DB;
+        $DB->delete_records('enrol_ues_sectionmeta', array('name' => 'section_reprocessed'));
     }
 }
 
@@ -2084,4 +2019,5 @@ function enrol_ues_supports($feature) {
     }
 }
 
-class UesInitException extends Exception {}
+class UesInitException extends Exception {
+}

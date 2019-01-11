@@ -1,18 +1,38 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
+
+defined('MOODLE_INTERNAL') || die();
 
 abstract class ues {
     const PENDING = 'pending';
     const PROCESSED = 'processed';
 
-    // Section is created
+    // Section is created.
     const MANIFESTED = 'manifested';
     const SKIPPED = 'skipped';
 
-    // Teacher / Student manifestation
+    // Teacher / Student manifestation.
     const ENROLLED = 'enrolled';
     const UNENROLLED = 'unenrolled';
 
@@ -24,19 +44,19 @@ abstract class ues {
     public static function require_daos() {
         $dao = self::base('classes/dao');
 
-        require_once $dao . '/base.php';
-        require_once $dao . '/extern.php';
-        require_once $dao . '/lib.php';
-        require_once $dao . '/daos.php';
-        require_once $dao . '/error.php';
-        require_once $dao . '/filter.php';
+        require_once($dao . '/base.php');
+        require_once($dao . '/extern.php');
+        require_once($dao . '/lib.php');
+        require_once($dao . '/daos.php');
+        require_once($dao . '/error.php');
+        require_once($dao . '/filter.php');
     }
 
     public static function require_extensions() {
         $classes = self::base('classes');
 
-        require_once $classes . '/processors.php';
-        require_once $classes . '/provider.php';
+        require_once($classes . '/processors.php');
+        require_once($classes . '/provider.php');
     }
 
     public static function format_time($time) {
@@ -83,7 +103,7 @@ abstract class ues {
         return $enrol->get_errors();
     }
 
-    // Note: this will cause manifestation (course creation if need be)
+    // Note: this will cause manifestation (course creation if need be).
     public static function enroll_users(array $sections, $silent = true) {
         global $CFG;
         $enrol = enrol_get_plugin('ues');
@@ -96,8 +116,8 @@ abstract class ues {
 
             $section->status = self::PROCESSED;
 
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                 $section = cps_ues_handler::ues_section_process($section);
             }
 
@@ -133,13 +153,13 @@ abstract class ues {
 
         $enrol->is_silent = $silent;
 
-        // Work on making department reprocessing code separate
+        // Work on making department reprocessing code separate.
         ues_error::department($semester, $department)->handle($enrol);
 
         $ids = ues_section::ids_by_course_department($semester, $department);
 
-        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
-        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
+        $pending = ues_section::get_all(self::where('id')->in($ids)->status->equal(self::PENDING));
+        $processed = ues_section::get_all(self::where('id')->in($ids)->status->equal(self::PROCESSED));
 
         $enrol->handle_pending_sections($pending);
         $enrol->handle_processed_sections($processed);
@@ -174,8 +194,8 @@ abstract class ues {
 
         $ids = array_keys($sections);
 
-        $pending = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PENDING));
-        $processed = ues_section::get_all(ues::where('id')->in($ids)->status->equal(ues::PROCESSED));
+        $pending = ues_section::get_all(self::where('id')->in($ids)->status->equal(self::PENDING));
+        $processed = ues_section::get_all(self::where('id')->in($ids)->status->equal(self::PROCESSED));
 
         $enrol->handle_pending_sections($pending);
         $enrol->handle_processed_sections($processed);
@@ -184,7 +204,7 @@ abstract class ues {
     }
 
     public static function reprocess_for($teacher, $silent = true) {
-        $ues_user = $teacher->user();
+        $uesuser = $teacher->user();
 
         $provider = self::create_provider();
 
@@ -196,7 +216,7 @@ abstract class ues {
             $semesters = ues_semester::in_session();
 
             foreach ($semesters as $semester) {
-                $courses = $info->teacher_info($semester, $ues_user);
+                $courses = $info->teacher_info($semester, $uesuser);
 
                 $processed = $enrol->process_courses($semester, $courses);
 
@@ -224,10 +244,10 @@ abstract class ues {
         $amount = count($errors);
 
         if ($amount) {
-            $e_txt = $amount === 1 ? 'error' : 'errors';
+            $etxt = $amount === 1 ? 'error' : 'errors';
 
             $enrol->log('-------------------------------------');
-            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $e_txt . ':');
+            $enrol->log('Attempting to reprocess ' . $amount . ' ' . $etxt . ':');
             $enrol->log('-------------------------------------');
         }
 
@@ -248,33 +268,35 @@ abstract class ues {
     public static function drop_semester($semester, $report = false) {
         global $CFG;
         $log = function ($msg) use ($report) {
-            if ($report) mtrace($msg);
+            if ($report) {
+                mtrace($msg);
+            }
         };
 
         $log('Commencing ' . $semester . " drop...\n");
         $count = 0;
 
-        // Remove data from local tables
+        // Remove data from local tables.
         foreach ($semester->sections() as $section) {
-            $section_param = array('sectionid' => $section->id);
+            $sectionparam = array('sectionid' => $section->id);
             $types = array('ues_student', 'ues_teacher');
 
-            if(file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')){
-                require_once $CFG->dirroot.'/blocks/ues_logs/eventslib.php';
+            if (file_exists($CFG->dirroot.'/blocks/ues_logs/eventslib.php')) {
+                require_once($CFG->dirroot.'/blocks/ues_logs/eventslib.php');
                 ues_logs_event_handler::ues_section_drop($section);
             }
 
-            if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-                require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+            if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+                require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
                 cps_ues_handler::ues_section_drop($section);
             }
 
-            if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-                require_once $CFG->dirroot.'/blocks/post_grades/events.php';
+            if (file_exists($CFG->dirroot.'/blocks/post_grades/events.php')) {
+                require_once($CFG->dirroot.'/blocks/post_grades/events.php');
                 post_grades_handler::ues_section_drop($section);
             }
 
-            // Optimize enrollment deletion
+            // Optimize enrollment deletion.
             foreach ($types as $class) {
                 $class::delete_all(array('sectionid' => $section->id));
             }
@@ -282,8 +304,8 @@ abstract class ues {
 
             $count ++;
 
-            $should_report = ($count <= 100 and $count % 10 == 0);
-            if ($should_report or $count % 100 == 0) {
+            $shouldreport = ($count <= 100 and $count % 10 == 0);
+            if ($shouldreport or $count % 100 == 0) {
                 $log('Dropped ' . $count . " sections...\n");
             }
 
@@ -294,12 +316,12 @@ abstract class ues {
 
         $log('Dropped all ' . $count . " sections...\n");
 
-        if(file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')){
-            require_once $CFG->dirroot.'/blocks/cps/events/ues.php';
+        if (file_exists($CFG->dirroot.'/blocks/cps/events/ues.php')) {
+            require_once($CFG->dirroot.'/blocks/cps/events/ues.php');
             cps_ues_handler::ues_semester_drop($semester);
         }
-        if(file_exists($CFG->dirroot.'/blocks/post_grades/events.php')){
-            require_once $CFG->dirroot.'/blocks/post_grades/events.php';
+        if (file_exists($CFG->dirroot.'/blocks/post_grades/events.php')) {
+            require_once($CFG->dirroot.'/blocks/post_grades/events.php');
             post_grades_handler::ues_semester_drop($semester);
         }
 
@@ -335,9 +357,9 @@ abstract class ues {
         $data = new stdClass;
         $data->plugins = array();
         $basedir = $CFG->dirroot.'/local/';
-        foreach(scandir($basedir) as $file){
-            if(file_exists($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'provider.php')){
-                require_once $basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'events.php';
+        foreach (scandir($basedir) as $file) {
+            if (file_exists($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'provider.php')) {
+                require_once($basedir.DIRECTORY_SEPARATOR.$file.DIRECTORY_SEPARATOR.'events.php');
                 $class = $file.'_enrollment_events';
                 $data = $class::ues_list_provider($data);
             }
@@ -347,52 +369,52 @@ abstract class ues {
 
     public static function provider_class() {
         global $CFG;
-        $provider_name = get_config('enrol_ues', 'enrollment_provider');
+        $providername = get_config('enrol_ues', 'enrollment_provider');
 
-        if (!$provider_name) {
+        if (!$providername) {
             return false;
         }
 
         $plugins = self::list_plugins();
 
-        if (!isset($plugins[$provider_name])) {
+        if (!isset($plugins[$providername])) {
             return false;
         }
 
-        // Require library code
+        // Require library code.
         self::require_libs();
         $data = new stdClass;
-        $data->provider_class = "{$provider_name}_enrollment_provider";
-        $basedir = $CFG->dirroot.'/local/'.$provider_name;
+        $data->provider_class = "{$providername}_enrollment_provider";
+        $basedir = $CFG->dirroot.'/local/'.$providername;
 
-        if(file_exists($basedir.'/events.php')){
-            require_once $basedir.'/events.php';
-            $class = $provider_name.'_enrollment_events';
-            $fn    = 'ues_load_'.$provider_name.'_provider';
+        if (file_exists($basedir.'/events.php')) {
+            require_once($basedir.'/events.php');
+            $class = $providername.'_enrollment_events';
+            $fn    = 'ues_load_'.$providername.'_provider';
             $class::$fn($data);
         }
         return $data->provider_class;
     }
 
     public static function create_provider() {
-        $provider_class = self::provider_class();
-        return $provider_class ? new $provider_class() : false;
+        $providerclass = self::provider_class();
+        return $providerclass ? new $providerclass() : false;
     }
 
     public static function translate_error($e) {
-        $provider_class = self::provider_class();
+        $providerclass = self::provider_class();
         $code = $e->getMessage();
         $a = new stdClass;
 
         if ($code == "enrollment_unsupported") {
             $a->problem = self::_s($code);
         } else {
-            $a->problem = $provider_class::translate_error($code);
+            $a->problem = $providerclass::translate_error($code);
         }
 
         $a->pluginname =
-            $provider_class ?
-            $provider_class::get_name() :
+            $providerclass ?
+            $providerclass::get_name() :
             get_config('enrol_ues', 'enrollment_provider');
 
         return $a;
@@ -400,21 +422,21 @@ abstract class ues {
 
     public static function get_task_status_description() {
 
-        $scheduled_task = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
+        $scheduledtask = \core\task\manager::get_scheduled_task('\enrol_ues\task\full_process');
 
-        if ($scheduled_task) {
+        if ($scheduledtask) {
 
-            $disabled = $scheduled_task->get_disabled();
-            $last_time = $scheduled_task->get_last_run_time();
-            $next_time = $scheduled_task->get_next_scheduled_time();
-            $time_format = '%A, %e %B %G, %l:%M %p';
+            $disabled = $scheduledtask->get_disabled();
+            $lasttime = $scheduledtask->get_last_run_time();
+            $nexttime = $scheduledtask->get_next_scheduled_time();
+            $timeformat = '%A, %e %B %G, %l:%M %p';
 
             $details = new stdClass();
-            $details->status = (!$disabled) ? ues::_s('run_adhoc_status_enabled') : ues::_s('run_adhoc_status_disabled');
-            $details->last = ues::_s('run_adhoc_last_run_time', date_format_string($last_time, $time_format, usertimezone()));
-            $details->next = ues::_s('run_adhoc_next_run_time', date_format_string($next_time, $time_format, usertimezone()));
+            $details->status = (!$disabled) ? self::_s('run_adhoc_status_enabled') : self::_s('run_adhoc_status_disabled');
+            $details->last = self::_s('run_adhoc_last_run_time', date_format_string($lasttime, $timeformat, usertimezone()));
+            $details->next = self::_s('run_adhoc_next_run_time', date_format_string($nexttime, $timeformat, usertimezone()));
 
-            return ues::_s('run_adhoc_scheduled_task_details', $details);
+            return self::_s('run_adhoc_scheduled_task_details', $details);
         }
 
         return false;

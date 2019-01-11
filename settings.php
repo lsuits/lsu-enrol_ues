@@ -1,26 +1,44 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * @package enrol_ues
+ *
+ * @package    enrol_ues
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Philip Cali, Adam Zapletal, Chad Mazilly, Robert Russo, Dave Elliott
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') or die();
+
+defined('MOODLE_INTERNAL') || die();
 
 if ($ADMIN->fulltree) {
-    require_once dirname(__FILE__) . '/publiclib.php';
+    require_once(dirname(__FILE__) . '/publiclib.php');
 
     $plugins = ues::list_plugins();
 
-    $_s = ues::gen_str();
+    $s = ues::gen_str();
 
     $settings->add(new admin_setting_heading('enrol_ues_settings', '',
-        $_s('pluginname_desc')));
+        $s('pluginname_desc')));
 
-    // --------------------- Scheduled Task Status --------------------------------
-
+    // Scheduled Task Status.
     $settings->add(new admin_setting_heading('enrol_ues_task_status',
-        $_s('task_status'), ues::get_task_status_description()));
+        $s('task_status'), ues::get_task_status_description()));
 
-    // --------------------- Internal Links --------------------------------
-
+    // Internal Links.
     $urls = new stdClass;
     $urls->cleanup_url = $CFG->wwwroot . '/enrol/ues/cleanup.php';
     $urls->failure_url = $CFG->wwwroot . '/enrol/ues/failures.php';
@@ -28,79 +46,78 @@ if ($ADMIN->fulltree) {
     $urls->adhoc_url = $CFG->wwwroot . '/enrol/ues/adhoc.php';
 
     $settings->add(new admin_setting_heading('enrol_ues_internal_links',
-        $_s('management'), $_s('management_links', $urls)));
+        $s('management'), $s('management_links', $urls)));
 
-    // --------------------- General Settings --------------------------------
-
+    // General Settings.
     $settings->add(new admin_setting_heading('enrol_ues_general_settings',
-        $_s('general_settings'), ''));
+        $s('general_settings'), ''));
 
     if (!empty($plugins)) {
         $settings->add(new admin_setting_configselect('enrol_ues/enrollment_provider',
-            $_s('provider'), $_s('provider_desc'), key($plugins), $plugins));
+            $s('provider'), $s('provider_desc'), key($plugins), $plugins));
     }
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/process_by_department',
-        $_s('process_by_department'), $_s('process_by_department_desc'), 1));
+        $s('process_by_department'), $s('process_by_department_desc'), 1));
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/running',
-        $_s('running'), $_s('running_desc'), 0));
+        $s('running'), $s('running_desc'), 0));
 
     $settings->add(new admin_setting_configtext('enrol_ues/grace_period',
-        $_s('grace_period'), $_s('grace_period_desc'), 3600));
+        $s('grace_period'), $s('grace_period_desc'), 3600));
 
     $settings->add(new admin_setting_configtext('enrol_ues/sub_days',
-        $_s('sub_days'), $_s('sub_days_desc'), 60));
+        $s('sub_days'), $s('sub_days_desc'), 60));
 
     $settings->add(new admin_setting_configtext('enrol_ues/error_threshold',
-        $_s('error_threshold'), $_s('error_threshold_desc'), 100));
+        $s('error_threshold'), $s('error_threshold_desc'), 100));
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/email_report',
-        $_s('email_report'), $_s('email_report_desc'), 1));
+        $s('email_report'), $s('email_report_desc'), 1));
 
-    // ------------------ User Creation Settings -----------------------------
+    // User Creation Settings.
     $settings->add(new admin_setting_heading('enrol_ues_user_settings',
-        $_s('user_settings'), ''));
+        $s('user_settings'), ''));
 
     $settings->add(new admin_setting_configtext('enrol_ues/user_email',
-        $_s('user_email'), $_s('user_email_desc'), '@example.com'));
+        $s('user_email'), $s('user_email_desc'), '@example.com'));
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/user_confirm',
-        $_s('user_confirm'), $_s('user_confirm_desc'), 1));
+        $s('user_confirm'), $s('user_confirm_desc'), 1));
 
     $languages = get_string_manager()->get_list_of_translations();
     $settings->add(new admin_setting_configselect('enrol_ues/user_lang',
         get_string('language'), '', $CFG->lang, $languages));
 
     $auths = get_plugin_list('auth');
-    $auth_options = array();
+    $authoptions = array();
     foreach ($auths as $auth => $unused) {
-        $auth_options[$auth] = get_string('pluginname', "auth_{$auth}");
+        $authoptions[$auth] = get_string('pluginname', "auth_{$auth}");
     }
 
     $settings->add(new admin_setting_configselect('enrol_ues/user_auth',
-        $_s('user_auth'), $_s('user_auth_desc'), 'manual', $auth_options));
+        $s('user_auth'), $s('user_auth_desc'), 'manual', $authoptions));
 
     $settings->add(new admin_setting_configtext('enrol_ues/user_city',
-        $_s('user_city'), $_s('user_city_desc'), ''));
+        $s('user_city'), $s('user_city_desc'), ''));
 
     $countries = get_string_manager()->get_list_of_countries();
     $settings->add(new admin_setting_configselect('enrol_ues/user_country',
-        $_s('user_country'), $_s('user_country_desc'), $CFG->country, $countries));
+        $s('user_country'), $s('user_country_desc'), $CFG->country, $countries));
 
-    // ------------------ Course Creation Settings ---------------------------
+    // Course Creation Settings.
     $settings->add(new admin_setting_heading('enrol_ues_course_settings',
-        $_s('course_settings'), ''));
+        $s('course_settings'), ''));
 
     $settings->add(new admin_setting_configtext('enrol_ues/course_fullname',
-        get_string('fullname'), '', $_s('course_shortname')));
+        get_string('fullname'), '', $s('course_shortname')));
 
     $settings->add(new admin_setting_configtext('enrol_ues/course_shortname',
-        get_string('shortname'), $_s('course_shortname_desc'),
-        $_s('course_shortname')));
+        get_string('shortname'), $s('course_shortname_desc'),
+        $s('course_shortname')));
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/course_form_replace',
-        $_s('course_form_replace'), $_s('course_form_replace_desc'), 0));
+        $s('course_form_replace'), $s('course_form_replace_desc'), 0));
 
     $fields = array(
         'newsitems' => get_string('newsitemsnumber'),
@@ -115,40 +132,40 @@ if ($ADMIN->fulltree) {
     $defaults = array('groupmode', 'groupmodeforce');
 
     $settings->add(new admin_setting_configmultiselect('enrol_ues/course_restricted_fields',
-        $_s('course_restricted_fields'), $_s('course_restricted_fields_desc'),
+        $s('course_restricted_fields'), $s('course_restricted_fields_desc'),
         $defaults, $fields));
 
-    // ------------------ User Enrollment Settings ---------------------------
+    // User Enrollment Settings.
     $settings->add(new admin_setting_heading('enrol_ues_enrol_settings',
-        $_s('enrol_settings'), ''));
+        $s('enrol_settings'), ''));
 
     $roles = role_get_names(null, null, true);
 
     foreach (array('editingteacher', 'teacher', 'student') as $shortname) {
         $typeid = $DB->get_field('role', 'id', array('shortname' => $shortname));
         $settings->add(new admin_setting_configselect('enrol_ues/'.$shortname.'_role',
-            $_s($shortname.'_role'), $_s($shortname.'_role_desc'), $typeid ,$roles));
+            $s($shortname.'_role'), $s($shortname.'_role_desc'), $typeid, $roles));
     }
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/recover_grades',
-        $_s('recover_grades'), $_s('recover_grades_desc'), 1));
+        $s('recover_grades'), $s('recover_grades_desc'), 1));
 
     $settings->add(new admin_setting_configcheckbox('enrol_ues/suspend_enrollment',
-        $_s('suspend_enrollment'), $_s('suspend_enrollment_desc'), 0));
+        $s('suspend_enrollment'), $s('suspend_enrollment_desc'), 0));
 
-    // ------------------ Specific Provider Settings -------------------------
+    // Specific Provider Settings.
     $provider = ues::provider_class();
 
     if ($provider) {
         try {
-            // Attempting to create the provider
-            $test_provider = new $provider();
+            // Attempting to create the provider.
+            $testprovider = new $provider();
 
-            $test_provider->settings($settings);
+            $testprovider->settings($settings);
 
             $works = (
-                $test_provider->supports_section_lookups() or
-                $test_provider->supports_department_lookups()
+                $testprovider->supports_section_lookups() or
+                $testprovider->supports_department_lookups()
             );
 
             if ($works === false) {
@@ -156,28 +173,28 @@ if ($ADMIN->fulltree) {
             }
 
             $a = new stdClass;
-            $a->name = $test_provider->get_name();
+            $a->name = $testprovider->get_name();
             $a->list = '';
 
-            if ($test_provider->supports_department_lookups()) {
+            if ($testprovider->supports_department_lookups()) {
                 $a->list .= '<li>' . ues::_s('process_by_department') . '</li>';
             }
 
-            if ($test_provider->supports_section_lookups()) {
+            if ($testprovider->supports_section_lookups()) {
                 $a->list .= '<li>' . ues::_s('process_by_section') . '</li>';
             }
 
-            if ($test_provider->supports_reverse_lookups()) {
+            if ($testprovider->supports_reverse_lookups()) {
                 $a->list .= '<li>' . ues::_s('reverse_lookups') . '</li>';
             }
 
             $settings->add(new admin_setting_heading('provider_information',
-                $_s('provider_information'), $_s('provider_information_desc', $a)));
+                $s('provider_information'), $s('provider_information_desc', $a)));
         } catch (Exception $e) {
             $a = ues::translate_error($e);
 
             $settings->add(new admin_setting_heading('provider_problem',
-                $_s('provider_problems'), $_s('provider_problems_desc', $a)));
+                $s('provider_problems'), $s('provider_problems_desc', $a)));
         }
     }
 }

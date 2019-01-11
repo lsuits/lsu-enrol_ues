@@ -100,7 +100,7 @@ if ($posted and $data = data_submitted()) {
     if ($reprocessing) {
         // Reprocess the selected error ids.
         $handler = function($out) use ($posted) {
-            $msg = ues::s('reprocess_success');
+            $msg = ues::_s('reprocess_success');
 
             echo $out->notification($msg, 'notifysuccess');
             echo html_writer::start_tag('pre');
