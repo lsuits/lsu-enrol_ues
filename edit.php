@@ -26,7 +26,7 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/enrol/ues/publiclib.php');
 require_once($CFG->dirroot . '/course/lib.php');
-require_once($CFG->dirroot . '/edit_form.php');
+require_once($CFG->dirroot . '/enrol/ues/edit_form.php');
 
 // Grap the courseid.
 $courseid = required_param('id', PARAM_INT);

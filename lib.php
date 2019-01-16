@@ -185,12 +185,14 @@ class enrol_ues_plugin extends enrol_plugin {
         // Flag the process as no longer running.
         $this->setting('running', false);
 
-        // Handle any errors automatically per threshold settings.
-        // TODO: This causes a blank email to be sent even if everything ran OK.
-        $this->handle_automatic_errors();
-
         // Email final report.
         $this->email_reports(false, $starttime);
+
+        // Handle any errors automatically per threshold settings.
+        // TODO: This causes a blank email to be sent even if everything ran OK.
+	$this->handle_automatic_errors();
+
+        $this->email_reports(true);
         return true;
     }
 
@@ -1809,7 +1811,7 @@ class enrol_ues_plugin extends enrol_plugin {
     }
 
     public function log($what) {
-        if (!$this->is_silent) {
+        if (!$this->issilent) {
             mtrace($what);
         }
 
