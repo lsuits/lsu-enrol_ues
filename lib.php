@@ -290,17 +290,17 @@ class enrol_ues_plugin extends enrol_plugin {
         global $CFG;
 
         // Get email content from error log.
-        $emailcontent = implode("\n", $this->get_errors());
+        $emailerrorcontent = implode("\n", $this->get_errors());
 
         if ($starttime) {
             $starttimedisplay = $this->format_time_display($starttime);
 
-            $emailcontent .= "\n\nThis process begun at: " . $starttimedisplay;
+            $emailerrorcontent .= "\n\nThis process begun at: " . $starttimedisplay;
         }
 
         // Send to each admin.
         foreach ($users as $user) {
-            email_to_user($user, ues::_s('pluginname'), sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $emailcontent);
+            email_to_user($user, ues::_s('pluginname'), sprintf('[SEVERE] UES Errors [%s]', $CFG->wwwroot), $emailerrorcontent);
         }
     }
 
@@ -1291,9 +1291,9 @@ class enrol_ues_plugin extends enrol_plugin {
 
             foreach ($actions as $status => $action) {
                 $actionparams = $generalparams + array('status' => $status);
-                ${$action . '_count'} = $class::count($actionparams);
+                ${$action . 'count'} = $class::count($actionparams);
 
-                if (${$action . '_count'}) {
+                if (${$action . 'count'}) {
                     // This will only happen if there are no more
                     // teachers and students are set to be enrolled
                     // We should log it as a potential error and continue.
